@@ -1,3 +1,5 @@
+
+
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
@@ -10,5 +12,9 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
+
+if(pool){
+  console.log("Connected!");
+}
 
 export default pool;

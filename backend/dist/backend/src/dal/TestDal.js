@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const CommentDTO_1 = require("./dto/CommentDTO");
+const PostDTO_1 = require("./dto/PostDTO");
+const CommentQuery_1 = require("./query/CommentQuery");
+const PostQuery_1 = require("./query/PostQuery");
+const postQuery = new PostQuery_1.PostQuery();
+const post = new PostDTO_1.PostDTO(3, "my caption 1", "uplode/image1.jpg");
+const newPost = postQuery.createPost(post);
+console.log(newPost);
+const commentQuery = new CommentQuery_1.CommentQuery();
+const comment = new CommentDTO_1.CommentDTO(1, 2, "My first comment", null);
+const newComment = commentQuery.createComment(comment);
+console.log(newComment);

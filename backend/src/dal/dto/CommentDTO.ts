@@ -1,0 +1,20 @@
+import { BaseDTO } from "./BaseDTO";
+export class CommentDTO implements BaseDTO {
+  id: number;
+  user_id: number;
+  posts_id: number;
+  parent_id?: number;
+  content: string;
+  created_at?: Date;
+  updated_at?: Date;
+  constructor(userId:number,postID:number,content:string,parentID?:number){
+    this.user_id = userId;
+    this.posts_id = postID;
+    this.parent_id = parentID;
+    this.content = content;
+    const now = new Date();
+    this.created_at = now;
+    this.updated_at = now;
+
+  }
+}

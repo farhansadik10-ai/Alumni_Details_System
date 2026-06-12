@@ -1,0 +1,61 @@
+
+import pool from "../../config/db";
+import { PostDTO } from "../dto/PostDTO";
+
+export class PostQuery {
+    constructor() {
+
+
+    }
+ public async createPost(data: PostDTO): Promise<PostDTO> {
+      
+        const result:any = await pool.query(
+            `INSERT INTO posts (user_id, caption, media_url)
+            VALUES ($1, $2, $3) RETURNING *`,
+            [data.user_id, data.caption, data.media_url]
+        );
+        return result.rows[0];
+    }
+
+  public async  postllPosts(): Promise<PostDTO[]> {
+    const result = await pool.query(
+      `SELECT * FROM posts ORDER BY created_at DESC`
+    );
+    return result.rows;
+  }
+  public async findPostById(post:PostDTO): Promise<PostDTO | null>{
+      const result =await pool.query(
+          `SELECT * FROM posts WHERE id=$1`,
+          [post.id]
+      );
+      return result.rows[0] || null
+  }
+  public async  getPostsByUserId(post: PostDTO): Promise<PostDTO[]> {
+    const result = await pool.query(
+      `SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC`,
+      [post.user_id]
+    );
+    return result.rows;
+
+  }
+  public async  updatePost( post: PostDTO): Promise<PostDTO> {
+    const result = await pool.query(
+      `UPDATE posts SET caption=$1, media_url=$2, updated_at=NOW()
+      WHERE id=$3 RETURNING *`,
+      [post.caption, post.media_url,post.id]
+    );
+    return result.rows[0];
+  }
+  public async  deletePost(post: PostDTO): Promise<void> {
+    await pool.query(
+      `DELETE FROM posts WHERE id = $1`,
+      [post.id]
+    );
+  }
+  public async  updateCommentCount(post: PostDTO): Promise<void> {
+    await pool.query(
+      `UPDATE posts SET comment_count=$1 WHERE id=$2`,
+      [post.comment_count, post.id]
+    );
+  }
+}
