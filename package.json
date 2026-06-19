@@ -1,32 +1,20 @@
 {
   "name": "alumni_details_system",
-  "version": "1.0.0",
-  "description": "```\r Alumni_Details_System\r ├─ backend\r │  ├─ .env\r │  ├─ package-lock.json\r │  ├─ package.json\r │  ├─ src\r │  │  ├─ app.ts\r │  │  ├─ config\r │  │  │  └─ db.ts\r │  │  ├─ controllers\r │  │  ├─ dal\r │  │  │  ├─ alumni.dal.ts\r │  │  │  ├─ comment.dal.ts\r │  │  │  ├─ posts.dal.ts\r │  │  │  └─ user.dal.ts\r │  │  ├─ middlewares\r │  │  ├─ models\r │  │  ├─ routes\r │  │  ├─ server.ts\r │  │  └─ services\r │  └─ tsconfig.json\r ├─ README.md\r └─ shared\r    ├─ constants\r    └─ types\r       ├─ alumni.types.ts\r       ├─ comment.types.ts\r       ├─ posts.types.ts\r       └─ user.types.ts",
-  "homepage": "https://github.com/farhansadik10-ai/Alumni_Details_System#readme",
+  "private": true,
   "workspaces": [
-    "alumni_details_system/*"
+    "backend/src/dal",
+    "backend/src/businessLogic"
+    
   ],
-  "bugs": {
-    "url": "https://github.com/farhansadik10-ai/Alumni_Details_System/issues"
+  "scripts": {
+    "dev": "tsx backend/src/server.ts"
   },
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC",
+  "type": "commonjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/farhansadik10-ai/Alumni_Details_System.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.20.0",
-    "tsx": "^4.22.0"
-  },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "pg": "^8.20.0",
-    "typescript": "^6.0.3"
   }
 }
