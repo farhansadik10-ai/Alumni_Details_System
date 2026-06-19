@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 import { AlumniDTO } from "../dto/AlumniDTO.js";
 export class AlumniQuery {
   constructor() {}
-  public async crateAlumni(alumni: AlumniDTO): Promise<AlumniDTO> {
+  public async createAlumni(alumni: AlumniDTO): Promise<AlumniDTO> {
     const info = await pool.query(
       "INSER INTO users (user_id,department,graduation_yr?,current_company?,job_title?,experience?,bio,linkedin_url)VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING*",
       [
@@ -51,7 +51,7 @@ export class AlumniQuery {
     return info.rows[0];
   }
 
-  public async getAllAlumnill(): Promise<AlumniDTO[]> {
+  public async getAllAlumni(): Promise<AlumniDTO[]> {
     const info = await pool.query("SELECT * FROM users");
     return info.rows;
   }

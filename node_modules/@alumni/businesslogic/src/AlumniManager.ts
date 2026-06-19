@@ -28,7 +28,7 @@ export class AlumniManager {
   }
 
   public async getAllAlumni() {
-    const allAlumni = await this.alumniQuery.getAllAlumnil();
+    const allAlumni = await this.alumniQuery.getAllAlumni();
     return allAlumni;
   }
 }
