@@ -12,9 +12,14 @@ export class CommentQuery {
   }
   public async getAllComments(): Promise<CommentDTO[]> {
     const info = await pool.query(
-      "SELECT * FROM comments ORDER BY created_at DESC",
+      "SELECT * FROM comment ORDER BY created_at DESC",
     );
-    return info.rows;
+     const comments: CommentDTO[] = [];
+        for (const comment of info.rows) {
+            console.log(comment);
+            comments.push(comment);
+        }
+        return comments;
   }
 
   public async updateComment(comment: CommentDTO): Promise<CommentDTO> {

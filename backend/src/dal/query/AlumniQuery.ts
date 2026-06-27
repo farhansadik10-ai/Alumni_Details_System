@@ -52,7 +52,12 @@ export class AlumniQuery {
   }
 
   public async getAllAlumni(): Promise<AlumniDTO[]> {
-    const info = await pool.query("SELECT * FROM users");
-    return info.rows;
+    const info = await pool.query("SELECT * FROM alumni");
+     const alumnis: AlumniDTO[] = [];
+            for (const alumni of info.rows) {
+                console.log(alumni);
+                alumnis.push(alumni);
+            }
+            return alumnis;
   }
 }

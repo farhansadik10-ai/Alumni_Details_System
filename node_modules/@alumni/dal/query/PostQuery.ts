@@ -12,12 +12,17 @@ export class PostQuery {
     return result.rows[0];
   }
 
-  public async getAllPosts(): Promise<PostDTO[]> {
-    const result = await pool.query(
-      `SELECT * FROM posts ORDER BY created_at DESC`,
-    );
-    return result.rows;
-  }
+    public async getAllPosts(): Promise<PostDTO[]> {
+        const info = await pool.query(
+            'SELECT * FROM posts ORDER BY created_at DESC'
+        );
+        const posts: PostDTO[] = [];
+        for (const post of info.rows) {
+            console.log(post);
+            posts.push(post);
+        }
+        return posts;
+    }
   public async findPostById(post: PostDTO): Promise<PostDTO | null> {
     const result = await pool.query(`SELECT * FROM posts WHERE id=$1`, [
       post.id,
