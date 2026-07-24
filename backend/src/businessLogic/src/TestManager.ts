@@ -6,8 +6,8 @@ import { UserManager } from "./UserManager";
 
 // /* ---------------- POST TEST ---------------- */
 
-const postManager = new PostManager();
-postManager.getAllPosts();
+//const postManager = new PostManager();
+//postManager.getAllPosts();
 // // Create Post
 // const post = new PostDTO(
 //   1,
@@ -42,7 +42,7 @@ postManager.getAllPosts();
 
 // /* ---------------- COMMENT TEST ---------------- */
 
-const commentManager = new CommentManager();
+//const commentManager = new CommentManager();
 
 // // Create Comment
 // const comment = new CommentDTO(
@@ -53,7 +53,7 @@ const commentManager = new CommentManager();
 // commentManager.createComment(comment);
 
 // // Get All Comments
-commentManager.getAllComments();
+//commentManager.getAllComments();
 
 // // Update Comment
 // const updateComment = new CommentDTO(
@@ -75,7 +75,7 @@ commentManager.getAllComments();
 
 // /* ---------------- ALUMNI TEST ---------------- */
 
- const alumniManager = new AlumniManager();
+ //const alumniManager = new AlumniManager();
 
 // // Create Alumni
 // const alumni = new AlumniDTO(
@@ -91,7 +91,7 @@ commentManager.getAllComments();
 // alumniManager.createAlumni(alumni);
 
 // // Get All Alumni
-alumniManager.getAllAlumni();
+//alumniManager.getAllAlumni();
 
 // // Find Alumni By ID
 // alumniManager.findAlumniById(1);
@@ -103,9 +103,9 @@ alumniManager.getAllAlumni();
 
 // /* ---------------- USER TEST ---------------- */
 
- const userManager = new UserManager();
+//  const userManager = new UserManager();
 
-// // Create User
+// Create User
 // const user = new UserDTO(
 //   "MD Rahim",
 //   "test001@email.com",
@@ -117,7 +117,7 @@ alumniManager.getAllAlumni();
 // userManager.createUser(user);
 
 // // Get All Users
- userManager.getAllUsers();
+//  userManager.getAllUsers();
 
 // // Find User By ID
 // userManager.findUserById(1);
