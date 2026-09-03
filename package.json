@@ -1,35 +1,24 @@
 {
-  "name": "alumni_details_system",
+  "name": "alumni-system",
   "private": true,
-  "workspaces": [
-    "backend/src/dal",
-    "backend/src/businessLogic"
-  ],
+"workspaces": [
+  "frontend",
+  "backend/src/*",
+  "shared"
+],
   "scripts": {
-    "dev": "tsx backend/src/server.ts"
-  },
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "ISC",
-  "type": "commonjs",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/farhansadik10-ai/Alumni_Details_System.git"
+    "dev:api": "npm run dev --workspace=backend/src/api",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev": "npm run dev:api & npm run dev:frontend"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/pg": "^8.20.0",
-    "typescript": "^6.0.3"
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }
