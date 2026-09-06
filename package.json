@@ -1,15 +1,19 @@
 {
   "name": "alumni-system",
+  "version": "1.0.0",
   "private": true,
-"workspaces": [
-  "frontend",
-  "backend/src/*",
-  "shared"
-],
+  "workspaces": [
+    "backend/src/api",
+    "backend/src/businessLogic",
+    "frontend",
+    "backend/src/dal",
+    "shared"
+  ],
   "scripts": {
-    "dev:api": "npm run dev --workspace=backend/src/api",
-    "dev:frontend": "npm run dev --workspace=frontend",
-    "dev": "npm run dev:api & npm run dev:frontend"
+    "dev:api": "npm run dev --workspace=@alumni/api",
+    "dev:frontend": "npm run dev --workspace=@alumni/frontend",
+    "dev": "npm run dev:api & npm run dev:frontend",
+    "build": "npm run build --workspace=@alumni/api && npm run build --workspace=@alumni/frontend"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -19,6 +23,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/jsonwebtoken": "^9.0.10"
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.23.1"
   }
 }
