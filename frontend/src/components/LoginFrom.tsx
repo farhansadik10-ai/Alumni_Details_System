@@ -1,8 +1,9 @@
-
 import { useState } from "react";
+import { useSetAtom } from "jotai";
 import type { FormProps } from "antd";
 import { Button, Checkbox, Form, Input } from "antd";
 import { login } from "../services/authApi";
+import { tokenAtom } from "../store/authAtom";
 
 interface Props {
   onSuccess: (token: string) => void;
@@ -18,7 +19,10 @@ export default function LoginForm({ onSuccess }: Props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
+  // Jotai Atom
+  const setToken = useSetAtom(tokenAtom);
+
+
   const savedEmail = localStorage.getItem("savedEmail") || "";
   const savedPassword = localStorage.getItem("savedPassword") || "";
 
@@ -27,7 +31,17 @@ export default function LoginForm({ onSuccess }: Props) {
     setLoading(true);
 
     try {
-      const data = await login(values.email!, values.password!);
+      
+      const data = await login(
+        values.email!,
+        values.password!
+      );
+
+      
+      setToken(data.token);
+
+      
+      localStorage.setItem("token", data.token);
 
       
       if (values.remember) {
@@ -38,13 +52,16 @@ export default function LoginForm({ onSuccess }: Props) {
         localStorage.removeItem("savedPassword");
       }
 
+      
       onSuccess(data.token);
+
     } catch (err: any) {
       console.log(err);
 
       setError(
         err.response?.data?.message || "Login failed"
       );
+
     } finally {
       setLoading(false);
     }
@@ -64,6 +81,7 @@ export default function LoginForm({ onSuccess }: Props) {
       onFinish={handleSubmit}
       autoComplete="off"
     >
+
       {/* Email */}
       <Form.Item<FieldType>
         label="Email"
@@ -102,7 +120,9 @@ export default function LoginForm({ onSuccess }: Props) {
         valuePropName="checked"
         label={null}
       >
-        <Checkbox>Remember me</Checkbox>
+        <Checkbox>
+          Remember me
+        </Checkbox>
       </Form.Item>
 
       {/* Login Button */}
@@ -116,13 +136,18 @@ export default function LoginForm({ onSuccess }: Props) {
         </Button>
       </Form.Item>
 
-      {/* Error */}
+      {/* Error Message */}
       {error && (
-        <p style={{ color: "red", textAlign: "center" }}>
+        <p
+          style={{
+            color: "red",
+            textAlign: "center",
+          }}
+        >
           {error}
         </p>
       )}
+
     </Form>
   );
 }
-

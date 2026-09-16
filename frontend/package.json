@@ -10,6 +10,7 @@
     "@alumni/shared": "*",
     "antd": "^6.6.2",
     "axios": "^1.6.2",
+    "jotai": "^2.20.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.18.2"

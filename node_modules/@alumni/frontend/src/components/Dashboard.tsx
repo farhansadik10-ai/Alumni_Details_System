@@ -1,5 +1,6 @@
-
 import React from "react";
+import { useSetAtom } from "jotai";
+
 import {
   DashboardOutlined,
   UserOutlined,
@@ -7,15 +8,18 @@ import {
   FileTextOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
+
 import type { MenuProps } from "antd";
+
 import {
   Breadcrumb,
   Layout,
   Menu,
   theme,
   Typography,
-
 } from "antd";
+
+import { tokenAtom } from "../store/authAtom";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -41,7 +45,6 @@ const menuItems: MenuProps["items"] = [
     icon: <FileTextOutlined />,
     label: "Posts",
   },
-  
   {
     key: "logout",
     icon: <LogoutOutlined />,
@@ -54,15 +57,25 @@ const Dashboard: React.FC = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // Jotai Atom setter
+  const setToken = useSetAtom(tokenAtom);
+
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key === "logout") {
+      // Remove token from localStorage
       localStorage.removeItem("token");
-      window.location.href = "/login";
+
+      // Remove token from Jotai Atom
+      setToken(null);
+
+      // Go to login page
+      window.location.href = "/";
     }
   };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+
       {/* Header */}
       <Header
         style={{
@@ -82,12 +95,17 @@ const Dashboard: React.FC = () => {
           Alumni Details System
         </div>
 
-        <div style={{ color: "white", marginLeft: "auto" }}>
-          
+        <div
+          style={{
+            color: "white",
+            marginLeft: "auto",
+          }}
+        >
         </div>
       </Header>
 
       <Layout>
+
         {/* Sidebar */}
         <Sider
           width={220}
@@ -109,6 +127,7 @@ const Dashboard: React.FC = () => {
 
         {/* Main Content */}
         <Layout style={{ padding: "0 24px 24px" }}>
+
           <Breadcrumb
             items={[
               { title: "Home" },
@@ -126,14 +145,15 @@ const Dashboard: React.FC = () => {
               borderRadius: borderRadiusLG,
             }}
           >
-            <Title level={2}>Dashboard</Title>
+            <Title level={2}>
+              Dashboard
+            </Title>
 
             <Text type="secondary">
               Welcome to the Alumni Details System
             </Text>
-
-            
           </Content>
+
         </Layout>
       </Layout>
     </Layout>
@@ -141,4 +161,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-

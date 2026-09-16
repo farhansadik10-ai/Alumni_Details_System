@@ -4,11 +4,6 @@ import { Card, Typography } from "antd";
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
-  const handleSuccess = (token: string) => {
-    localStorage.setItem("token", token);
-    window.location.href = "/dashboard";
-  };
-
   return (
     <div
       style={{
@@ -33,7 +28,12 @@ export default function LoginPage() {
           },
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: 25 }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: 25,
+          }}
+        >
           <Title level={2} style={{ marginBottom: 5 }}>
             Welcome Back
           </Title>
@@ -43,9 +43,12 @@ export default function LoginPage() {
           </Text>
         </div>
 
-        <LoginForm onSuccess={handleSuccess} />
+        <LoginForm
+          onSuccess={() => {
+            window.location.href = "/dashboard";
+          }}
+        />
       </Card>
     </div>
   );
 }
-
