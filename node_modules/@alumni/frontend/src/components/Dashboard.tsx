@@ -37,6 +37,7 @@ const menuItems: MenuProps["items"] = [
   },
   {
     key: "alumni",
+    
     icon: <TeamOutlined />,
     label: "Alumni",
   },
