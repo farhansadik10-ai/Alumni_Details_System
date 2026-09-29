@@ -2,9 +2,10 @@
 
 set -e
 
-echo "Starting Alumni Details System..."
+cd "$(dirname "$0")/.."
 
-./scripts/build.sh
+echo "Starting Alumni Details System..."
+echo
 
 echo "Starting backend..."
 npm run dev:api &
@@ -13,7 +14,9 @@ echo "Starting Apache..."
 /c/xampp/apache/bin/httpd.exe &
 
 echo
-echo "All services started!"
+echo "================================="
+echo "Application started!"
 echo "Website: https://localhost"
+echo "Backend: http://localhost:3000"
+echo "================================="
 
-wait
