@@ -11,6 +11,8 @@ export interface LoginFormProps {
   // Resolves when logged in; rejects on failure (the caller shows the reason through `error`).
   onSubmit: (values: LoginFormValues) => Promise<void>;
   error?: string;
+  // Fills the email field instead of the remembered one (e.g. right after sign-up).
+  initialEmail?: string;
 }
 
 interface FieldValues extends LoginFormValues {
@@ -22,7 +24,7 @@ const SAVED_EMAIL_KEY = "savedEmail";
 // Older versions of this form stored the password in plain text under this key.
 const LEGACY_SAVED_PASSWORD_KEY = "savedPassword";
 
-export default function LoginForm({ onSubmit, error }: LoginFormProps) {
+export default function LoginForm({ onSubmit, error, initialEmail }: LoginFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [savedEmail] = useState(() => localStorage.getItem(SAVED_EMAIL_KEY) ?? "");
 
@@ -51,7 +53,7 @@ export default function LoginForm({ onSubmit, error }: LoginFormProps) {
       name="login"
       layout="vertical"
       requiredMark={false}
-      initialValues={{ email: savedEmail, password: "", remember: savedEmail !== "" }}
+      initialValues={{ email: initialEmail || savedEmail, password: "", remember: savedEmail !== "" }}
       onFinish={handleFinish}
       disabled={submitting}
     >
@@ -63,7 +65,7 @@ export default function LoginForm({ onSubmit, error }: LoginFormProps) {
 
       {/* No minimum length here: the minimum applies to new passwords only. */}
       <Form.Item<FieldValues> label="Password" name="password" rules={[requiredRule("your password")]}>
-        <Input.Password placeholder="Your password" autoComplete="current-password" />
+        <Input.Password placeholder="Your password" autoComplete="current-password" autoFocus={!!initialEmail} />
       </Form.Item>
 
       <Form.Item<FieldValues> name="remember" valuePropName="checked">

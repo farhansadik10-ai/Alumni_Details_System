@@ -6,6 +6,7 @@ import UserManagementPage from "./pages/admin/UserManagementPage";
 import AlumniDetailPage from "./pages/alumni/AlumniDetailPage";
 import AlumniListPage from "./pages/alumni/AlumniListPage";
 import LoginPage from "./pages/auth/LoginPage";
+import SignUpPage from "./pages/auth/SignUpPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import PostsFeedPage from "./pages/posts/PostsFeedPage";
@@ -24,6 +25,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path={PATHS.LOGIN} element={<LoginPage />} />
+        <Route path={PATHS.SIGNUP} element={<SignUpPage />} />
 
         {/* Logged-in screens: RequireAuth sends everyone else to the login page. */}
         <Route
