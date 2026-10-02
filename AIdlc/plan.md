@@ -54,7 +54,26 @@ Requirement
 
 ## Current State
 
-Analysis from 2026-10-02. Table names are inferred from the code; the real schema is confirmed in bolt B8 (`db/schema.md`).
+Analysis from 2026-10-02. Table and column names were confirmed against the real database in bolt B8 (`db/schema.md`).
+
+### Database schema (confirmed in B8)
+
+Real tables: `"User"`, `alumni`, `posts`, `comment`. There is **no** `users` and **no** `comments` table.
+
+| Table | Columns (type) | Constraints |
+|---|---|---|
+| `"User"` | `id` serial, `name` varchar(100), `email` varchar(100) NOT NULL, `password` varchar(255) NOT NULL, `role` varchar(50), `photo_url` text, `login_at`, `logout_at` timestamp, `created_at`, `updated_at` timestamp default now | PK `id`; `email` UNIQUE |
+| `alumni` | `id` serial, `user_id` int, `graduation_year` **integer**, `department` varchar(100), `current_company` varchar(100), `job_title` varchar(100), `experience` varchar(100), `bio` text, `linkedin_url` text, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`; **no UNIQUE on `user_id`**; no `email` column, no `created_at` |
+| `posts` | `id` serial, `user_id` int, `caption` text, `media_url` text, `comment_count` int default 0, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)` |
+| `comment` | `id` serial, `user_id` int, `posts_id` int, `parent_id` int, `content` text, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`, `posts_id` → `posts(id)`, `parent_id` → `comment(id)` |
+
+Consequences for the plan:
+
+- The alumni column is `graduation_year` (integer). The backend's `graduation_yr` is wrong; the fix is in B11 (moved from L.7), and B12 sends `graduation_year`.
+- The comment → post column is `posts_id`.
+- Form length limits: `name`, `email`, `department`, `current_company`, `job_title` and `experience` are varchar(100). They go into `constants/validation.ts` in B1.
+- **No foreign key has `ON DELETE CASCADE`.** Deleting a post that has comments, a comment that has replies, or a user who has posts, comments or an alumni row fails with a foreign-key error. How B5, B6 and B14 handle this is Q7.
+- `alumni.user_id` has no UNIQUE constraint, so "one profile per user" (Q4) is not enforced by the database (see B12).
 
 ### Infrastructure status
 
@@ -112,20 +131,21 @@ Analysis from 2026-10-02. Table names are inferred from the code; the real schem
 
 | File : method | Problem | Breaks UI? | Screen affected |
 |---|---|:-:|---|
-| `AlumniQuery.createAlumni` | `INSER` typo; inserts into `users`; `graduation_yr?`, `current_company?`, `job_title?`, `experience?` are invalid column names | 🔴 Always fails | Create Alumni Profile |
-| `AlumniQuery.updateAlumni` | Table `users`; `?` in column names; SQL uses `$8` but only 7 values passed (`id` missing); omitted fields set to NULL | 🔴 Yes | Edit Alumni Profile |
-| `AlumniQuery.findAlumniById` | Reads `users` instead of `alumni` | 🔴 Yes (error or wrong row) | Alumni Detail |
-| `AlumniQuery.findAlumniByEmail` | Reads `users`; `alumni` has no `email`, needs a join with `"User"` | 🔴 Yes | Alumni Detail (by email) |
+| `AlumniQuery.createAlumni` | `INSER` typo; inserts into `users` (no such table; must be `alumni`); `graduation_yr?` (real column `graduation_year`), `current_company?`, `job_title?`, `experience?` are invalid column names | 🔴 Always fails | Create Alumni Profile |
+| `AlumniQuery.updateAlumni` | Table `users` (no such table); `?` in column names; `graduation_yr` instead of `graduation_year`; SQL uses `$8` but only 7 values passed (`id` missing); omitted fields set to NULL | 🔴 Always fails | Edit Alumni Profile |
+| `AlumniQuery.findAlumniById` | Reads `users` (no such table) instead of `alumni` | 🔴 Always fails | Alumni Detail |
+| `AlumniQuery.findAlumniByEmail` | Reads `users` (no such table); `alumni` has no `email`, needs a join with `"User"` | 🔴 Always fails | Alumni Detail (by email) |
 | `AlumniQuery.getAllAlumni` | Table OK, but no join to `"User"`, so no name / email / photo | 🟡 Data gap | Alumni Directory |
-| `CommentQuery.createComment` / `getAllComments` | Table `comment`, while update / delete use `comments`; one of them is wrong | 🔴 One set fails | Comments |
-| `CommentQuery.updateComment` | Table `comments`; missing comma in `content=$1 updated_at=NOW()` (syntax error) | 🔴 Always fails | Edit comment |
-| `CommentQuery.deleteComment` | Table `comments` (doesn't match create) | 🔴 Likely | Delete comment |
+| `CommentQuery.createComment` / `getAllComments` | Table `comment` — correct | ✅ | — |
+| `CommentQuery.updateComment` | Table `comments` (no such table; must be `comment`); missing comma in `content=$1 updated_at=NOW()` (syntax error) | 🔴 Always fails | Edit comment |
+| `CommentQuery.deleteComment` | Table `comments` (no such table; must be `comment`) | 🔴 Always fails | Delete comment |
+| `PostQuery.deletePost`, `CommentQuery.deleteComment`, `UserQuery.deleteUser` | No `ON DELETE CASCADE`: fails when the post has comments, the comment has replies, or the user has posts / comments / an alumni row (Q7) | 🔴 When related rows exist | Delete Post, Delete comment, User Management |
 | `UserQuery.updateUser` | Always writes `password` and `email`; an edit without a password sets it to NULL and locks the user out | 🔴 Yes | My Profile |
 | `PostQuery.updatePost` | Omitted caption / media become NULL | 🟡 Data loss | Edit Post |
 | `PostQuery.updateCommentCount` | Never called; `comment_count` stays 0 | 🟡 Wrong count | Posts Feed |
-| Other `UserQuery` / `PostQuery` methods | No problems found | ✅ | — |
+| Other `UserQuery` / `PostQuery` methods | No problems found (`"User"` and `posts` are the real table names) | ✅ | — |
 
-Related, outside the SQL files: `graduation_yr` (backend) vs `graduation_year` (`shared` types); `POST /api/comments` reads `post_id` but the column is `posts_id`; sign-up accepts `role` from the body; `PUT /api/users/:id/login` needs no login; alumni lookups return 200 with an empty body when not found.
+Related, outside the SQL files: `graduation_yr` in `AlumniDTO.ts` and `AlumniController.ts` is wrong — the column (and the `shared` type) is `graduation_year` (fixed in B11); `POST /api/comments` reads `post_id` from the body but the column is `posts_id`; sign-up accepts `role` from the body; `PUT /api/users/:id/login` needs no login; alumni lookups return 200 with an empty body when not found.
 
 ### API endpoints: used vs unused by the frontend
 
@@ -303,20 +323,20 @@ Status values: ⬜ Not started · 🔄 In progress · ⏸ Blocked (open question
 | # | Bolt | Deliverables (exact files and components) | Depends on | Status |
 |---|---|---|---|---|
 | B0 | Repo hygiene and docs cleanup | Root `.gitignore` (`node_modules/`, `.env`, `frontend/.env`, `dist/`); untrack those files with `git rm --cached` (files stay on disk; secret values untouched, owner rotates them); `CLAUDE.md`: add a "UI Rules" section pointing to `AIdlc/plan.md`, remove the non-existent `npm run lint` command; `frontend/package.json`: add `@ant-design/icons`; delete unused `frontend/src/App.css` and `frontend/src/index.css` (imported nowhere); `frontend/index.html`: `<title>Alumni Details System</title>` | — | ✅ |
-| B1 | Theme and constants | `src/theme/theme.ts`, `src/theme/roleColors.ts`; font package + import (per Q1); `src/main.tsx` (antd `ConfigProvider` + antd `App` + Jotai `Provider`); `src/constants/roles.ts`, `src/constants/validation.ts`; `src/routes/paths.ts`; record the theme choice in "UI Design and Code Structure" | B0, Q1 | ⬜ |
+| B1 | Theme and constants | `src/theme/theme.ts`, `src/theme/roleColors.ts`; font package + import (per Q1); `src/main.tsx` (antd `ConfigProvider` + antd `App` + Jotai `Provider`); `src/constants/roles.ts`, `src/constants/validation.ts` (includes max length 100 for `name`, `email`, `department`, `current_company`, `job_title`, `experience` — varchar(100) in `db/schema.md`); `src/routes/paths.ts`; record the theme choice in "UI Design and Code Structure" | B0, Q1 | ⬜ |
 | B2 | API and auth data layer | `frontend/vite.config.ts` (`/api` dev proxy only); `src/services/apiClient.ts`; `src/services/authApi.ts` (on `apiClient`); `src/services/usersApi.ts` (`getUserById`, `logout`); `src/utils/jwt.ts`; `src/store/authAtom.ts` (+ `currentUserAtom`, expiry); `src/hooks/useCurrentUser.ts`, `src/hooks/useRequest.ts`, `src/hooks/useIsMobile.ts`; `src/types/` (API types, reusing `@alumni/shared`) | B1 | ⬜ |
 | B3 | Reusable common components | `src/components/common/`: `PageHeader.tsx`, `AsyncContent.tsx`, `LoadingState.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `DataTable.tsx`, `FormModal.tsx`, `ConfirmDelete.tsx`, `RoleTag.tsx`, `UserAvatar.tsx`, `Can.tsx` | B2 | ⬜ |
 | B4 | Layouts, guards, router, Login | `src/components/layout/`: `AuthLayout.tsx`, `AppLayout.tsx`, `SideMenu.tsx`, `HeaderUserMenu.tsx` (logout calls `PUT /api/users/:id/logout`); `src/routes/RequireAuth.tsx`, `src/routes/RequireRole.tsx`; `src/pages/errors/ForbiddenPage.tsx`, `NotFoundPage.tsx`; `src/App.tsx` (route table, nested protected routes); move `components/LoginFrom.tsx` → `components/auth/LoginForm.tsx` (remember email only, no password) and `pages/LoginPage.tsx` → `pages/auth/LoginPage.tsx`; `src/pages/dashboard/DashboardPage.tsx` (placeholder); delete `components/Dashboard.tsx` and `pages/Dashboard.tsx` | B3 | ⬜ |
-| B5 | Posts | `src/services/postsApi.ts`; `src/pages/posts/PostsFeedPage.tsx`; `src/components/posts/PostCard.tsx`, `PostForm.tsx`; create / edit via `FormModal` (edit always sends both `caption` and `media_url`, because `updatePost` overwrites omitted fields with NULL — see L.10), delete via `ConfirmDelete`; [BE] `backend/src/dal/query/PostQuery.ts` → `getAllPosts` joins the user table to return the author's name and photo (no password) (Q6) | B4, B8, Q3, Q6 | ⬜ |
-| B6 | Dashboard home and User Management | `src/pages/dashboard/DashboardPage.tsx` (stat cards, recent posts); `src/services/usersApi.ts` (`getAllUsers`, `getUserByEmail`, `deleteUser`); `src/pages/admin/UserManagementPage.tsx` (`DataTable`, search, `ConfirmDelete`; password never shown) | B5 | ⬜ |
+| B5 | Posts | `src/services/postsApi.ts`; `src/pages/posts/PostsFeedPage.tsx`; `src/components/posts/PostCard.tsx`, `PostForm.tsx`; create / edit via `FormModal` (edit always sends both `caption` and `media_url`, because `updatePost` overwrites omitted fields with NULL — see L.10), delete via `ConfirmDelete`; [BE] `backend/src/dal/query/PostQuery.ts` → `getAllPosts` joins `"User"` to return the author's name and photo (no password) (Q6); deleting a post that has comments fails (no `ON DELETE CASCADE`) — handle per Q7 | B4, B8, Q3, Q6, Q7 | ⬜ |
+| B6 | Dashboard home and User Management | `src/pages/dashboard/DashboardPage.tsx` (stat cards, recent posts); `src/services/usersApi.ts` (`getAllUsers`, `getUserByEmail`, `deleteUser`); `src/pages/admin/UserManagementPage.tsx` (`DataTable`, search, `ConfirmDelete`; password never shown); deleting a user who has posts, comments or an alumni row fails (no `ON DELETE CASCADE`) — handle per Q7 | B5, Q7 | ⬜ |
 | B7 | Sign Up | `src/components/auth/SignUpForm.tsx`; `src/pages/auth/SignUpPage.tsx`; `usersApi.createUser`; `/signup` route; link from Login | B4, Q2, Q5 | ⬜ |
-| B8 | [BE] Database verification | Give the owner the `psql` commands (`\dt`, `\d "User"`, `\d users`, `\d alumni`, `\d posts`, `\d comment`, `\d comments`); save the owner's output as `db/schema.md`; correct table / column names in "Current State" | — | ⬜ |
+| B8 | [BE] Database verification | Give the owner the `psql` commands (`\dt`, `\d "User"`, `\d users`, `\d alumni`, `\d posts`, `\d comment`, `\d comments`); save the owner's output as `db/schema.md`; correct table / column names in "Current State" | — | ✅ |
 | B9 | [BE] User update fix | `backend/src/dal/query/UserQuery.ts` → `updateUser` no longer overwrites omitted fields (`password`, `email`, …) with NULL | B8 | ⬜ |
 | B10 | My Profile | `src/pages/profile/ProfilePage.tsx`; `src/components/users/ProfileForm.tsx` (in `FormModal`); `usersApi.updateUser` | B4, B9, Q5 | ⬜ |
-| B11 | [BE] Alumni SQL fixes | `backend/src/dal/query/AlumniQuery.ts`: `createAlumni` (`INSER`, table, `?` columns), `updateAlumni` (table, `?` columns, `$8` id, no NULL overwrite), `findAlumniById`, `findAlumniByEmail` (table, join `"User"`), `getAllAlumni` (join `"User"` for name / email / photo, no password) | B8 | ⬜ |
-| B12 | Alumni screens | `src/services/alumniApi.ts` (sends `graduation_yr`); `src/pages/alumni/AlumniListPage.tsx`, `AlumniDetailPage.tsx`; `src/components/alumni/AlumniForm.tsx`, `AlumniDescriptions.tsx`; alumni stat card on `DashboardPage.tsx` | B6, B11, Q4 | ⬜ |
-| B13 | [BE] Comments SQL fixes | `backend/src/dal/query/CommentQuery.ts`: one real table name in all methods; missing comma in `updateComment` | B8 | ⬜ |
-| B14 | Comments | `src/services/commentsApi.ts` (body `post_id`, response `posts_id`, client-side filter by post); `src/components/comments/CommentThread.tsx`, `CommentItem.tsx`, `CommentForm.tsx`; Drawer opened from `PostCard.tsx` | B5, B13 | ⬜ |
+| B11 | [BE] Alumni SQL fixes | `backend/src/dal/query/AlumniQuery.ts`: `createAlumni` (`INSER`, table, `?` columns), `updateAlumni` (table, `?` columns, `$8` id, no NULL overwrite), `findAlumniById`, `findAlumniByEmail` (table, join `"User"`), `getAllAlumni` (join `"User"` for name / email / photo, no password); all queries use the real column `graduation_year`; `graduation_yr` → `graduation_year` also in `backend/src/dal/dto/AlumniDTO.ts` and `backend/src/api/controllers/AlumniController.ts` (moved from L.7) | B8 | ⬜ |
+| B12 | Alumni screens | `src/services/alumniApi.ts` (sends `graduation_year`); "one profile per user" (Q4) is **not** enforced by the database (`alumni.user_id` has no UNIQUE constraint), so the UI hides "Add my alumni profile" when the current user already has one; `src/pages/alumni/AlumniListPage.tsx`, `AlumniDetailPage.tsx`; `src/components/alumni/AlumniForm.tsx`, `AlumniDescriptions.tsx`; alumni stat card on `DashboardPage.tsx` | B6, B11, Q4 | ⬜ |
+| B13 | [BE] Comments SQL fixes | `backend/src/dal/query/CommentQuery.ts`: table `comment` (not `comments`) in all methods; missing comma in `updateComment` | B8 | ⬜ |
+| B14 | Comments | `src/services/commentsApi.ts` (body `post_id`, response `posts_id`, client-side filter by post); `src/components/comments/CommentThread.tsx`, `CommentItem.tsx`, `CommentForm.tsx`; Drawer opened from `PostCard.tsx`; deleting a comment that has replies fails (no `ON DELETE CASCADE`) — handle per Q7 | B5, B13, Q7 | ⬜ |
 | B15 | Verification and review | `npm run build`; every Acceptance Criteria check (greps, 360 / 768 / 1280 px, console); every screen per role (student, alumni, admin); `/api/health` and app `/api` calls through Apache over HTTPS; **refresh a deep link such as `/alumni` (and `/alumni/:id`) through Apache — page must load, not 404**; final code review; final security review | B0–B14 | ⬜ |
 
 ### Later: backend hardening
@@ -329,7 +349,7 @@ Not needed for any screen to work; done after the main path. Nothing here is dro
 - [ ] L.4 Implement the sign-up `role` decision (Q2) on the backend
 - [ ] L.5 `PUT /api/alumni/:id`: allow only the owner or an admin
 - [ ] L.6 Return 404 when an alumni record is not found
-- [ ] L.7 Align `graduation_yr` (backend) with `graduation_year` (`shared` types)
+- [ ] L.7 ~~Align `graduation_yr` (backend) with `graduation_year` (`shared` types)~~ — moved into B11 (B8 confirmed the column is `graduation_year`)
 - [ ] L.8 `POST /api/posts`: take `user_id` from `req.user.sub`, not the body
 - [ ] L.9 `PUT /api/posts/:id`: allow only the owner or an admin
 - [ ] L.10 Fix `PostQuery.updatePost` so omitted fields are not overwritten with NULL
@@ -371,6 +391,14 @@ The backend stores only `photo_url` and has no upload endpoint. Is a URL text fi
 ### Q6 — Post author name and photo (bolt B5) [BE]
 Should `GET /api/posts` join the user table to return the author's name and photo, so `PostCard` can show them?
 - **Answer (2026-10-02):** Yes. Added to B5 as a [BE] deliverable.
+
+### Q7 — Deleting rows that other rows reference (bolts B5, B6, B14) [BE]
+B8 showed that no foreign key has `ON DELETE CASCADE`. So deleting a post that has comments, a comment that has replies, or a user who has posts, comments or an alumni row fails with a foreign-key error. Options:
+(a) block it in the UI: hide or disable Delete when related rows exist, and show a clear message if the backend still returns the error;
+(b) the backend deletes the related rows first (in one transaction) in `deletePost`, `deleteComment`, `deleteUser`;
+(c) change the foreign keys to `ON DELETE CASCADE` (or `SET NULL` for `comment.parent_id`) with a database migration;
+(d) something else.
+- **Answer:**
 
 ## Scripts
 
@@ -428,4 +456,4 @@ Each item is checked in bolt B15 (and for the screens touched, at the end of eve
 - Q5: Photos are a URL field with an initials avatar fallback.
 - Q6: `GET /api/posts` will join the user table to return the author's name and photo ([BE], in B5).
 - Phase moved to Construction; B0 is next.
-- B0 done (owner approved): root `.gitignore` added (`node_modules/`, `.env`, `frontend/.env`, `dist/`); `node_modules` (root, `backend/src/api`, `backend/src/dal`), `.env` and `frontend/.env` untracked with `git rm --cached` (still on disk; owner rotates the secrets); unused `frontend/src/App.css` and `frontend/src/index.css` deleted; `@ant-design/icons` added to `frontend/package.json`; page title set to "Alumni Details System"; `CLAUDE.md` gained a "UI Rules" section, lost the non-existent lint command, and its "Root-level oddity" section was replaced by "Ignored files". `npm run build` passes.
+- B0 done (owner approved): root `.gitignore` added (`node_modules/`, `.env`, `frontend/.env`, `dist/`); `node_modules` (root, `backend/src/api`, `backend/src/dal`), `.env` and `frontend/.env` untracked with `git rm --cached` (still on disk; owner rotates the secrets); unused `frontend/src/App.css` and `frontend/src/index.css` deleted; `@ant-design/icons` added to `frontend/package.json`; page title set to "Alumni Details System"; `CLAUDE.md` gained a "UI Rules" section, lost the non-existent lint command, and its "Root-level oddity" section was replaced by "Ignored files". `npm run build` passes.- B8 done (owner approved): owner ran the `psql` commands; output saved unchanged as `db/schema.md`. Real tables are `"User"`, `alumni`, `posts`, `comment` (no `users`, no `comments`). "Current State" corrected (new "Database schema" section, SQL problems table updated). Consequences recorded: `graduation_yr` → `graduation_year` fix moved from L.7 into B11 (also `AlumniDTO.ts`, `AlumniController.ts`) and B12 sends `graduation_year`; comment column is `posts_id`; varchar(100) limits for `name`, `email`, `department`, `current_company`, `job_title`, `experience` added to B1 validation constants; no foreign key has `ON DELETE CASCADE`, so Q7 added and B5, B6, B14 depend on it (unanswered); `alumni.user_id` has no UNIQUE constraint, noted in B12 (Q4 enforced in the UI only). No SQL or code changed.
