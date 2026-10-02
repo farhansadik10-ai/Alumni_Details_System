@@ -1,6 +1,6 @@
 # Alumni Details System - AI-DLC Plan
 
-Phase: Construction: B0 next
+Phase: Construction: B1 next
 
 Last updated: 2026-10-02
 
@@ -302,7 +302,7 @@ Status values: ⬜ Not started · 🔄 In progress · ⏸ Blocked (open question
 
 | # | Bolt | Deliverables (exact files and components) | Depends on | Status |
 |---|---|---|---|---|
-| B0 | Repo hygiene and docs cleanup | Root `.gitignore` (`node_modules/`, `.env`, `frontend/.env`, `dist/`); untrack those files with `git rm --cached` (files stay on disk; secret values untouched, owner rotates them); `CLAUDE.md`: add a "UI Rules" section pointing to `AIdlc/plan.md`, remove the non-existent `npm run lint` command; `frontend/package.json`: add `@ant-design/icons`; delete unused `frontend/src/App.css` and `frontend/src/index.css` (imported nowhere); `frontend/index.html`: `<title>Alumni Details System</title>` | — | ⬜ |
+| B0 | Repo hygiene and docs cleanup | Root `.gitignore` (`node_modules/`, `.env`, `frontend/.env`, `dist/`); untrack those files with `git rm --cached` (files stay on disk; secret values untouched, owner rotates them); `CLAUDE.md`: add a "UI Rules" section pointing to `AIdlc/plan.md`, remove the non-existent `npm run lint` command; `frontend/package.json`: add `@ant-design/icons`; delete unused `frontend/src/App.css` and `frontend/src/index.css` (imported nowhere); `frontend/index.html`: `<title>Alumni Details System</title>` | — | ✅ |
 | B1 | Theme and constants | `src/theme/theme.ts`, `src/theme/roleColors.ts`; font package + import (per Q1); `src/main.tsx` (antd `ConfigProvider` + antd `App` + Jotai `Provider`); `src/constants/roles.ts`, `src/constants/validation.ts`; `src/routes/paths.ts`; record the theme choice in "UI Design and Code Structure" | B0, Q1 | ⬜ |
 | B2 | API and auth data layer | `frontend/vite.config.ts` (`/api` dev proxy only); `src/services/apiClient.ts`; `src/services/authApi.ts` (on `apiClient`); `src/services/usersApi.ts` (`getUserById`, `logout`); `src/utils/jwt.ts`; `src/store/authAtom.ts` (+ `currentUserAtom`, expiry); `src/hooks/useCurrentUser.ts`, `src/hooks/useRequest.ts`, `src/hooks/useIsMobile.ts`; `src/types/` (API types, reusing `@alumni/shared`) | B1 | ⬜ |
 | B3 | Reusable common components | `src/components/common/`: `PageHeader.tsx`, `AsyncContent.tsx`, `LoadingState.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `DataTable.tsx`, `FormModal.tsx`, `ConfirmDelete.tsx`, `RoleTag.tsx`, `UserAvatar.tsx`, `Can.tsx` | B2 | ⬜ |
@@ -428,3 +428,4 @@ Each item is checked in bolt B15 (and for the screens touched, at the end of eve
 - Q5: Photos are a URL field with an initials avatar fallback.
 - Q6: `GET /api/posts` will join the user table to return the author's name and photo ([BE], in B5).
 - Phase moved to Construction; B0 is next.
+- B0 done (owner approved): root `.gitignore` added (`node_modules/`, `.env`, `frontend/.env`, `dist/`); `node_modules` (root, `backend/src/api`, `backend/src/dal`), `.env` and `frontend/.env` untracked with `git rm --cached` (still on disk; owner rotates the secrets); unused `frontend/src/App.css` and `frontend/src/index.css` deleted; `@ant-design/icons` added to `frontend/package.json`; page title set to "Alumni Details System"; `CLAUDE.md` gained a "UI Rules" section, lost the non-existent lint command, and its "Root-level oddity" section was replaced by "Ignored files". `npm run build` passes.

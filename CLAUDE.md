@@ -12,7 +12,6 @@ This is an npm workspaces monorepo. Run all commands from the repo root.
 - Run only the frontend dev server: `npm run dev:frontend` (Vite, workspace `@alumni/frontend`)
 - Build everything: `npm run build` (builds `@alumni/api` then `@alumni/frontend`)
 - Frontend-only build/preview: `npm run build --workspace=@alumni/frontend`, `npm run preview --workspace=@alumni/frontend`
-- Frontend lint: `npm run lint --workspace=@alumni/frontend` (flat ESLint config with typescript-eslint + react-hooks/react-refresh)
 
 There is no test runner configured anywhere in the repo (the `shared` package's `test` script is an unimplemented placeholder). `backend/src/businessLogic/src/TestManager.ts` and `backend/src/dal/TestDal.ts` are ad hoc, commented-out manual scratch scripts used during development, not an actual test suite — don't treat them as tests or try to run them as such.
 
@@ -49,9 +48,13 @@ React 18 + TypeScript + Vite, using `antd` for UI components, `axios` for HTTP, 
 - `src/store/authAtom.ts` holds jotai atoms: `tokenAtom` (seeded from `localStorage`) and the derived `isLoggedInAtom`.
 - `src/services/*Api.ts` is the axios call layer (see the env caveat above).
 
-### Root-level oddity
+### UI Rules
 
-There is no root `.gitignore`, so the root `node_modules/` (including the `node_modules/@alumni/*` workspace-linked copies) is tracked in git on this repo/platform. Diffs under `node_modules/` are install artifacts mirroring the real source in `backend/`/`frontend`/`shared` — don't hand-edit files there, and don't be alarmed by them showing up in `git status`.
+All frontend work follows the approved plan in `AIdlc/plan.md`: its UI design and code structure, Work Plan bolts, Bolt protocol, and Acceptance Criteria. Do one bolt at a time, change only that bolt's listed deliverables, and wait for the owner's approval before committing or starting the next bolt.
+
+### Ignored files
+
+The root `.gitignore` ignores `node_modules/` (at any depth, including the nested `backend/src/api/node_modules` and `backend/src/dal/node_modules`), `.env`, `frontend/.env` and `dist/`. None of these are tracked in git: run `npm install` after cloning, and create the root `.env` and `frontend/.env` by hand (see Environment above). Never commit them. Earlier commits still contain `node_modules/` and the `.env` files, so their secrets must be treated as exposed and rotated.
 
 ## Other resources
 

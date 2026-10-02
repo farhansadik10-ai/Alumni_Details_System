@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@alumni/shared": "*",
+    "@ant-design/icons": "^6.3.4",
     "antd": "^6.6.2",
     "axios": "^1.6.2",
     "jotai": "^2.20.3",
