@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | REQ | REQ-fs-001 |
-| Status | complete — awaiting merge |
+| Status | complete — merged 2026-10-05 |
 | Phase | wrapup |
 | Created | 2026-10-05 |
 | Primary repo | alumni-details-system |

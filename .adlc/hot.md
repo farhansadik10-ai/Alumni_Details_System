@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-05] req-archived | REQ-fs-001-fix-alumni-comment-queries
+## [2026-10-05] req-merged | REQ-fs-001-fix-alumni-comment-queries | merge commit 2f51e18f on redesign
 ## [2026-10-05] ship-gate-cleared | REQ-fs-001-fix-alumni-comment-queries
 ## [2026-10-05] req-ready-to-merge | REQ-fs-001-fix-alumni-comment-queries | AlumniQuery and CommentQuery SQL match db/schema.md; graduation_year; alumni reads join "User"
 ## [2026-10-05] lesson | L-REQ-fs-001-4 — before adding joined columns to a read, check whether the method logs its rows
