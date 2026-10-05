@@ -10,7 +10,7 @@ An npm workspaces monorepo with a layered Express + PostgreSQL backend, a `share
 
 ## System diagram
 
-> **STATUS: needs verification** — drawn from the prose in `CLAUDE.md` (Architecture) and `AIdlc/plan.md` (Decision Log: Apache) on 2026-10-05; the source has no diagram of its own. Review and edit; remove this banner when confirmed.
+> **STATUS: needs verification** — drawn from the prose in `CLAUDE.md` (Architecture) and the retired AI-DLC plan's Decision Log (Apache) on 2026-10-05; the sources have no diagram of their own. Review and edit; remove this banner when confirmed.
 
 ```
 Browser
@@ -45,18 +45,37 @@ shared (@alumni/shared) — TypeScript types used across workspaces
 | `backend/src/api` (`@alumni/api`) | Express app. `routes/*Routes.ts` wire URL paths to `controllers/*Controller.ts`, which call the Managers. `app.ts` mounts `/api/auth`, `/api/users`, `/api/alumni`, `/api/posts`, `/api/comments`, and `/api/health`. | Express |
 | `backend/src/server.ts` | Process entrypoint: loads env, calls `app.listen`. | Node, `tsx` |
 | `shared` (`@alumni/shared`) | Cross-cutting types in `shared/types/*.types.ts`, consumed by workspace name. Compiled `.js`/`.d.ts` output is checked in beside the sources, but the package `main` is `index.ts`, so most imports resolve to source. | TypeScript |
-| `frontend` (`@alumni/frontend`) | React app. `pages/` holds route-level containers, `components/` the presentational pieces, `services/*Api.ts` the axios call layer, `store/` the jotai atoms. | React 18, Vite, antd, axios, jotai, react-router-dom |
-
-The frontend's full target folder structure and its reusable components are in `AIdlc/plan.md` → "UI Design and Code Structure" (sections b and c). `CLAUDE.md` still describes the frontend as it was before bolts B1–B7 (two routes, `LoginFrom.tsx`); the plan's Decision Log records what changed since.
+| `frontend` (`@alumni/frontend`) | React app, **being rebuilt from scratch** in `frontend/src`. What is there now is the legacy Ant Design (`antd`) app; the redesign replaces it. The new structure and UI library are decided at the architect gate, not here. | React, Vite, TypeScript, jotai |
 
 ## Data stores
 
-> **STATUS: needs verification** — synthesized from `CLAUDE.md` and `AIdlc/plan.md` (Database schema) on 2026-10-05. Review and edit; remove this banner when confirmed.
-
 | Store | Holds | Tech |
 |---|---|---|
-| PostgreSQL | Tables `"User"`, `alumni`, `posts`, `comment`. Real definitions are in `db/schema.md`. | `pg` `Pool` in `backend/src/dal/config/db.ts` |
-| Browser `localStorage` | The login token, which seeds `tokenAtom` in `src/store/authAtom.ts`. | jotai |
+| PostgreSQL | Tables `"User"`, `alumni`, `posts`, `comment`. See "Database schema" below. | `pg` `Pool` in `backend/src/dal/config/db.ts` |
+| Browser `localStorage` | The login token (legacy frontend: seeds `tokenAtom` in `src/store/authAtom.ts`). | jotai |
+
+## Database schema
+
+Confirmed against the real database by the owner on 2026-10-02. The raw `psql` output is in `db/schema.md`, which is the source of truth; this section is a summary of it.
+
+Real tables: `"User"`, `alumni`, `posts`, `comment`. There is **no** `users` table and **no** `comments` table. `"User"` must be double-quoted in SQL.
+
+| Table | Columns (type) | Constraints |
+|---|---|---|
+| `"User"` | `id` serial, `name` varchar(100), `email` varchar(100) NOT NULL, `password` varchar(255) NOT NULL, `role` varchar(50), `photo_url` text, `login_at`, `logout_at` timestamp, `created_at`, `updated_at` timestamp default now | PK `id`; `email` UNIQUE |
+| `alumni` | `id` serial, `user_id` int, `graduation_year` **integer**, `department` varchar(100), `current_company` varchar(100), `job_title` varchar(100), `experience` varchar(100), `bio` text, `linkedin_url` text, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`; **no UNIQUE on `user_id`**; no `email` column, no `created_at` |
+| `posts` | `id` serial, `user_id` int, `caption` text, `media_url` text, `comment_count` int default 0, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)` |
+| `comment` | `id` serial, `user_id` int, `posts_id` int, `parent_id` int, `content` text, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`, `posts_id` → `posts(id)`, `parent_id` → `comment(id)` |
+
+What follows from it:
+
+- The alumni column is `graduation_year` (integer). The backend's `graduation_yr` is wrong ([[knowledge/gotchas#^g12|G12]]).
+- The comment → post column is `posts_id`, not `post_id` ([[knowledge/gotchas#^g13|G13]]).
+- Length limits for forms: `name`, `email`, `department`, `current_company`, `job_title` and `experience` are varchar(100).
+- **No foreign key has `ON DELETE CASCADE`.** Deleting a row that other rows point to fails ([[knowledge/gotchas#^g08|G08]]); the decided handling is [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]].
+- `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database.
+- The `"User".email` UNIQUE constraint is case-sensitive, so the same email in different letter case can register twice.
+- No schema change without the owner's approval.
 
 ## External integrations
 
@@ -66,22 +85,31 @@ The frontend's full target folder structure and its reusable components are in `
 
 ## Layering rules
 
-> **STATUS: needs verification** — synthesized from `CLAUDE.md` on 2026-10-05. Review and edit; remove this banner when confirmed.
-
 - Backend flow is strictly **Route → Controller → Manager → Query → DB**. New backend features follow it and never skip a layer.
 - The three backend workspaces form a one-way chain: `api` depends on `businessLogic`, which depends on `dal`.
-- SQL lives only in `dal/query/*Query.ts`. Managers contain no SQL.
-- Frontend: `pages/` are route-level containers; `components/` are the presentational implementation; HTTP goes through `src/services/*Api.ts`.
+- SQL lives only in `dal/query/*Query.ts`, always parameterized, and uses the real names above. Managers contain no SQL.
+- Controllers are classes; routes bind instance methods. _(Target rule from the owner, 2026-10-05. Today's controllers are exported functions.)_
+- One shared error middleware maps errors to HTTP responses; no per-method `try`/`catch` for that. _(Target rule from the owner, 2026-10-05. Today every controller function has its own `try`/`catch` and there is no error middleware.)_
+- Every non-public route uses `authMiddleware`, plus `requireRole` and an owner check where needed.
+- No endpoint returns the `password` column ([[knowledge/gotchas#^g17|G17]]).
+- Frontend: API calls live in `src/services/` and use relative `/api` paths; no API calls inside UI components. State is Jotai atoms in `src/store/`. Types come from `@alumni/shared`.
 
 ## Cross-cutting concerns
 
 > **STATUS: needs verification** — synthesized from `CLAUDE.md` on 2026-10-05. Review and edit; remove this banner when confirmed.
 
-- **Auth:** there is no `AuthController` or `AuthManager`. Login and JWT logic (`login`, `verifyToken`) live in `UserController.ts`. `api/MiddleWare/authMiddleware.ts` verifies the bearer token and sets `req.user = { sub, role }`. `api/MiddleWare/roleMiddleware.ts` exports `requireRole(...roles)`, which checks `req.user.role`. Route files compose the two per route (see `AlumniRoutes.ts`); auth is not applied globally.
+- **Auth:** there is no `AuthController` or `AuthManager`. Login and JWT logic (`login`, `verifyToken`) live in `UserController.ts`. `api/MiddleWare/authMiddleware.ts` verifies the bearer token and sets `req.user = { sub, role }`. `api/MiddleWare/roleMiddleware.ts` exports `requireRole(...roles)`, which checks `req.user.role`. Route files compose the two per route (see `AlumniRoutes.ts`); auth is not applied globally. The token lasts 1 hour.
 - **Config:** one root-level `.env`, read with `dotenv` using relative paths from `backend/src/server.ts`, `backend/src/dal/config/db.ts` and `backend/src/api/app.ts`. `db.ts` throws at import time if `DB_PASSWORD` is missing or empty.
-- **Frontend state:** `src/store/authAtom.ts` holds `tokenAtom` (seeded from `localStorage`) and the derived `isLoggedInAtom`.
-- **Logging, error handling, observability:** _(not described in the source docs — fill in)_
+- **Error handling:** see the two target rules under "Layering rules". Until they are built, each controller catches its own errors and returns `{ error: <message> }` with the raw database message.
+- **Logging, observability:** _(not described in the source docs — fill in)_
 
 ## Related ADRs
 
-_(populated as ADRs land)_
+- [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]] — Sign-up role is student or alumni; admin is never selectable
+- [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]] — An admin can delete any post but edit only their own
+- [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]] — One alumni profile per user, created only by that user
+- [[architecture/adr-04-profile-photo-is-a-url-field|ADR-04]] — A profile photo is a URL field, with an initials avatar as fallback
+- [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]] — `GET /api/posts` returns each post's author name and photo
+- [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]] — Deleting rows that other rows reference
+
+Known backend problems are in [[knowledge/gotchas]] (G01–G24).

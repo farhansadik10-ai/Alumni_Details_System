@@ -4,17 +4,15 @@ The plain-English what-and-why of this project. Read by every Claude session so 
 
 ## What this is
 
-> **STATUS: needs verification** — synthesized from `AIdlc/plan.md` (Project Goal) and `CLAUDE.md` on 2026-10-05. Review and edit; remove this banner when confirmed.
-
 The Alumni Details System is an npm workspaces monorepo: an Express API over PostgreSQL (users, alumni profiles, posts, comments) and a React frontend.
 
-The current goal, from the plan: complete the frontend and properly integrate it with the existing backend, database, Apache, HTTPS, and deployment setup.
+The current goal (owner, 2026-10-05): rebuild the frontend from scratch with a Scandinavian design and a light / dark / system theme, on top of the existing backend, database, Apache, HTTPS and deployment setup. The Ant Design frontend now in `frontend/src` is legacy and will be replaced. All work goes through the ADLC pipeline; the earlier AI-DLC "bolt" plan is retired.
 
-`README.md` holds only a folder tree (and an outdated one), so it contributed nothing here. Rewriting it is planned in bolt B15 of `AIdlc/plan.md`.
+`README.md` holds only a folder tree (and an outdated one), so it contributed nothing here.
 
 ## Who uses it
 
-> **STATUS: needs verification** — synthesized from `AIdlc/plan.md` (Screens by role) on 2026-10-05. Review and edit; remove this banner when confirmed.
+> **STATUS: needs verification** — synthesized from the retired AI-DLC plan (Screens by role) on 2026-10-05. Review and edit; remove this banner when confirmed.
 
 Three roles, taken from the routes and role middleware: **student**, **alumni**, **admin**.
 
@@ -22,11 +20,13 @@ Three roles, taken from the routes and role middleware: **student**, **alumni**,
 - Alumni also create and edit their own alumni profile and their own posts.
 - Admins also manage users and can delete any post.
 
+The app is white-label: no university logo, and the app name is text from one constant.
+
 _(Who the real-world audience is — which institution, how many users — is not written down anywhere in the repo.)_
 
 ## Core flows
 
-> **STATUS: needs verification** — synthesized from `AIdlc/plan.md` (Screens by role) on 2026-10-05. Review and edit; remove this banner when confirmed.
+> **STATUS: needs verification** — synthesized from the retired AI-DLC plan (Screens by role) on 2026-10-05. Review and edit; remove this banner when confirmed.
 
 1. Sign up as student or alumni, log in, and land on a role-based dashboard.
 2. Browse the alumni directory and open an alumni profile; alumni create and edit their own profile.
@@ -34,11 +34,11 @@ _(Who the real-world audience is — which institution, how many users — is no
 
 ## Stack snapshot
 
-> **STATUS: needs verification** — synthesized from `CLAUDE.md` and `AIdlc/plan.md` (Technology, Scripts) on 2026-10-05. Review and edit; remove this banner when confirmed.
+> **STATUS: needs verification** — the backend, database, auth and deploy rows were synthesized from `CLAUDE.md` and the retired AI-DLC plan on 2026-10-05. The frontend row is from the owner (2026-10-05).
 
 | Layer | Tech |
 |---|---|
-| Frontend | React 18 + TypeScript + Vite; Ant Design (`antd`), `axios`, `jotai`, `react-router-dom` |
+| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. UI library not chosen yet (approved at the architect gate). The current `frontend/src` uses Ant Design (`antd`), which is legacy. |
 | Backend | Node.js + Express, TypeScript, run with `tsx watch` in dev; three workspaces: `@alumni/api`, `@alumni/businesslogic`, `@alumni/dal` |
 | Shared | `@alumni/shared` — cross-cutting TypeScript types |
 | Database | PostgreSQL through a shared `pg` `Pool` |
@@ -63,17 +63,19 @@ There is no test runner anywhere in the repo.
 
 Out-of-scope adjacencies. Worth listing because they recur as suggestions.
 
-_(nothing written down in the source docs — fill in)_
+- Not branded for one university: no logo.
+- Not an Ant Design app any more.
+
+_(nothing else written down — fill in)_
 
 ## Constraints
 
-> **STATUS: needs verification** — synthesized from `CLAUDE.md` (Environment, UI Rules, Ignored files) and `AIdlc/plan.md` (Work Plan rules, Q7) on 2026-10-05. Review and edit; remove this banner when confirmed.
-
 - Backend config comes from one root-level `.env` (not `backend/.env`). Required: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET`. The API will not boot if `DB_PASSWORD` is missing or empty.
 - `.env`, `frontend/.env`, `node_modules/` and `dist/` are gitignored and must never be committed. Earlier commits still contain `node_modules/` and the `.env` files, so those secrets count as exposed and need rotating.
-- All frontend work follows the approved plan in `AIdlc/plan.md`: one bolt at a time, only that bolt's listed deliverables, and the owner's approval before committing or starting the next bolt.
-- No database migration: delete behaviour is handled in the backend and the UI, not by changing foreign keys (plan Q7, answered 2026-10-03).
-- No SQL is changed without the real table definitions in `db/schema.md`.
+- All work goes through the ADLC pipeline. No code is written before the spec and architecture gates are approved.
+- No schema change without the owner's approval. SQL uses the real names in `db/schema.md`.
+- No database migration for deletes: delete behaviour is handled in the backend and the UI, not by changing foreign keys ([[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]).
+- Screens show only fields that exist in `db/schema.md`.
 
 ## Status
 
@@ -83,4 +85,4 @@ _(nothing written down in the source docs — fill in)_
 | Started | 2026-10-05 |
 | Repo | C:/Users/Lenovo/Alumni_Details_System |
 
-_"Started" is the date this vault was created, not the date the project began. "Phase" is from `AIdlc/plan.md` ("Construction: B7 done; B5 next", last updated 2026-10-03) — STATUS: needs verification._
+_"Started" is the date this vault was created, not the date the project began. As of 2026-10-05 the frontend redesign has not started: no REQ exists yet._

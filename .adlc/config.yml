@@ -63,7 +63,7 @@ stack:
   # Declare what's in use. Skills read these to decide what stack-specific
   # behavior to enable.
   languages: [typescript]
-  frontends: [react]   # React 18 + Vite + antd + jotai
+  frontends: [react]   # React + Vite + TypeScript + jotai, rebuilt from scratch; antd in frontend/src is legacy; UI library is chosen at the architect gate
   backends: [node]   # Express, npm workspaces
   databases: [postgres]   # via pg
 
