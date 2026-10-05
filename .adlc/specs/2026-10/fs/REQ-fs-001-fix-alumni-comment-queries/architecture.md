@@ -79,7 +79,7 @@ There is no test runner ([[context/conventions]], Testing), so nothing automated
 - **Real names from `db/schema.md`** (`"User"`, `alumni`, `comment`): this REQ is what brings these two classes into line.
 - **No endpoint returns `password`:** the join names its three `"User"` columns.
 - **No schema change:** none.
-- **Deviations, all inherited and left alone on the owner's "No other change":** `AlumniController` stays exported functions with per-function `try`/`catch` (target rule is classes + one error middleware); the `console.log` calls in `getAllAlumni` / `getAllComments` stay; `AlumniDTO.created_at` stays although `alumni` has no such column; `PUT /api/alumni/:id`, `PUT` and `DELETE /api/comments/:id` stay without owner checks (see Risks).
+- **Deviations, all inherited and left alone on the owner's "No other change":** `AlumniController` stays exported functions with per-function `try`/`catch` (target rule is classes + one error middleware); the `console.log` in `getAllComments` stays (the one in `getAllAlumni` was removed by owner decision at the implement gate, because the join made it print names and emails); `AlumniDTO.created_at` stays although `alumni` has no such column; `PUT /api/alumni/:id`, `PUT` and `DELETE /api/comments/:id` stay without owner checks (see Risks).
 
 ## Risks
 

@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | REQ | REQ-fs-001 |
-| Status | validated |
-| Phase | spec |
+| Status | complete — awaiting merge |
+| Phase | wrapup |
 | Created | 2026-10-05 |
 | Primary repo | alumni-details-system |
 | Touched repos | alumni-details-system |
@@ -61,7 +61,7 @@ Whole change
 - The join is `alumni.user_id = "User".id`, the only foreign key between the two tables.
 - `findAlumniById` keeps looking up by the alumni row's own `id`, not by `user_id` — `STATUS: needs verification`.
 - The joined fields come back under the names `name`, `email` and `photo_url`, as the request words them — `STATUS: needs verification`.
-- "No other change" is taken literally: the `console.log` in both `getAll…` methods, the `created_at` field on `AlumniDTO` (the `alumni` table has no such column), and the formatting of untouched lines all stay as they are.
+- "No other change" is taken literally: the `console.log` in `getAllComments` (the one in `getAllAlumni` was removed by owner decision at the implement gate, 2026-10-05), the `created_at` field on `AlumniDTO` (the `alumni` table has no such column), and the formatting of untouched lines all stay as they are.
 - There is no test runner; `npm run build` plus the owner's manual check stands in for tests ([[context/conventions]], Testing).
 
 ## Open questions

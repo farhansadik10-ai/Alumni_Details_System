@@ -16,7 +16,7 @@ _(REQ pages by id, with a one-line summary)_
 
 | REQ | Title | Status | Path |
 |---|---|---|---|
-| _(empty)_ | | | |
+| REQ-fs-001 | Fix AlumniQuery and CommentQuery against db/schema.md | ready to merge | `specs/2026-10/fs/REQ-fs-001-fix-alumni-comment-queries` |
 
 ## ADRs
 
@@ -35,7 +35,7 @@ Patterns, rules that must always hold, domain models.
 
 | Page | One-line summary |
 |---|---|
-| _(empty)_ | |
+| [[knowledge/concepts/user-join-read-shape]] | Reads that need the person join `"User"` with named columns, never `password` |
 
 ## Components
 
@@ -43,7 +43,7 @@ One page per major module.
 
 | Page | Module | Owner |
 |---|---|---|
-| _(empty)_ | | |
+| [[knowledge/components/dal-query-classes]] | `backend/src/dal/query/`, `dal/dto/` | farhansadik10-ai |
 
 ## Lessons
 
