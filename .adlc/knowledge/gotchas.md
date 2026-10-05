@@ -24,7 +24,7 @@ Use both. They serve different purposes.
 
 <!-- Newest entries below this line. Add new ones at the bottom; existing anchors must not be renumbered. -->
 
-G01–G24 were carried over on 2026-10-05 from the retired AI-DLC plan (`AIdlc/plan.md`, deleted; still in git history): its "SQL problems" table and its "Later: backend hardening" list, items L.1 to L.15. Each was re-checked against the backend code on 2026-10-05 and is still true. None has been fixed. "REQ" is `—` because they predate the ADLC pipeline. "Why it exists" is not recorded anywhere for any of them (`STATUS: needs verification`), so that field is left out of the entries below.
+G01–G24 were carried over on 2026-10-05 from the retired AI-DLC plan (`AIdlc/plan.md`, deleted; still in git history): its "SQL problems" table and its "Later: backend hardening" list, items L.1 to L.15. Each was re-checked against the backend code on 2026-10-05 and was true then. REQ-fs-001 (2026-10-05) fixed G01, G03, G04, G05, G06, G07 and G12 and half of G02; each entry's Status row says where it stands. "REQ" is `—` because they predate the ADLC pipeline. "Why it exists" is not recorded anywhere for any of them (`STATUS: needs verification`), so that field is left out of the entries below.
 
 Where each old item went:
 
@@ -56,7 +56,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The insert can never run: it says `INSER`, targets the table `users` (there is none; the table is `alumni`), and names the columns `graduation_yr?`, `current_company?`, `job_title?`, `experience?`.
@@ -66,6 +66,8 @@ Where each old item went:
 **Why it's surprising:** The route, controller and Manager all exist and look finished, so creating an alumni profile looks like a working feature. Every call returns 400.
 
 **Don't:** Don't build a "create alumni profile" screen on this endpoint before the query is fixed. Use the real names in `db/schema.md` (`alumni`, `graduation_year`).
+
+**Update 2026-10-05 (REQ-fs-001):** The insert now targets `alumni` with the schema's column names. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
 
 **Related:** [[knowledge/gotchas#^g02|G02]], [[knowledge/gotchas#^g12|G12]], [[context/architecture]] (Database schema). Origin: SQL problems.
 
@@ -78,7 +80,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | partly fixed by REQ-fs-001 (2026-10-05) — NULL overwrite still open |
 | Severity | trap (will bite a normal change) |
 
 **What:** The update targets `users` (no such table), uses `?` in column names and `graduation_yr` instead of `graduation_year`, and its SQL uses `$8` for the id while only 7 values are passed (`id` is never sent). Once repaired as written, it would also set every omitted field to NULL.
@@ -88,6 +90,8 @@ Where each old item went:
 **Why it's surprising:** The method takes a `Partial<AlumniDTO>`, which suggests a partial update. It writes all seven columns regardless.
 
 **Don't:** Don't fix only the table name. The parameter list and the NULL overwrite must be fixed in the same change, or a partial edit will wipe the profile.
+
+**Update 2026-10-05 (REQ-fs-001):** The table, column names and `$8` binding are fixed, so the update now runs. It still writes all seven columns: any field the request leaves out is set to NULL. The owner chose at the spec gate to leave that for a later REQ. Callers must send all seven fields.
 
 **Related:** [[knowledge/gotchas#^g01|G01]], [[knowledge/gotchas#^g12|G12]], [[knowledge/gotchas#^g19|G19]]. Origin: SQL problems.
 
@@ -100,7 +104,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** It runs `SELECT * FROM users WHERE id = $1`. There is no `users` table; it must read `alumni`.
@@ -110,6 +114,8 @@ Where each old item went:
 **Why it's surprising:** `getAllAlumni` in the same class reads `alumni` correctly, so the list works and the detail lookup always fails.
 
 **Don't:** Don't assume the detail endpoint works because the list endpoint does.
+
+**Update 2026-10-05 (REQ-fs-001):** Reads `alumni` joined to `"User"`, filtered by `alumni.id`.
 
 **Related:** [[knowledge/gotchas#^g04|G04]], [[knowledge/gotchas#^g16|G16]]. Origin: SQL problems.
 
@@ -122,7 +128,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** It runs `SELECT * FROM users WHERE email = $1`. There is no `users` table, and `alumni` has no `email` column: the email lives on `"User"`, so the lookup needs a join.
@@ -132,6 +138,8 @@ Where each old item went:
 **Why it's surprising:** Changing `users` to `alumni` looks like the whole fix. It is not, because the column is missing too.
 
 **Don't:** Don't add an `email` column to `alumni` to make this work. No schema change without the owner's approval; join `"User"` instead.
+
+**Update 2026-10-05 (REQ-fs-001):** Reads `alumni` joined to `"User"` and filters on `"User".email`. No schema change.
 
 **Related:** [[knowledge/gotchas#^g03|G03]], [[knowledge/gotchas#^g05|G05]]. Origin: SQL problems.
 
@@ -144,7 +152,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** It runs `SELECT * FROM alumni` with no join to `"User"`, so each row has a `user_id` but no name, email or photo.
@@ -154,6 +162,8 @@ Where each old item went:
 **Why it's surprising:** The query works, so the gap only shows when a directory screen tries to display a person.
 
 **Don't:** Don't fill the gap by calling `GET /api/users/:id` once per row from the frontend. When adding the join, never select `password`.
+
+**Update 2026-10-05 (REQ-fs-001):** All three alumni reads return `name`, `email`, `photo_url` from `"User"`; `password` is never selected. See [[knowledge/concepts/user-join-read-shape]].
 
 **Related:** [[knowledge/gotchas#^g17|G17]], [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]] (same join decided for posts). Origin: SQL problems.
 
@@ -166,7 +176,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/CommentQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** It updates the table `comments` (no such table; it is `comment`), and the SQL has a syntax error: `content=$1 updated_at=NOW()` is missing a comma.
@@ -176,6 +186,8 @@ Where each old item went:
 **Why it's surprising:** `createComment` and `getAllComments` in the same class use `comment` correctly.
 
 **Don't:** Don't fix only one of the two errors; both stop the query.
+
+**Update 2026-10-05 (REQ-fs-001):** Table name and comma fixed; the update now runs. The owner check is still missing — see G23.
 
 **Related:** [[knowledge/gotchas#^g07|G07]], [[knowledge/gotchas#^g23|G23]]. Origin: SQL problems.
 
@@ -188,7 +200,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/CommentQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** It runs `DELETE FROM comments`. The table is `comment`.
@@ -198,6 +210,8 @@ Where each old item went:
 **Why it's surprising:** Same class, two table names: create and list use `comment`, update and delete use `comments`.
 
 **Don't:** Don't stop at the table name. Once it is right, deleting a comment that has replies fails for a second reason (G08).
+
+**Update 2026-10-05 (REQ-fs-001):** Table name fixed. Deleting a comment that has replies still fails (G08).
 
 **Related:** [[knowledge/gotchas#^g06|G06]], [[knowledge/gotchas#^g08|G08]], [[knowledge/gotchas#^g23|G23]]. Origin: SQL problems.
 
@@ -298,7 +312,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/dto/AlumniDTO.ts`, `backend/src/api/controllers/AlumniController.ts`, `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-001 (2026-10-05) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The DTO, the controller and the queries use `graduation_yr`. The real column, and the type in `@alumni/shared`, is `graduation_year` (integer).
@@ -308,6 +322,8 @@ Where each old item went:
 **Why it's surprising:** A client that sends the correct name, `graduation_year`, has the value dropped by the controller.
 
 **Don't:** Don't rename the database column to match the code. The schema is the source of truth; fix the three backend files together.
+
+**Update 2026-10-05 (REQ-fs-001):** `AlumniDTO`, `AlumniController.createAlumni` and `AlumniQuery` all say `graduation_year`. A client that still sends `graduation_yr` has the year ignored (create) or written as NULL (update).
 
 **Related:** [[knowledge/gotchas#^g01|G01]], [[knowledge/gotchas#^g02|G02]]. Origin: SQL problems (related), L.7.
 
@@ -452,7 +468,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/AlumniRoutes.ts`, `backend/src/api/controllers/AlumniController.ts` |
-| Status | confirmed |
+| Status | confirmed — **live since REQ-fs-001 (2026-10-05)** |
 | Severity | trap (will bite a normal change) |
 
 **What:** `PUT /api/alumni/:id` has `authMiddleware` only: no role check, no owner check. Students can call it. `updateAlumni` also passes `req.body` straight to the Manager.
@@ -462,6 +478,8 @@ Where each old item went:
 **Why it's surprising:** Creating a profile is limited to alumni and admin on the same router; editing one is not. It is masked today because the query itself fails (G02).
 
 **Don't:** Don't fix G02 without adding the owner-or-admin check in the same change, or the hole opens the moment the query works.
+
+**Update 2026-10-05 (REQ-fs-001):** The query now works, so this is no longer masked: any logged-in user can edit any alumni profile. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoint.
 
 **Related:** [[knowledge/gotchas#^g02|G02]], [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]. Origin: L.5.
 
@@ -540,7 +558,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/CommentRoutes.ts`, `backend/src/api/controllers/CommentController.ts` |
-| Status | confirmed |
+| Status | confirmed — **live since REQ-fs-001 (2026-10-05)** |
 | Severity | trap (will bite a normal change) |
 
 **What:** `PUT` and `DELETE /api/comments/:id` check only the token: no owner check, no role check.
@@ -550,6 +568,8 @@ Where each old item went:
 **Why it's surprising:** It is masked today because both queries fail (G06, G07). Fixing the SQL alone turns a broken feature into an open one.
 
 **Don't:** Don't fix G06 / G07 without the check: edit is owner-only; delete is owner or admin.
+
+**Update 2026-10-05 (REQ-fs-001):** Both queries now work, so this is no longer masked: any logged-in user can edit or delete any comment. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoints.
 
 **Related:** [[knowledge/gotchas#^g06|G06]], [[knowledge/gotchas#^g07|G07]], [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]. Origin: L.13.
 
@@ -574,3 +594,75 @@ Where each old item went:
 **Don't:** Don't treat client-side filtering as the design. It is a stopgap until a comments-by-post endpoint exists.
 
 **Related:** [[knowledge/gotchas#^g11|G11]], [[knowledge/gotchas#^g13|G13]]. Origin: L.15.
+
+---
+
+## G25 — Alumni reads and alumni writes return different shapes ^g25
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-05 |
+| REQ | REQ-fs-001 |
+| Component | `backend/src/dal/query/AlumniQuery.ts`, `backend/src/dal/dto/AlumniDTO.ts`, `shared/types/alumni.types.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `getAllAlumni`, `findAlumniById` and `findAlumniByEmail` return the alumni columns plus the user's `name`, `email` and `photo_url`. `createAlumni` and `updateAlumni` return the alumni columns only. On a read, the three user fields are `null` when the alumni row has no user.
+
+**Where:** `AlumniQuery.ts` — the reads use a `LEFT JOIN "User"`; the writes use `RETURNING *`, which cannot join. `AlumniDTO` declares the three fields as optional `string`; the shared `Alumni` type does not declare them at all.
+
+**Why it's surprising:** Both paths are typed as `AlumniDTO`. A screen that refreshes a card from the POST or PUT response loses the name and photo, and the types say `string | undefined` where the database sends `null`.
+
+**Why it exists:** The owner asked for the join on reads only, and chose `LEFT JOIN` and optional DTO fields at the design gate to keep REQ-fs-001 inside four files.
+
+**Don't:** Don't refresh UI state from a create or update response; GET the row again. Treat `name`, `email`, `photo_url` as nullable. Add them to the shared `Alumni` type (as `string | null`) before the first screen uses them.
+
+**Related:** [[knowledge/concepts/user-join-read-shape]], [[knowledge/gotchas#^g05|G05]], [[knowledge/components/dal-query-classes]].
+
+---
+
+## G26 — `getAllAlumni` returns rows in no fixed order ^g26
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-05 |
+| REQ | REQ-fs-001 |
+| Component | `backend/src/dal/query/AlumniQuery.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** The alumni list query has no `ORDER BY`. PostgreSQL may return the rows in a different order after any row is updated.
+
+**Where:** `AlumniQuery.getAllAlumni`. Reached by `GET /api/alumni`. (`getAllComments` does sort, by `created_at DESC`.)
+
+**Why it's surprising:** On a small, never-edited table the rows come back in insert order, so it looks sorted.
+
+**Why it exists:** Found in the REQ-fs-001 review (finding m2); the owner approved the REQ as-is under "No other change".
+
+**Don't:** Don't rely on the list order in a screen or a pagination scheme. Add `ORDER BY a.id` (or sort in the client) first.
+
+**Related:** [[knowledge/gotchas#^g05|G05]].
+
+---
+
+## G27 — Updating or deleting a row that does not exist reports success ^g27
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-05 |
+| REQ | REQ-fs-001 |
+| Component | `backend/src/dal/query/AlumniQuery.ts`, `backend/src/dal/query/CommentQuery.ts`, their controllers |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `PUT /api/alumni/:id` and `PUT /api/comments/:id` with an id that does not exist return 200 with an empty body. `DELETE /api/comments/:id` reports success whether or not a row was deleted.
+
+**Where:** `AlumniQuery.updateAlumni`, `CommentQuery.updateComment` (`UPDATE … RETURNING *` gives no row; `rows[0]` is `undefined`); `CommentQuery.deleteComment` returns nothing. The controllers send whatever they get.
+
+**Why it's surprising:** These paths could not run before REQ-fs-001, so nothing ever showed it. Same family as G16.
+
+**Why it exists:** Out of scope for REQ-fs-001 (review finding m1).
+
+**Don't:** Don't treat a 200 from these endpoints as "saved". Check for an empty body until they return 404.
+
+**Related:** [[knowledge/gotchas#^g16|G16]], [[knowledge/gotchas#^g02|G02]].

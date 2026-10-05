@@ -24,7 +24,7 @@ export class CommentQuery {
 
   public async updateComment(comment: CommentDTO): Promise<CommentDTO> {
     const info = await pool.query(
-      `UPDATE comments SET content=$1 updated_at=NOW()
+      `UPDATE comment SET content=$1, updated_at=NOW()
             WHERE id=$2 RETURNING *`,
       [comment.content, comment.id],
     );
@@ -32,6 +32,6 @@ export class CommentQuery {
   }
 
   public async deleteComment(comment: CommentDTO): Promise<void> {
-    await pool.query("DELETE FROM comments WHERE id = $1", [comment.id]);
+    await pool.query("DELETE FROM comment WHERE id = $1", [comment.id]);
   }
 }

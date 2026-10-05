@@ -9,7 +9,7 @@ export const createAlumni = async (req: Request, res: Response) => {
     const {
       user_id,
       department,
-      graduation_yr,
+      graduation_year,
       current_company,
       job_title,
       experience,
@@ -28,7 +28,7 @@ export const createAlumni = async (req: Request, res: Response) => {
     );
 
     
-    alumni.graduation_yr = graduation_yr;
+    alumni.graduation_year = graduation_year;
 
     const newAlumni = await alumniManager.createAlumni(alumni);
     res.status(201).json(newAlumni);

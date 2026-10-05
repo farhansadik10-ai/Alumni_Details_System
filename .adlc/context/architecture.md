@@ -69,7 +69,7 @@ Real tables: `"User"`, `alumni`, `posts`, `comment`. There is **no** `users` tab
 
 What follows from it:
 
-- The alumni column is `graduation_year` (integer). The backend's `graduation_yr` is wrong ([[knowledge/gotchas#^g12|G12]]).
+- The alumni column is `graduation_year` (integer). The backend used `graduation_yr` until REQ-fs-001 (2026-10-05) renamed it ([[knowledge/gotchas#^g12|G12]], fixed).
 - The comment → post column is `posts_id`, not `post_id` ([[knowledge/gotchas#^g13|G13]]).
 - Length limits for forms: `name`, `email`, `department`, `current_company`, `job_title` and `experience` are varchar(100).
 - **No foreign key has `ON DELETE CASCADE`.** Deleting a row that other rows point to fails ([[knowledge/gotchas#^g08|G08]]); the decided handling is [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]].

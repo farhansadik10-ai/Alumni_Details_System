@@ -17,6 +17,23 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-05] ship-gate-cleared | REQ-fs-001-fix-alumni-comment-queries
+## [2026-10-05] req-ready-to-merge | REQ-fs-001-fix-alumni-comment-queries | AlumniQuery and CommentQuery SQL match db/schema.md; graduation_year; alumni reads join "User"
+## [2026-10-05] lesson | L-REQ-fs-001-4 — before adding joined columns to a read, check whether the method logs its rows
+## [2026-10-05] lesson | L-REQ-fs-001-3 — after renaming a DTO field, check every req.body pass-through
+## [2026-10-05] lesson | L-REQ-fs-001-2 — before fixing code that never ran, list what it was hiding
+## [2026-10-05] lesson | L-REQ-fs-001-1 — a passing build says nothing about SQL strings
+## [2026-10-05] gotcha | G27 — updating or deleting a row that does not exist reports success
+## [2026-10-05] gotcha | G26 — getAllAlumni returns rows in no fixed order
+## [2026-10-05] gotcha | G25 — alumni reads and alumni writes return different shapes
+## [2026-10-05] gotcha-status | G01, G03–G07, G12 fixed; G02 partly fixed; G19 and G23 now live (REQ-fs-001)
+## [2026-10-05] concept | user-join-read-shape — first captured
+## [2026-10-05] verify-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | findings: C0/M0/m7
+## [2026-10-05] implement-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | 3 tasks done, build passes; console.log removed from getAllAlumni by owner decision
+## [2026-10-05] architect-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | 3 tasks, no ADR; owner chose LEFT JOIN and optional fields on AlumniDTO
+## [2026-10-05] work-path-set | REQ-fs-001-fix-alumni-comment-queries | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-001-fix-alumni-comment-queries, off redesign)
+## [2026-10-05] spec-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | owner checks (G19, G23) and updateAlumni NULL overwrite (G02) left out by owner decision
+
 ## [2026-10-05] vault-cleanup | AI-DLC bolt plan retired; AIdlc/ deleted; frontend to be rebuilt from scratch (Scandinavian design, no Ant Design); bolt table, bolt protocol, antd theme/UI rules and Q1 removed from context/
 ## [2026-10-05] gotcha | G01–G24 — SQL problems and backend hardening L.1–L.15, carried over from the retired plan
 ## [2026-10-05] adr-accepted | ADR-06 deleting rows that other rows reference (retired plan Q7, decided 2026-10-03)
