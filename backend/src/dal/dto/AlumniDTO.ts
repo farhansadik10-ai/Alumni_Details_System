@@ -3,7 +3,7 @@ import { BaseDTO } from "./BaseDTO";
 export class AlumniDTO implements BaseDTO {
   id!: number;
   user_id: number;
-  graduation_yr?: number;
+  graduation_year?: number;
   department: string;
   current_company?: string;
   job_title?: string;
@@ -12,6 +12,9 @@ export class AlumniDTO implements BaseDTO {
   linkedin_url?: string;
   created_at: Date;
   updated_at: Date;
+  name?: string;
+  email?: string;
+  photo_url?: string;
 
   constructor(
     
