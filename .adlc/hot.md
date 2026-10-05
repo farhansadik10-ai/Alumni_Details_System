@@ -17,6 +17,11 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-05] implement-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | 3 tasks done, build passes; console.log removed from getAllAlumni by owner decision
+## [2026-10-05] architect-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | 3 tasks, no ADR; owner chose LEFT JOIN and optional fields on AlumniDTO
+## [2026-10-05] work-path-set | REQ-fs-001-fix-alumni-comment-queries | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-001-fix-alumni-comment-queries, off redesign)
+## [2026-10-05] spec-gate-cleared | REQ-fs-001-fix-alumni-comment-queries | owner checks (G19, G23) and updateAlumni NULL overwrite (G02) left out by owner decision
+
 ## [2026-10-05] vault-cleanup | AI-DLC bolt plan retired; AIdlc/ deleted; frontend to be rebuilt from scratch (Scandinavian design, no Ant Design); bolt table, bolt protocol, antd theme/UI rules and Q1 removed from context/
 ## [2026-10-05] gotcha | G01–G24 — SQL problems and backend hardening L.1–L.15, carried over from the retired plan
 ## [2026-10-05] adr-accepted | ADR-06 deleting rows that other rows reference (retired plan Q7, decided 2026-10-03)
