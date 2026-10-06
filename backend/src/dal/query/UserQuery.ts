@@ -1,6 +1,9 @@
 import pool from "../config/db.js";
 import { UserDTO, PublicUserDTO } from "../dto/UserDTO.js";
 import { buildUpdateSet } from "./updateSet.js";
+import type { UpdateFields } from "./updateSet.js";
+import { likePattern } from "./listHelpers.js";
+import type { PageRequest, PageRows } from "./listHelpers.js";
 
 // Every "User" column except password. Used in place of `*` so the hash is
 // never read by a query whose result can reach a response.
@@ -10,6 +13,17 @@ const PUBLIC_USER_COLUMNS =
 // The only columns updateUser may write. Column names in its SQL come from
 // this list, never from the request.
 const UPDATABLE_USER_COLUMNS = ["name", "email", "password", "photo_url"] as const;
+
+/** A column `updateUser` may write. */
+export type UserUpdateColumn = (typeof UPDATABLE_USER_COLUMNS)[number];
+
+/** What `listUsers` may narrow by. A key left out means "no filter". */
+export interface UserListFilter {
+  /** Any part of `name` or `email`, ignoring case. */
+  q?: string;
+  /** The whole `role` value. */
+  role?: string;
+}
 
 export class UserQuery {
   constructor() {}
@@ -76,7 +90,7 @@ export class UserQuery {
   // Returns undefined when no user has this id.
   public async updateUser(
     id: number,
-    data: Record<string, unknown>,
+    data: UpdateFields<UserUpdateColumn>,
   ): Promise<PublicUserDTO | undefined> {
     const { assignments, values } = buildUpdateSet(data, UPDATABLE_USER_COLUMNS);
 
@@ -95,28 +109,59 @@ export class UserQuery {
     return info.rows[0];
   }
 
-  // Get all users
-  public async getAllUsers(): Promise<PublicUserDTO[]> {
-    const info = await pool.query(
-      `SELECT ${PUBLIC_USER_COLUMNS} FROM "User"`
-    );
+  // One page of users, ordered by id, plus how many users match in all.
+  // Conditions and values are built together, so each `$n` is the position
+  // of the value pushed just before it. The count and the page statement
+  // share the same WHERE and the same leading values.
+  public async listUsers(
+    filter: UserListFilter,
+    page: PageRequest,
+  ): Promise<PageRows<PublicUserDTO>> {
+    const conditions: string[] = [];
+    const values: unknown[] = [];
 
-    const users: PublicUserDTO[] = [];
-
-    for (const user of info.rows) {
-      users.push(user);
+    if (filter.q !== undefined) {
+      values.push(likePattern(filter.q));
+      const position = values.length;
+      conditions.push(`(name ILIKE $${position} OR email ILIKE $${position})`);
     }
 
-    return users;
+    if (filter.role !== undefined) {
+      values.push(filter.role);
+      conditions.push(`role = $${values.length}`);
+    }
+
+    const where =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const countInfo = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM "User" ${where}`,
+      values,
+    );
+
+    const limitPosition = values.length + 1;
+    const offsetPosition = values.length + 2;
+    const pageInfo = await pool.query(
+      `SELECT ${PUBLIC_USER_COLUMNS} FROM "User" ${where}
+       ORDER BY id
+       LIMIT $${limitPosition} OFFSET $${offsetPosition}`,
+      [...values, page.limit, page.offset],
+    );
+
+    return { rows: pageInfo.rows, total: countInfo.rows[0].total };
   }
 
-  // Delete user
-  public async deleteUser(id: number): Promise<void> {
-    await pool.query(
+  // Delete user. Returns false when no user has this id.
+  // A user who still has posts, comments or an alumni profile is refused by
+  // the foreign keys in the database; that error is left to the caller.
+  public async deleteUser(id: number): Promise<boolean> {
+    const info = await pool.query(
       `DELETE FROM "User"
        WHERE id = $1`,
       [id],
     );
+
+    return (info.rowCount ?? 0) > 0;
   }
 
   // Update logout time
