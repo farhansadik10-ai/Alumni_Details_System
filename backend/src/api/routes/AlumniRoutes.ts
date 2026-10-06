@@ -15,6 +15,6 @@ router.post("/", authMiddleware, requireRole("alumni", "admin"), createAlumni);
 router.get("/", authMiddleware, getAllAlumni);
 router.get("/:id", authMiddleware, findAlumniById);
 router.get("/email/:email", authMiddleware, findAlumniByEmail);
-router.put("/:id", authMiddleware, updateAlumni); // ideally check ownership in controller too
+router.put("/:id", authMiddleware, updateAlumni); // owner or admin only; checked in the controller
 
 export default router;

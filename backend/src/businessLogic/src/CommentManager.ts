@@ -20,6 +20,10 @@ export class CommentManager {
     const newDeleteComment = await this.commentQuery.deleteComment(comment);
     return newDeleteComment;
   }
+  public async findCommentById(id: number) {
+    const comment = await this.commentQuery.findCommentById(id);
+    return comment;
+  }
   public async getAllComments() {
     const allComments = await this.commentQuery.getAllComments();
     return allComments;

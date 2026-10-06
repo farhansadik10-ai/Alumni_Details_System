@@ -1,5 +1,9 @@
 import pool from "../config/db";
 import { PostDTO } from "../dto/PostDTO";
+import { buildUpdateSet } from "./updateSet";
+
+// The only columns an edit may write. Names are from the posts table in db/schema.md.
+const POST_UPDATE_COLUMNS = ["caption", "media_url"] as const;
 
 export class PostQuery {
   constructor() {}
@@ -18,15 +22,12 @@ export class PostQuery {
         );
         const posts: PostDTO[] = [];
         for (const post of info.rows) {
-            console.log(post);
             posts.push(post);
         }
         return posts;
     }
-  public async findPostById(post: PostDTO): Promise<PostDTO | null> {
-    const result = await pool.query(`SELECT * FROM posts WHERE id=$1`, [
-      post.id,
-    ]);
+  public async findPostById(id: number): Promise<PostDTO | null> {
+    const result = await pool.query(`SELECT * FROM posts WHERE id=$1`, [id]);
     return result.rows[0] || null;
   }
   public async getPostsByUserId(post: PostDTO): Promise<PostDTO[]> {
@@ -36,13 +37,29 @@ export class PostQuery {
     );
     return result.rows;
   }
-  public async updatePost(post: PostDTO): Promise<PostDTO> {
-    const result = await pool.query(
-      `UPDATE posts SET caption=$1, media_url=$2, updated_at=NOW()
-      WHERE id=$3 RETURNING *`,
-      [post.caption, post.media_url, post.id],
+  /**
+   * Writes only the fields present in `data`. Returns the updated row, or
+   * `null` when no post has this id. With nothing to write it runs no UPDATE
+   * and returns the current row.
+   */
+  public async updatePost(
+    id: number,
+    data: Partial<PostDTO>,
+  ): Promise<PostDTO | null> {
+    const { assignments, values } = buildUpdateSet(
+      data as Record<string, unknown>,
+      POST_UPDATE_COLUMNS,
     );
-    return result.rows[0];
+    if (assignments.length === 0) {
+      return this.findPostById(id);
+    }
+
+    const result = await pool.query(
+      `UPDATE posts SET ${assignments.join(", ")}, updated_at = NOW()
+      WHERE id = $${values.length + 1} RETURNING *`,
+      [...values, id],
+    );
+    return result.rows[0] || null;
   }
   public async deletePost(post: PostDTO): Promise<void> {
     await pool.query(`DELETE FROM posts WHERE id = $1`, [post.id]);

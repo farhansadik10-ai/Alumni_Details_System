@@ -67,7 +67,7 @@ Where each old item went:
 
 **Don't:** Don't build a "create alumni profile" screen on this endpoint before the query is fixed. Use the real names in `db/schema.md` (`alumni`, `graduation_year`).
 
-**Update 2026-10-05 (REQ-fs-001):** The insert now targets `alumni` with the schema's column names. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-05 (REQ-fs-001):** The insert now targets `alumni` with the schema's column names. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g02|G02]], [[knowledge/gotchas#^g12|G12]], [[context/architecture]] (Database schema). Origin: SQL problems.
 
@@ -80,7 +80,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | partly fixed by REQ-fs-001 (2026-10-05) — NULL overwrite still open |
+| Status | fixed by REQ-fs-001 and REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The update targets `users` (no such table), uses `?` in column names and `graduation_yr` instead of `graduation_year`, and its SQL uses `$8` for the id while only 7 values are passed (`id` is never sent). Once repaired as written, it would also set every omitted field to NULL.
@@ -92,6 +92,8 @@ Where each old item went:
 **Don't:** Don't fix only the table name. The parameter list and the NULL overwrite must be fixed in the same change, or a partial edit will wipe the profile.
 
 **Update 2026-10-05 (REQ-fs-001):** The table, column names and `$8` binding are fixed, so the update now runs. It still writes all seven columns: any field the request leaves out is set to NULL. The owner chose at the spec gate to leave that for a later REQ. Callers must send all seven fields.
+
+**Update 2026-10-06 (REQ-fs-002):** `updateAlumni` writes only the columns that were sent. `null` clears a field; a body with no updatable field is 400. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g01|G01]], [[knowledge/gotchas#^g12|G12]], [[knowledge/gotchas#^g19|G19]]. Origin: SQL problems.
 
@@ -246,7 +248,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/UserQuery.ts`, `backend/src/api/controllers/UserController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | landmine (can cause an outage) |
 
 **What:** `updateUser` always writes `name`, `photo_url`, `password` and `email`. A request that leaves one out sends it as NULL. `password` and `email` are NOT NULL, so that update is rejected; any nullable field left out (`name`, `photo_url`) is silently wiped.
@@ -256,6 +258,8 @@ Where each old item went:
 **Why it's surprising:** It takes `Partial<UserDTO>` and the controller hashes the password only "if given", which reads like a partial update. The retired plan recorded the effect as "sets the password to NULL and locks the user out"; with the NOT NULL constraint in `db/schema.md` the database should refuse that instead — which of the two happens has not been tested (`STATUS: needs verification`).
 
 **Don't:** Don't build a profile-edit form that sends only the changed fields until this query stops overwriting omitted ones.
+
+**Update 2026-10-06 (REQ-fs-002):** `updateUser` writes only the sent ones of `name`, `email`, `password`, `photo_url`. No password sent keeps the hash. `email` or `password` sent as `null`, empty or only spaces is 400. `role` cannot be changed through this route. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g10|G10]], [[knowledge/gotchas#^g18|G18]], [[knowledge/gotchas#^g17|G17]]. Origin: SQL problems.
 
@@ -268,7 +272,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/PostQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The update always sets both `caption` and `media_url`. Leaving one out of the request sets it to NULL.
@@ -278,6 +282,8 @@ Where each old item went:
 **Why it's surprising:** Editing only the caption silently removes the post's media, and nothing reports an error.
 
 **Don't:** Until the query is fixed, any caller must send both `caption` and `media_url` on every edit.
+
+**Update 2026-10-06 (REQ-fs-002):** `updatePost` writes only `caption` / `media_url` when sent; editing the caption keeps the media. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g09|G09]], [[knowledge/gotchas#^g21|G21]]. Origin: SQL problems, L.10.
 
@@ -358,7 +364,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/controllers/UserController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | landmine (can cause an outage) |
 
 **What:** `POST /api/users` is public and stores whatever `role` the body contains, so anyone can register as `admin`.
@@ -368,6 +374,8 @@ Where each old item went:
 **Why it's surprising:** A sign-up form that offers only student and alumni looks safe. The limit is in the UI only.
 
 **Don't:** Don't rely on the form. [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]] decides that admin is never selectable; the backend must enforce it.
+
+**Update 2026-10-06 (REQ-fs-002):** `createUser` accepts only the exact values `student` and `alumni`; anything else, or no role, is 400 and no user is created. Sign-up can no longer create an admin: today the first admin is made by hand in the database (ADR-01 leaves this open). Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]]. Origin: SQL problems (related), L.4.
 
@@ -380,7 +388,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/UserRoutes.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** The route that stamps `login_at` has no `authMiddleware`. Anyone can set any user's login time.
@@ -390,6 +398,8 @@ Where each old item went:
 **Why it's surprising:** Every other write on `/api/users/:id` requires a token. Nothing calls this route: `POST /api/auth/login` does not stamp `login_at` either.
 
 **Don't:** Don't call it from the frontend. Review it (remove it, or stamp `login_at` inside the login itself) before anything depends on `login_at`.
+
+**Update 2026-10-06 (REQ-fs-002):** The route and the controller, Manager and Query code behind it are removed. Nothing stamps `login_at` now; the column stays unused.
 
 **Related:** [[knowledge/gotchas#^g18|G18]]. Origin: SQL problems (related), L.3.
 
@@ -424,7 +434,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/UserQuery.ts`, `backend/src/api/controllers/UserController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | landmine (can cause an outage) |
 
 **What:** Every user query uses `SELECT *` or `RETURNING *`, and the controllers send the row as it is. Create, get all, get by id, get by email and update all return the `password` column (the bcrypt hash).
@@ -434,6 +444,8 @@ Where each old item went:
 **Why it's surprising:** `GET /api/users/:id` is open to any logged-in user, so any user can read any other user's hash.
 
 **Don't:** Don't add a join to `"User"` with `SELECT *`. No endpoint may return `password`. The login path still needs the hash internally, so don't remove it from `findUserByEmail` without giving login another way to read it.
+
+**Update 2026-10-06 (REQ-fs-002):** Every `UserQuery` read and write names its columns without `password`. One read, `findUserWithPasswordByEmail`, selects the hash and is used only by login. The row log in `getAllUsers` is gone. See [[knowledge/lessons/LESSON-REQ-fs-002-2]]. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g05|G05]], [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]]. Origin: L.1.
 
@@ -446,7 +458,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/UserRoutes.ts`, `backend/src/api/controllers/UserController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | landmine (can cause an outage) |
 
 **What:** `PUT /api/users/:id` checks only that a token is present. It does not compare `:id` with `req.user.sub`, so a student can change another user's email or password.
@@ -456,6 +468,8 @@ Where each old item went:
 **Why it's surprising:** A UI that only links to "my profile" hides the hole; the API does not.
 
 **Don't:** Don't treat the UI as the guard. Allow only the owner or an admin.
+
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/users/:id` is allowed only for that user or an admin; anyone else gets 403. The 403 comes before the 404, so a non-admin cannot learn which ids exist. An admin can change another user's email or password (the owner asked for owner-or-admin). The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[knowledge/gotchas#^g09|G09]], [[knowledge/gotchas#^g19|G19]], [[knowledge/gotchas#^g21|G21]], [[knowledge/gotchas#^g23|G23]]. Origin: L.2.
 
@@ -468,7 +482,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/AlumniRoutes.ts`, `backend/src/api/controllers/AlumniController.ts` |
-| Status | confirmed — **live since REQ-fs-001 (2026-10-05)** |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** `PUT /api/alumni/:id` has `authMiddleware` only: no role check, no owner check. Students can call it. `updateAlumni` also passes `req.body` straight to the Manager.
@@ -481,6 +495,8 @@ Where each old item went:
 
 **Update 2026-10-05 (REQ-fs-001):** The query now works, so this is no longer masked: any logged-in user can edit any alumni profile. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoint.
 
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/alumni/:id` is allowed only for the profile's owner or an admin; a missing id is 404; `req.body` is no longer passed through. The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
+
 **Related:** [[knowledge/gotchas#^g02|G02]], [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]. Origin: L.5.
 
 ---
@@ -492,7 +508,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/controllers/PostController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The author of a new post is whatever `user_id` the request says, not the logged-in user (`req.user.sub`). An alumni can post as anyone.
@@ -502,6 +518,8 @@ Where each old item went:
 **Why it's surprising:** The route requires a token and a role, so the author looks verified.
 
 **Don't:** Don't design the frontend to choose the author. Take `user_id` from `req.user.sub`.
+
+**Update 2026-10-06 (REQ-fs-002):** `createPost` stores `req.user.sub`; a `user_id` in the body is ignored. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g22|G22]]. Origin: L.8.
 
@@ -514,7 +532,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/PostRoutes.ts`, `backend/src/api/controllers/PostController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** `PUT /api/posts/:id` checks only the token. `deletePost` checks owner or admin; `updatePost` checks nothing, so a student can edit anyone's post.
@@ -524,6 +542,8 @@ Where each old item went:
 **Why it's surprising:** Delete on the same resource is protected, so edit looks protected too.
 
 **Don't:** Don't copy the delete rule as it is. [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]]: an admin may delete any post but edit only their own, so edit is owner-only.
+
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/posts/:id` is author-only, admins included (ADR-02); a missing id is 404. The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]], [[knowledge/gotchas#^g10|G10]]. Origin: L.9.
 
@@ -536,7 +556,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/controllers/CommentController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** The author of a new comment is the `user_id` in the request, not `req.user.sub`. Any logged-in user can comment as anyone.
@@ -546,6 +566,8 @@ Where each old item went:
 **Why it's surprising:** Same as G20: the token is checked, the author is not.
 
 **Don't:** Don't send or trust `user_id` from the client. Take it from `req.user.sub`.
+
+**Update 2026-10-06 (REQ-fs-002):** `createComment` stores `req.user.sub`; a `user_id` in the body is ignored. It still reads `post_id` (G13). Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g20|G20]], [[knowledge/gotchas#^g13|G13]]. Origin: L.12.
 
@@ -558,7 +580,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/CommentRoutes.ts`, `backend/src/api/controllers/CommentController.ts` |
-| Status | confirmed — **live since REQ-fs-001 (2026-10-05)** |
+| Status | fixed by REQ-fs-002 (2026-10-06) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** `PUT` and `DELETE /api/comments/:id` check only the token: no owner check, no role check.
@@ -570,6 +592,8 @@ Where each old item went:
 **Don't:** Don't fix G06 / G07 without the check: edit is owner-only; delete is owner or admin.
 
 **Update 2026-10-05 (REQ-fs-001):** Both queries now work, so this is no longer masked: any logged-in user can edit or delete any comment. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoints.
+
+**Update 2026-10-06 (REQ-fs-002):** Edit is author-only (admins too) and changes only `content`; delete is author or admin; a missing id is 404 on both. Deleting a comment with replies still fails (G08). The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[knowledge/gotchas#^g06|G06]], [[knowledge/gotchas#^g07|G07]], [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]. Origin: L.13.
 
@@ -652,7 +676,7 @@ Where each old item went:
 | Discovered | 2026-10-05 |
 | REQ | REQ-fs-001 |
 | Component | `backend/src/dal/query/AlumniQuery.ts`, `backend/src/dal/query/CommentQuery.ts`, their controllers |
-| Status | confirmed |
+| Status | partly fixed by REQ-fs-002 (2026-10-06) |
 | Severity | careful (check before touching) |
 
 **What:** `PUT /api/alumni/:id` and `PUT /api/comments/:id` with an id that does not exist return 200 with an empty body. `DELETE /api/comments/:id` reports success whether or not a row was deleted.
@@ -665,4 +689,174 @@ Where each old item went:
 
 **Don't:** Don't treat a 200 from these endpoints as "saved". Check for an empty body until they return 404.
 
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/alumni/:id`, `PUT /api/comments/:id` and `DELETE /api/comments/:id` now answer 404 for a missing id, and the Query methods are typed as possibly returning no row ([[knowledge/lessons/LESSON-REQ-fs-002-1]]). Still open: the user and alumni lookups (G16).
+
 **Related:** [[knowledge/gotchas#^g16|G16]], [[knowledge/gotchas#^g02|G02]].
+
+---
+
+## G28 — `npm run build` does not compile a DAL file that nothing imports ^g28
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/api/tsconfig.json`, `backend/src/dal/` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** The API build type-checks only `backend/src/api` plus whatever it reaches by import. A new file in `dal/` or `businessLogic/` with no importer passes the build unread.
+
+**Where:** `backend/src/api/tsconfig.json` (`include`); seen with `backend/src/dal/query/updateSet.ts` before any Query class used it.
+
+**Why it's surprising:** The root command is called "build everything", and it exits 0.
+
+**Why it exists:** Each backend workspace has its own `tsconfig.json`; the root script builds only `@alumni/api` and the frontend.
+
+**Don't:** Don't treat a green build as proof a new DAL or Manager file compiles. Run `npx tsc --noEmit -p backend/src/dal` (or `-p backend/src/businessLogic`) until something imports it.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-001-1]], [[knowledge/components/dal-query-classes]].
+
+---
+
+## G29 — Error responses use two different keys: `error` and `message` ^g29
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/api/controllers/`, `backend/src/api/MiddleWare/`, `backend/src/api/routes/AuthRoutes.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** Controllers answer `{ error: "..." }`. `authMiddleware`, `requireRole` and login answer `{ message: "..." }`. A 403 from the role check and a 403 from an owner check on the same route have different body keys.
+
+**Where:** `authMiddleware.ts`, `roleMiddleware.ts`, `AuthRoutes.ts` (`message`); every `*Controller.ts` (`error`).
+
+**Why it's surprising:** Same status code, same route, two shapes.
+
+**Why it exists:** Never unified; the shared error middleware (roadmap B3) is where it should be.
+
+**Don't:** Don't read only one key in the frontend's error handling. Read both until B3 settles one shape.
+
+**Related:** [[knowledge/components/api-controllers-and-routes]].
+
+---
+
+## G30 — Each update's allowed-field list is written twice ^g30
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `UserController` + `UserQuery`, `PostController` + `PostQuery`, `AlumniController` + `AlumniQuery` |
+| Status | confirmed |
+| Severity | trap (will bite a normal change) |
+
+**What:** The fields an update may change are listed once in the controller (which keys to pick from the body) and once in the Query class (which columns may appear in the SQL). A column added to only one list is silently dropped and the call still answers 200.
+
+**Where:** `USER_UPDATE_FIELDS` / `UPDATABLE_USER_COLUMNS`; `UPDATABLE_FIELDS` / `UPDATABLE_COLUMNS` in the alumni and post files.
+
+**Why it's surprising:** The update compiles and returns 200; only the missing change in the row shows it.
+
+**Why it exists:** Deliberate: the Query builds SQL only from its own constant and never trusts a list handed down (REQ-fs-002 review finding m3, kept by the owner).
+
+**Don't:** Don't add an updatable column in one place. Change the controller list, the Query list and the type check together. Don't replace the Query's list with one passed in from the controller.
+
+**Related:** [[knowledge/concepts/partial-update-sent-fields]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]] (the next columns to add).
+
+---
+
+## G31 — DTO types do not allow `null`, but the database sends it and updates accept it ^g31
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/dal/dto/*DTO.ts`, the three update controllers, `UserManager.updateUser` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** DTO fields are typed `string` or `string | undefined`. A nullable column read with `SELECT *` arrives as `null`, and a partial update may send `null` to clear a field. So the controllers cast (`fields as Partial<PostDTO>`, `as Partial<AlumniDTO>`) and `updateUser` takes `Record<string, unknown>`: three shapes for the same thing.
+
+**Where:** `PostController.updatePost`, `AlumniController.updateAlumni`, `UserManager.updateUser`, `UserQuery.updateUser`; `CommentDTO.parent_id`.
+
+**Why it's surprising:** The types read as if `null` cannot happen, and the casts hide that it can.
+
+**Why it exists:** Fixing the DTO types was outside the files REQ-fs-002 named (review finding m4, left for the controller rewrite, roadmap B3).
+
+**Don't:** Don't trust a DTO type to tell you a value is not `null`. Don't add a fourth shape: when B3 lands, give the three updates one input type that allows `null`.
+
+**Related:** [[knowledge/gotchas#^g25|G25]], [[knowledge/concepts/partial-update-sent-fields]].
+
+---
+
+## G32 — An alumni profile always belongs to whoever created it, and nothing stops a second one ^g32
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/api/controllers/AlumniController.ts`, `backend/src/api/routes/AlumniRoutes.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `POST /api/alumni` stores the caller's id as `user_id`. An admin who calls it creates a profile for themself and cannot create one for another user. A user who calls it twice gets two profiles.
+
+**Where:** `AlumniController.createAlumni`; the route still allows the `admin` role. `alumni.user_id` has no UNIQUE constraint (`db/schema.md`).
+
+**Why it's surprising:** The route lets admins in, which reads as "admin can set up a profile for someone". And ADR-03 says one profile per user, which reads as enforced.
+
+**Why it exists:** ADR-03 chose "created only by that user"; enforcing one-per-user needs a check or a schema change, both outside REQ-fs-002 (review finding m7).
+
+**Don't:** Don't build an admin "create profile for user" screen on this endpoint. Hide "add my profile" once the user has one, until the backend refuses a second.
+
+**Related:** [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]], [[knowledge/gotchas#^g19|G19]].
+
+---
+
+## G33 — There is no `GET /api/posts/:id` route, although the controller function exists ^g33
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/api/routes/PostRoutes.ts`, `backend/src/api/controllers/PostController.ts` |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** `PostController.findPostById` is exported but no route line calls it. One post can only be read from the `GET /api/posts` list.
+
+**Where:** `PostRoutes.ts` (no `router.get("/:id", ...)`).
+
+**Why it's surprising:** The controller, Manager and Query methods all exist, so the endpoint looks finished.
+
+**Why it exists:** Not recorded (`STATUS: needs verification`).
+
+**Don't:** Don't call `GET /api/posts/:id` from the frontend before the route line exists.
+
+**Related:** [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]].
+
+---
+
+## G34 — Raw database messages still reach the client on bad ids and duplicate emails ^g34
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-06 |
+| REQ | REQ-fs-002 |
+| Component | `backend/src/api/controllers/*Controller.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** A non-numeric `:id` (for example `/api/posts/abc`) reaches PostgreSQL as `NaN` and comes back as 400 with the database's own message. So does a sign-up or a user update with an email that is already taken (the message names the constraint `User_email_key`).
+
+**Where:** Every controller `catch` block (`res.status(400).json({ error: error.message })`); `PostController.deletePost` joined the list in REQ-fs-002's fix round (review finding t2); `UserController.updateUser` and `createUser` for the duplicate email (finding m6).
+
+**Why it's surprising:** The new 400 / 403 / 404 answers have clear messages, so the remaining raw ones look like a bug in this change.
+
+**Why it exists:** Accepted by the owner at the REQ-fs-002 design and review gates; the shared error middleware (roadmap B3) is where it gets fixed. The legacy sign-up form matches on `User_email_key` to show "email taken".
+
+**Don't:** Don't change the duplicate-email message without updating whatever screen matches on it. Don't parse these messages in new frontend code; wait for B3's error shape.
+
+**Related:** [[knowledge/gotchas#^g29|G29]], [[knowledge/gotchas#^g16|G16]].

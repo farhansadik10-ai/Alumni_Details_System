@@ -18,3 +18,4 @@ A join can turn a harmless debug log into a personal-data log. Before widening a
 
 - `backend/src/dal/query/AlumniQuery.ts` (`getAllAlumni`) — a per-row `console.log` would have printed every user's name and email on each `GET /api/alumni` after the join; removed at the implement gate.
 - `backend/src/dal/query/CommentQuery.ts` (`getAllComments`) — the same log is still there (REQ-fs-001 review finding m3).
+- REQ-fs-002 (second time) — the row log was removed from `UserQuery.getAllUsers` and left in `PostQuery.getAllPosts` and `CommentQuery.getAllComments`; caught at review (finding m1) and removed in the fix round. No Query method logs rows now.

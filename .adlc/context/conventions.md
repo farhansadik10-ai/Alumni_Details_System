@@ -117,4 +117,4 @@ _From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/s
 ### Known quirks
 
 - `shared` has compiled `.js`/`.d.ts`/`.map` files checked in beside the `.ts` sources. Edit the `.ts`.
-- Known backend problems are listed in [[knowledge/gotchas]] (G01–G24). Decisions in effect are in [[decisions]].
+- Known backend problems are listed in [[knowledge/gotchas]] (G01–G34; each entry's Status row says whether it is still open). Decisions in effect are in [[decisions]].

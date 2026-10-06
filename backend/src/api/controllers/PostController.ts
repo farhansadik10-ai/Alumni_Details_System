@@ -1,13 +1,23 @@
 import { Request, Response } from "express";
 import { PostManager } from "@alumni/businesslogic";
 import { PostDTO } from "@alumni/dal";
+import {
+  findWrongType,
+  isAdmin,
+  isSelf,
+  isStringOrNull,
+  pickSent,
+} from "../utils/requestHelpers";
 
 const postManager = new PostManager();
 
+// The only body keys an edit may change. user_id, id and anything else are dropped.
+const POST_UPDATE_FIELDS = ["caption", "media_url"] as const;
+
 export const createPost = async (req: Request, res: Response) => {
   try {
-    const { user_id, caption, media_url } = req.body;
-    const post = new PostDTO(user_id, caption, media_url);
+    const { caption, media_url } = req.body;
+    const post = new PostDTO(req.user.sub, caption, media_url);
     const newPost = await postManager.createNewPost(post);
     res.status(201).json(newPost);
   } catch (error) {
@@ -27,8 +37,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
 export const findPostById = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const posts = await postManager.getAllPosts();
-    const post = posts.find((p) => p.id === id);
+    const post = await postManager.findPostById(id);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -40,10 +49,26 @@ export const findPostById = async (req: Request, res: Response) => {
 
 export const updatePost = async (req: Request, res: Response) => {
   try {
-    const { user_id, caption, media_url } = req.body;
-    const post = new PostDTO(user_id, caption, media_url);
-    post.id = Number(req.params.id);
-    const updated = await postManager.updatePost(post);
+    const id = Number(req.params.id);
+    const existing = await postManager.findPostById(id);
+    if (!existing) return res.status(404).json({ error: "Post not found" });
+
+    // Author only. An admin may delete any post but edit only their own (ADR-02).
+    if (!isSelf(req, existing.user_id)) {
+      return res.status(403).json({ error: "Not authorized to edit this post" });
+    }
+
+    const fields = pickSent(req.body, POST_UPDATE_FIELDS);
+    if (Object.keys(fields).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+    const wrongField = findWrongType(fields, isStringOrNull);
+    if (wrongField) {
+      return res.status(400).json({ error: `${wrongField} has the wrong type` });
+    }
+
+    const updated = await postManager.updatePost(id, fields as Partial<PostDTO>);
+    if (!updated) return res.status(404).json({ error: "Post not found" });
     res.status(200).json(updated);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
@@ -53,13 +78,11 @@ export const updatePost = async (req: Request, res: Response) => {
 export const deletePost = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const posts = await postManager.getAllPosts();
-    const existing = posts.find((p) => p.id === id);
+    const existing = await postManager.findPostById(id);
     if (!existing) return res.status(404).json({ error: "Post not found" });
 
-    const isOwner = existing.user_id === req.user.sub;
-    const isAdmin = req.user.role === "admin";
-    if (!isOwner && !isAdmin) {
+    // Author or admin (ADR-02).
+    if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
       return res.status(403).json({ error: "Not authorized to delete this post" });
     }
 

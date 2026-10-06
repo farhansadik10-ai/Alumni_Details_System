@@ -16,3 +16,7 @@ One row per lesson file. Title is the H1 without its `^L…` anchor. Superseded 
 | LESSON-REQ-fs-001-2 | Before fixing code that never ran, list what it was hiding | dal, auth, api, scope | trap (cost real time before) | REQ-fs-001 |
 | LESSON-REQ-fs-001-3 | After renaming a DTO field, check every place a request body is passed straight through | api, controllers, dto, rename | guideline (a rule to follow) | REQ-fs-001 |
 | LESSON-REQ-fs-001-4 | Before adding joined columns to a read, check whether the method logs its rows | dal, logging, privacy, joins | guideline (a rule to follow) | REQ-fs-001 |
+| LESSON-REQ-fs-002-1 | Type a Query method that returns `rows[0]` as "row or undefined" | dal, types, not-found, controllers | trap (cost real time before) | REQ-fs-002 |
+| LESSON-REQ-fs-002-2 | A secret column is kept out of responses by the SQL column list, not by a type | dal, auth, password, sql, types | critical (must never repeat) | REQ-fs-002 |
+| LESSON-REQ-fs-002-3 | When a change adds a shared helper, convert every existing inline copy in the same change | api, controllers, auth, helpers, scope | guideline (a rule to follow) | REQ-fs-002 |
+| LESSON-REQ-fs-002-4 | Refuse null and empty values before turning an id into a number | api, auth, owner-check, javascript | trap (cost real time before) | REQ-fs-002 |

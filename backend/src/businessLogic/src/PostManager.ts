@@ -11,9 +11,13 @@ export class PostManager {
     return newPost;
   }
 
-  public async updatePost(post: PostDTO) {
-    const newUpatePost = await this.postQuery.updatePost(post);
+  public async updatePost(id: number, data: Partial<PostDTO>) {
+    const newUpatePost = await this.postQuery.updatePost(id, data);
     return newUpatePost;
+  }
+  public async findPostById(id: number) {
+    const post = await this.postQuery.findPostById(id);
+    return post;
   }
   public async deletePost(post:PostDTO){
     const newDeletePOst = await this.postQuery.deletePost(post);
