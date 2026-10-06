@@ -3,6 +3,7 @@ import { PostManager } from "@alumni/businesslogic";
 import { PostDTO } from "@alumni/dal";
 import {
   findWrongType,
+  isAdmin,
   isSelf,
   isStringOrNull,
   pickSent,
@@ -36,8 +37,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
 export const findPostById = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const posts = await postManager.getAllPosts();
-    const post = posts.find((p) => p.id === id);
+    const post = await postManager.findPostById(id);
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
@@ -78,13 +78,11 @@ export const updatePost = async (req: Request, res: Response) => {
 export const deletePost = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    const posts = await postManager.getAllPosts();
-    const existing = posts.find((p) => p.id === id);
+    const existing = await postManager.findPostById(id);
     if (!existing) return res.status(404).json({ error: "Post not found" });
 
-    const isOwner = existing.user_id === req.user.sub;
-    const isAdmin = req.user.role === "admin";
-    if (!isOwner && !isAdmin) {
+    // Author or admin (ADR-02).
+    if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
       return res.status(403).json({ error: "Not authorized to delete this post" });
     }
 
