@@ -16,9 +16,14 @@ export class CommentManager {
     const newUpdateComment = await this.commentQuery.updateComment(comment);
     return newUpdateComment;
   }
-  public async deleteComment(comment: CommentDTO) {
-    const newDeleteComment = await this.commentQuery.deleteComment(comment);
-    return newDeleteComment;
+  /** Deletes the comment and every reply under it. Returns how many rows went; 0 when no comment has this id. */
+  public async deleteComment(id: number) {
+    const deletedCount = await this.commentQuery.deleteComment(id);
+    return deletedCount;
+  }
+  public async listCommentsByPost(postId: number) {
+    const comments = await this.commentQuery.listCommentsByPost(postId);
+    return comments;
   }
   public async findCommentById(id: number) {
     const comment = await this.commentQuery.findCommentById(id);
