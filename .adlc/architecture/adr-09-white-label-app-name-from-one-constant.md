@@ -1,4 +1,4 @@
-# ADR-09 — The app is white-label; its name "University Alumni" comes from one config value ^ADR-09
+# ADR-09 — The app is white-label; its name "University Alumni" is text from one constant ^ADR-09
 
 | Field | Value |
 |---|---|
@@ -7,7 +7,7 @@
 | Author | farhansadik10-ai (owner) |
 | Supersedes | (none) |
 | Superseded by | (none) |
-| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1 and 4 |
+| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1 and 4; the owner's answer of 2026-10-06 on the wording |
 
 ## Context
 
@@ -19,9 +19,9 @@ The question was what the app is called and where that name is kept.
 
 ## Considered options
 
-### Option 1 — "University Alumni", read from one config value
+### Option 1 — "University Alumni", text from one constant
 
-Every place that shows the name reads the same value. No component contains the text.
+Every place that shows the name reads the same constant. No component contains the text.
 
 **Pros:**
 - Changing the name for another buyer is one edit.
@@ -43,22 +43,22 @@ Every place that shows the name reads the same value. No component contains the 
 
 **We chose Option 1.**
 
-The app name is "University Alumni". It comes from one config value and is never hard-coded in components. There is no university logo; the name is shown as text.
+The app name is "University Alumni". It is text from one constant and is never hard-coded in components. There is no university logo.
 
-"One config value" here and "one constant" in [[context/conventions]] mean the same thing: a single place in the code that holds the name.
+"One constant" means a single exported constant in one config file. The README's "one config value" means the same thing (confirmed by the owner, 2026-10-06); the vault uses the wording of the root `CLAUDE.md`, "one constant".
 
 ## Consequences
 
 | Consequence | Type |
 |---|---|
-| One config value holds the name; header, footer, phone header and log in read it | new work |
+| One exported constant in one config file holds the name; header, footer, phone header and log in read it | new work |
 | A review finding if the text "University Alumni" appears in a component | new work |
 | No logo anywhere; the name is text | trade-off |
 
 ## Open questions
 
-- [ ] Where does the value live: a constants file in `frontend/src`, or a build-time setting?
-- [ ] Does the browser tab title (`index.html`) use the same value?
+- [ ] Which config file holds the constant (its path in `frontend/src`)?
+- [ ] Does the browser tab title (`index.html`) use the same constant?
 
 ## Related
 

@@ -7,40 +7,50 @@
 | Author | farhansadik10-ai (owner) |
 | Supersedes | (none) |
 | Superseded by | (none) |
-| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1 to 5 and 10 |
+| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1 to 5 and 10; the owner's answers of 2026-10-06 (the three directions, UI library, contrast check) |
 
 ## Context
 
 The frontend is being rebuilt from scratch. The owner asked for a Scandinavian design with light, dark and system themes ([[context/conventions]], Frontend). Until now there was no approved look: no colors, no font, no page layout.
 
-The question was which visual direction the new frontend follows.
+Three directions were drawn on the same screen. The question was which one the new frontend follows, and whether it is built on a ready-made UI library.
 
 ## Considered options
 
-### Option 1 — "Oak, ink band"
+### Option A — "Fjord"
 
-A flat, calm style: strong type, no shadows, no gradients, 2px corners. A warm off-white ground with near-black text and borders ("ink"), and one oak-gold accent. Every main page has a header, a full-width dark band with the page heading, and a first card that overlaps the band. Font: Hanken Grotesk. Three themes: light, dark, system; system is the default.
+Cool blue-grey.
 
-**Pros:**
-- Matches the Scandinavian brief: neutral palette, few accents, clean type.
-- One accent and one page pattern keep every screen consistent.
-- Light and dark share one set of token names, so components do not branch on the theme.
+### Option B — "Academy"
 
-**Cons:**
-- Needs a web font that is not on the user's machine.
-- A ready-made UI library has to be restyled to match, or left out.
+Classic serif, formal.
 
-### Option 2 — Other directions
+### Option C — "Oak"
 
-The README records only the approved direction. Which other directions were looked at is not written down.
+Warm paper, ink, ochre accent. Drawn in two variants:
+
+- **Ink band:** the full-width band behind the page heading is near-black ("ink").
+- **Ochre band:** the band is the ochre accent color.
+
+Why A and B were not chosen is not written down.
 
 ## Decision
 
-**We chose Option 1.**
+**We chose Option C, "Oak", in the ink band variant.**
 
-The owner approved "Oak, ink band" on 2026-10-06. The rules are in `docs/design/README.md`; the vault copy is [[context/design-system]]. The pictures are in `docs/design/screens/`.
+The owner chose C, then chose the ink band over the ochre band because the light theme looked too plain without it.
 
-Themes: light, dark and system. Default is system. The choice is saved in the browser. The token set is switched with a `data-theme` attribute on the root element, and `color-scheme` is set too.
+What the direction fixes:
+
+- A flat, calm style: strong type, no shadows, no gradients, 2px corners.
+- Every main page has a header, a full-width ink band with the page heading, and a first card that overlaps the band.
+- Font: Hanken Grotesk.
+- Themes: light, dark and system. Default is system. The choice is saved in the browser. The token set is switched with a `data-theme` attribute on the root element, and `color-scheme` is set too.
+- **UI library: none.** We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports.
+
+The rules are in `docs/design/README.md`; the vault copy is [[context/design-system]]. The pictures are in `docs/design/screens/`.
+
+Contrast was checked by the owner (2026-10-06): every text pair passes WCAG AA in both themes, and borders and the focus ring pass 3:1. One limit follows from it: `--accent` on `--surface` in light is 2.76:1, so `--accent` is never used as text or as the only border on a light surface. The figures are in [[context/design-system]].
 
 ## Consequences
 
@@ -50,7 +60,10 @@ Themes: light, dark and system. Default is system. The choice is saved in the br
 | Every main page uses the header, band and overlapping first card | new work |
 | A theme switch in the header (three icon buttons) and in the phone menu (three text buttons) | new work |
 | Hanken Grotesk (400, 500, 600, 700) must be loaded | new work |
-| The UI library chosen at the architect gate must be able to take these tokens, or the components are built in the repo | follow-up |
+| Every component in [[context/design-system]] is built in the repo; nothing comes from a UI library | new work |
+| A review finding if a new file imports `antd` | new work |
+| `antd` stays installed until the last legacy screen is replaced, then it is removed | follow-up |
+| `--accent` is never text and never the only border on a light surface | trade-off |
 | No shadows and no gradients, so depth comes only from borders and the band | trade-off |
 | Screens without a dark or phone picture are built from the rules, not from a picture | trade-off |
 
@@ -60,7 +73,6 @@ Themes: light, dark and system. Default is system. The choice is saved in the br
 - [ ] How is the font loaded: self-hosted or from a font service?
 - [ ] How and under which key is the theme choice saved in the browser?
 - [ ] At which width does the layout switch to the phone layout? The README gives 360px as the smallest width and draws the phone at 390px, but no breakpoint.
-- [ ] Which UI library, if any? Decided at the architect gate.
 
 ## Related
 
@@ -68,5 +80,5 @@ Themes: light, dark and system. Default is system. The choice is saved in the br
 - Components: (none yet — the frontend is being rebuilt)
 - Gotchas: (none)
 - Lessons: (none)
-- ADRs: [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]
+- ADRs: [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]
 - Context: [[context/design-system]]

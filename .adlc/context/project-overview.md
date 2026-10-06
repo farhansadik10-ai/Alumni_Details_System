@@ -22,7 +22,7 @@ Three roles, taken from the routes and role middleware: **student**, **alumni**,
 - Alumni also create and edit their own alumni profile and their own posts.
 - Admins also manage users and can delete any post.
 
-The app is white-label: no university logo. The app name is "University Alumni", shown as text and read from one config value ([[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]]).
+The app is white-label: no university logo. The app name is "University Alumni", text from one constant ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
 
 _(Who the real-world audience is — which institution, how many users — is not written down anywhere in the repo.)_
 
@@ -40,7 +40,7 @@ _(Who the real-world audience is — which institution, how many users — is no
 
 | Layer | Tech |
 |---|---|
-| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). UI library not chosen yet (approved at the architect gate). The current `frontend/src` uses Ant Design (`antd`), which is legacy. |
+| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). No UI library: we build our own components on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]). The current `frontend/src` uses Ant Design (`antd`), which is legacy and is removed screen by screen; no new `antd` imports. |
 | Backend | Node.js + Express, TypeScript, run with `tsx watch` in dev; three workspaces: `@alumni/api`, `@alumni/businesslogic`, `@alumni/dal` |
 | Shared | `@alumni/shared` — cross-cutting TypeScript types |
 | Database | PostgreSQL through a shared `pg` `Pool` |
@@ -78,7 +78,7 @@ _(nothing else written down — fill in)_
 - All work goes through the ADLC pipeline. No code is written before the spec and architecture gates are approved.
 - No schema change without the owner's approval. SQL uses the real names in `db/schema.md`.
 - No database migration for deletes: delete behaviour is handled in the backend and the UI, not by changing foreign keys ([[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]).
-- Screens show only fields that exist in `db/schema.md`. The approved design shows mentoring and field, which need two new `alumni` columns: `mentorship_available` (boolean) and `field` (text). The owner decided to add them ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]); they are not in the database yet, so those parts of the screens wait for the migration.
+- Screens show only fields that exist in `db/schema.md`. The approved design shows mentoring and field, which need two new `alumni` columns: `mentorship_available` (boolean, default `false`) and `field` (text, nullable). The owner decided to add them ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]) and runs the migration himself in a later REQ; they are not in the database yet, so those parts of the screens wait for it.
 
 ## Status
 

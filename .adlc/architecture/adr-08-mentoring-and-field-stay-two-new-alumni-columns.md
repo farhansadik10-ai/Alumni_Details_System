@@ -7,7 +7,7 @@
 | Author | farhansadik10-ai (owner) |
 | Supersedes | (none) |
 | Superseded by | (none) |
-| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1, 5, 6 and 8 |
+| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1, 5, 6 and 8; the owner's answers of 2026-10-06 (final names, default, nullable, who runs the migration) |
 
 ## Context
 
@@ -49,12 +49,14 @@ The question was whether to drop mentoring and field from the design or to add t
 
 Mentoring and field stay. The owner approves adding two columns to `alumni`:
 
-| Column | Type |
-|---|---|
-| `mentorship_available` | boolean |
-| `field` | text |
+| Column | Type | Rule |
+|---|---|---|
+| `mentorship_available` | boolean | default `false` |
+| `field` | text | nullable |
 
-The rule "screens show only fields that exist in `db/schema.md`" still holds. It is met by adding the columns first: the columns go into the database and into `db/schema.md` before any screen shows them.
+The column names are final (confirmed by the owner, 2026-10-06).
+
+The rule "screens show only fields that exist in `db/schema.md`" still holds. It is met by adding the columns first: the columns go into the database and into `db/schema.md` before any screen shows them. The owner runs the migration himself, in a later REQ.
 
 This does not change [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]], which rules out a migration for deletes only.
 
@@ -62,19 +64,17 @@ This does not change [[architecture/adr-06-deleting-rows-that-other-rows-referen
 
 | Consequence | Type |
 |---|---|
-| A migration adds the two columns. The owner runs it; Claude does not change the database | new work |
+| A migration adds the two columns, in a later REQ. The owner runs it; Claude does not change the database | new work |
 | `db/schema.md` is refreshed from the real database after the migration, and the schema summary in [[context/architecture]] is updated | new work |
 | `AlumniQuery`, `AlumniDTO` and the `@alumni/shared` alumni types gain the two fields | new work |
 | Alumni search gains filters for field and mentoring, beside department and graduation year | new work |
 | My profile gains a mentoring checkbox and a field input; the directory and profile show the tags | new work |
 | Until the columns exist, the mentoring and field parts of the screens cannot be built | follow-up |
-| Existing alumni rows have no value for either column until their owners fill them in | trade-off |
+| Existing alumni rows start with mentoring `false` and no field until their owners fill them in | trade-off |
 
 ## Open questions
 
-- [ ] Is `mentorship_available` the final column name? Section 1 of the README says "for example"; section 8 uses the name as given.
-- [ ] Default and NULL rules for both columns (for example, is mentoring `false` when not set?).
-- [ ] Is `field` free text, or a fixed list? The README says text. Where the directory filter gets its choices from is not decided.
+- [ ] Where does the directory's field filter get its choices from? `field` is a free text column.
 - [ ] A length limit for `field` in the form.
 
 ## Related

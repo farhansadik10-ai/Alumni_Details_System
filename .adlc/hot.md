@@ -17,6 +17,11 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] design-system | open items filled by the owner: skeleton loading, hover colors, Small and Caption weight 400, contrast checked, no UI library
+## [2026-10-06] adr-updated | ADR-09 wording is "one constant" (a single exported constant in one config file); file renamed to adr-09-white-label-app-name-from-one-constant
+## [2026-10-06] adr-updated | ADR-08 column names final: mentorship_available (boolean, default false), field (text, nullable); owner runs the migration in a later REQ
+## [2026-10-06] adr-updated | ADR-07 records the three directions drawn (Fjord, Academy, Oak) and "no UI library"
+
 ## [2026-10-06] adr-accepted | ADR-10 About page built last; Privacy page and password reset are later work
 ## [2026-10-06] adr-accepted | ADR-09 white-label app name "University Alumni" from one config value
 ## [2026-10-06] adr-accepted | ADR-08 mentoring and field stay; alumni gets mentorship_available (boolean) and field (text)

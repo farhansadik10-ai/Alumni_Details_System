@@ -12,7 +12,7 @@ Catalog of all ADRs (architecture decision records). Updated by `/wrapup` when a
 | [[architecture/adr-06-deleting-rows-that-other-rows-reference\|ADR-06]] | Deleting rows that other rows reference: backend deletes for posts and comments, never for users; no migration | accepted | 2026-10-03 | (none) | (none) |
 | [[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]] | Design direction is "Oak, ink band", with light, dark and system themes | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns\|ADR-08]] | Mentoring and field stay in the design; `alumni` gets two new columns | accepted | 2026-10-06 | (none) | (none) |
-| [[architecture/adr-09-white-label-app-name-from-one-config-value\|ADR-09]] | The app is white-label; its name "University Alumni" comes from one config value | accepted | 2026-10-06 | (none) | (none) |
+| [[architecture/adr-09-white-label-app-name-from-one-constant\|ADR-09]] | The app is white-label; its name "University Alumni" is text from one constant | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-10-about-page-last-privacy-and-password-reset-later\|ADR-10]] | The About page is built last; the Privacy page and password reset are later work | accepted | 2026-10-06 | (none) | (none) |
 
 ADR-01 to ADR-06 are the owner's answers to questions Q2 to Q7 of the retired AI-DLC plan, carried over on 2026-10-05. Q1 (the Ant Design navy theme and Inter font) was dropped with the redesign and has no ADR.

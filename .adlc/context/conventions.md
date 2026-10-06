@@ -67,7 +67,7 @@ _From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/s
 
 - React + Vite + TypeScript.
 - State: Jotai atoms in `src/store/`.
-- UI library: Claude may recommend one; the owner approves it at the architect gate.
+- UI library: Claude may recommend one; the owner approves it at the architect gate. _(Decided by the owner, 2026-10-06: none. We build our own components on the tokens; `antd` is removed screen by screen; no new `antd` imports — [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]].)_
 - Scandinavian design: neutral palette, generous whitespace, clean typography, few accents.
 - White-label: no university logo; the app name is text from one constant.
 - Theme: light, dark, system; toggle in the header; the choice is persisted; system mode follows `prefers-color-scheme`.

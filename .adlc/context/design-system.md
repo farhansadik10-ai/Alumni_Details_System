@@ -6,19 +6,19 @@
 | Approved | 2026-10-06, by farhansadik10-ai (owner). Direction name: **Oak, ink band** |
 | Last audited | not audited yet (`/ux-doctor` has not run) |
 | Token source | not decided. The README fixes the mechanism (CSS variables on the root element, switched with a `data-theme` attribute, plus `color-scheme`) but not the file |
-| Component library | not decided. Chosen at the architect gate; the Ant Design (`antd`) code in `frontend/src` is legacy |
-| Copied from | `docs/design/README.md` (sections 1 to 10), on 2026-10-06 |
+| Component library | none. We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]) |
+| Copied from | `docs/design/README.md` (sections 1 to 10), on 2026-10-06. Rules marked "owner, 2026-10-06" are the owner's answers to gaps in the README, given the same day |
 
 This file is the UI contract the toolkit audits against: `/ux-doctor` measures drift from it, the `ui-reviewer` design-matches against it in `/review`, and the `architecture-adversary`'s UX lens checks plans against it in `/architect`. Keep it honest — a stale rule here produces false findings everywhere.
 
 **Where the truth lives**
 
-- `docs/design/README.md` holds the rules. This file is a copy of them in the vault's shape. If the two differ, the README is right: stop and tell the owner.
+- `docs/design/README.md` holds the rules. This file is a copy of them in the vault's shape, plus the owner's answers where the README is silent (marked "owner, 2026-10-06"). If the two differ on something the README does say, the README is right: stop and tell the owner.
 - `docs/design/screens/*.html` are static pictures (plain HTML, inline styles, no JavaScript). Use them for layout, wording and proportions. Where a screen and the README disagree, the README wins; tell the owner about the difference.
 - Do not copy the inline styles from the screens into React. Build real components that read the tokens.
 - "not decided" below means the README gives no value. Do not fill the gap by guessing; ask the owner.
 
-Decisions behind this file: [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]].
+Decisions behind this file: [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]].
 
 ## Tokens
 
@@ -48,10 +48,10 @@ Font: **Hanken Grotesk**, weights 400, 500, 600, 700. Fallback: `'Segoe UI', Hel
 | H2 | 24px / 1.2 / 700 |
 | H3 | 18px / 1.3 / 600 |
 | Body | 16px / 1.5 / 400 |
-| Small | 14px / 1.45 (weight not given) |
-| Caption | 13px / 1.4, muted (weight not given) |
+| Small | 14px / 1.45 / 400 |
+| Caption | 13px / 1.4 / 400, muted |
 
-Field labels are 14px, weight 600. Primary button text is weight 700; secondary button text is weight 600.
+The weight 400 for Small and Caption is from the owner, 2026-10-06. Field labels are Small at weight 600. Primary button text is weight 700; secondary button text is weight 600.
 
 ### Spacing
 
@@ -116,8 +116,19 @@ Color rules:
 - One primary (accent) button per view.
 - Brick red (`--danger`) is only for Delete and for errors.
 - Never use color as the only signal. Tags and messages always carry words.
+- `--accent` is never used as text, and never as the only border, on a light surface. Its contrast on `--surface` in light is 2.76:1. _(Owner, 2026-10-06.)_
 
-Not given by the README: hover colors for secondary buttons, links and table rows; a pressed (active) color for buttons; a warning or info color. All not decided.
+### Hover
+
+| Element | On hover | Source |
+|---|---|---|
+| Primary button | background `--accent-hover` | README |
+| Secondary button | background `--sunken`; border and text unchanged | owner, 2026-10-06 |
+| Link | text `--accent-soft-text` | owner, 2026-10-06 |
+| Danger text button ("Delete" in tables) | text `--danger-hover` | owner, 2026-10-06 |
+| Solid danger button | `--danger-hover` | README ("Danger hover") |
+
+Not decided: a hover color for table rows; a pressed (active) color for buttons; a warning or info color.
 
 ### Themes
 
@@ -128,7 +139,15 @@ Not given by the README: hover colors for secondary buttons, links and table row
 
 ### Contrast floor
 
-WCAG AA in both themes. In the standard, AA means 4.5:1 for body text and 3:1 for large text and for the parts of controls; the README itself says only "WCAG AA". The token pairs have not been measured yet.
+WCAG AA in both themes. In the standard, AA means 4.5:1 for body text and 3:1 for large text and for the parts of controls; the README itself says only "WCAG AA".
+
+Checked by the owner, 2026-10-06:
+
+| What | Result | Lowest pair |
+|---|---|---|
+| Text pairs, both themes | all pass AA | 5.33:1 — `--on-accent` on `--accent-hover`, light |
+| Borders and focus ring, both themes | all pass 3:1 | 3.18:1 — `--edge` on `--surface`, dark |
+| `--accent` on `--surface`, light | 2.76:1, below 3:1 | so `--accent` is never text and never the only border on a light surface |
 
 ## Components
 
@@ -137,7 +156,7 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Component | Path | Variants / states | Notes |
 |---|---|---|---|
 | Button, primary | not built | hover uses `--accent-hover` | `--accent` background, `--on-accent` text, 1.5px `--accent-edge` border, weight 700. One per view |
-| Button, secondary | not built | hover: not decided | `--surface` background, 1.5px `--edge` border, weight 600 |
+| Button, secondary | not built | hover: `--sunken` background, border and text unchanged | `--surface` background, 1.5px `--edge` border, weight 600 |
 | Button, danger | not built | text link in tables; solid in the confirm dialog; hover uses `--danger-hover` | Red text link style in tables ("Delete"); solid `--danger` with `--on-danger` text in the confirm dialog |
 | Text input, select, textarea | not built | default, disabled, error | 1.5px `--edge` border, label above (14px, 600), help or error text below |
 | Disabled input | not built | — | `--sunken` background, `--muted` text |
@@ -151,7 +170,9 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Pagination | not built | current page | Previous, page numbers, Next, "Page 1 of 25". Current page uses `--action` |
 | Dialog | not built | — | Centered card, heading, one sentence, two buttons. Used to confirm Delete |
 | Messages | not built | error, success, toast | Error `--danger-soft`, success `--success-soft`, toast `--action` |
+| Link | not built | hover: `--accent-soft-text` | Real `<a>`. Focus ring like every control |
 | States | not built | loading, empty, error | For every list. An empty state says what to do next |
+| Skeleton | not built | — | The loading state: blocks in the shape of the content, filled with `--sunken`. No spinner |
 | Theme switch | not built | light, dark, system; pressed | Three icon buttons in the header; three text buttons (Light, Dark, System) in the phone menu. The pressed one uses `--action` |
 | Header | not built | desktop, phone | See "Page pattern" |
 | Band | not built | page heading; avatar and name on profile pages | See "Page pattern" |
@@ -194,7 +215,7 @@ Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-res
 
 - Every list has a loading, an empty and an error state. An empty state says what to do next.
 - Every form has them too (from [[context/conventions]]).
-- What the loading state looks like (spinner, skeleton or text): not decided.
+- Loading shows skeleton blocks in the shape of the content, filled with `--sunken`. No spinner. No animation when `prefers-reduced-motion` is set. _(Owner, 2026-10-06.)_
 
 ### Forms
 
@@ -216,7 +237,7 @@ Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-res
 
 ### Fields the screens need that the database does not have yet
 
-The mentoring tag, the mentoring checkbox and filter, and the field tag and filter need two new `alumni` columns: `mentorship_available` (boolean) and `field` (text). See [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]. Until the columns exist in `db/schema.md`, these parts cannot be built.
+The mentoring tag, the mentoring checkbox and filter, and the field tag and filter need two new `alumni` columns: `mentorship_available` (boolean, default `false`) and `field` (text, nullable). The names are final. See [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]. The owner runs the migration in a later REQ. Until the columns exist in `db/schema.md`, these parts cannot be built.
 
 ## Exceptions
 
@@ -232,7 +253,7 @@ Places we deliberately break our own rules, each with a reason and scope. If it'
 
 ### Voice & UX copy
 
-- App name: "University Alumni", from one config value ([[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]]).
+- App name: "University Alumni", text from one constant ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
 - Dates are written as "3 October 2026".
 - An action keeps one name through the flow: the button "Save profile" leads to the message "Profile saved".
 - Error messages are in words, under the field.
@@ -244,12 +265,12 @@ Places we deliberately break our own rules, each with a reason and scope. If it'
 - Works from 360px wide. No layout breaks at 200% zoom (from [[context/conventions]]).
 - Every control is reachable by keyboard, with a visible focus ring.
 - Real `<button>`, `<a>`, `<label>` and `<input>` elements.
-- Respect `prefers-reduced-motion`. Motion only answers a user action.
+- Respect `prefers-reduced-motion`. Motion only answers a user action. Skeletons do not animate when it is set.
 - Never color alone: tags and messages always carry words.
 
 ### Theming / brands
 
-- White-label: no university logo. The app name is text and comes from one config value; it is never hard-coded in components ([[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]]).
+- White-label: no university logo. The app name is text from one constant (a single exported constant in one config file); it is never hard-coded in components ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
 - Two token sets (light, dark) under one set of names. Components never branch on the theme; they read the tokens.
 - Whether a buyer may change the tokens (their own accent color, for example): not decided.
 
@@ -261,4 +282,4 @@ Not decided.
 
 - Source: `docs/design/README.md`, `docs/design/screens/*.html`
 - Context: [[context/conventions]] (Frontend), [[context/project-overview]], [[context/architecture]]
-- ADRs: [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]], [[architecture/adr-04-profile-photo-is-a-url-field|ADR-04]], [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]
+- ADRs: [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]], [[architecture/adr-04-profile-photo-is-a-url-field|ADR-04]], [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]

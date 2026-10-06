@@ -45,7 +45,7 @@ shared (@alumni/shared) — TypeScript types used across workspaces
 | `backend/src/api` (`@alumni/api`) | Express app. `routes/*Routes.ts` wire URL paths to `controllers/*Controller.ts`, which call the Managers. `app.ts` mounts `/api/auth`, `/api/users`, `/api/alumni`, `/api/posts`, `/api/comments`, and `/api/health`. | Express |
 | `backend/src/server.ts` | Process entrypoint: loads env, calls `app.listen`. | Node, `tsx` |
 | `shared` (`@alumni/shared`) | Cross-cutting types in `shared/types/*.types.ts`, consumed by workspace name. Compiled `.js`/`.d.ts` output is checked in beside the sources, but the package `main` is `index.ts`, so most imports resolve to source. | TypeScript |
-| `frontend` (`@alumni/frontend`) | React app, **being rebuilt from scratch** in `frontend/src`. What is there now is the legacy Ant Design (`antd`) app; the redesign replaces it. The new structure and UI library are decided at the architect gate, not here. | React, Vite, TypeScript, jotai |
+| `frontend` (`@alumni/frontend`) | React app, **being rebuilt from scratch** in `frontend/src`. What is there now is the legacy Ant Design (`antd`) app; the redesign replaces it. The new structure is decided at the architect gate, not here. No UI library: components are built in the repo on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]). | React, Vite, TypeScript, jotai |
 
 ## Data stores
 
@@ -76,7 +76,7 @@ What follows from it:
 - `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database.
 - The `"User".email` UNIQUE constraint is case-sensitive, so the same email in different letter case can register twice.
 - No schema change without the owner's approval.
-- **Decided, not in the database yet (2026-10-06):** `alumni` gets `mentorship_available` (boolean) and `field` (text) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The table above shows the database as it is today; do not write SQL against the two columns until `db/schema.md` lists them.
+- **Decided, not in the database yet (2026-10-06):** `alumni` gets `mentorship_available` (boolean, default `false`) and `field` (text, nullable) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The table above shows the database as it is today; do not write SQL against the two columns until `db/schema.md` lists them.
 
 ## External integrations
 
@@ -114,7 +114,7 @@ What follows from it:
 - [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]] — Deleting rows that other rows reference
 - [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]] — Design direction is "Oak, ink band", with light, dark and system themes
 - [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]] — Mentoring and field stay in the design; `alumni` gets two new columns
-- [[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]] — The app is white-label; its name "University Alumni" comes from one config value
+- [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]] — The app is white-label; its name "University Alumni" is text from one constant
 - [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]] — The About page is built last; the Privacy page and password reset are later work
 
 Known backend problems are in [[knowledge/gotchas]] (G01–G24).
