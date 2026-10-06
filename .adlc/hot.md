@@ -17,6 +17,14 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] implement-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | 7 tasks done, build passes; AC1-AC24 wait for the owner's manual checklist; spaces-only values count as empty
+
+## [2026-10-06] architect-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | 7 tasks, no ADR; owner chose 403 before 404 on PUT /api/users/:id and 400 for an empty update
+
+## [2026-10-06] work-path-set | REQ-fs-002-backend-security-data-loss-gaps | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-002-backend-security-data-loss-gaps, off redesign)
+
+## [2026-10-06] spec-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | owner added post-edit owner check (G21), alumni user_id from token, logout owner check; login route to be removed
+
 ## [2026-10-06] docs-aligned | docs/design/README.md (About link, forgot-password line) and root CLAUDE.md (no UI library) now match ADR-07 and ADR-10
 
 ## [2026-10-06] design-system | remaining questions answered by the owner; anything still open is "decide in the REQ that builds it"
