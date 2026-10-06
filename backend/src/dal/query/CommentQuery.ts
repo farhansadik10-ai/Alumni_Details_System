@@ -16,7 +16,6 @@ export class CommentQuery {
     );
      const comments: CommentDTO[] = [];
         for (const comment of info.rows) {
-            console.log(comment);
             comments.push(comment);
         }
         return comments;
@@ -27,7 +26,9 @@ export class CommentQuery {
     return info.rows[0];
   }
 
-  public async updateComment(comment: CommentDTO): Promise<CommentDTO> {
+  public async updateComment(
+    comment: CommentDTO,
+  ): Promise<CommentDTO | undefined> {
     const info = await pool.query(
       `UPDATE comment SET content=$1, updated_at=NOW()
             WHERE id=$2 RETURNING *`,

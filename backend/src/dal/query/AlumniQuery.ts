@@ -41,7 +41,7 @@ export class AlumniQuery {
     return info.rows[0];
   }
 
-  public async findAlumniById(id: number): Promise<AlumniDTO> {
+  public async findAlumniById(id: number): Promise<AlumniDTO | undefined> {
     const info = await pool.query(
       `SELECT a.*, u.name, u.email, u.photo_url FROM alumni a LEFT JOIN "User" u ON u.id = a.user_id WHERE a.id = $1`,
       [id],
@@ -52,11 +52,12 @@ export class AlumniQuery {
   public async updateAlumni(
     id: number,
     alumni: Partial<AlumniDTO>,
-  ): Promise<AlumniDTO> {
+  ): Promise<AlumniDTO | undefined> {
     const { assignments, values } = buildUpdateSet(alumni, UPDATABLE_COLUMNS);
 
     // Nothing was sent: write nothing and return the row as it is, with the
     // alumni columns only, the same shape the UPDATE returns.
+    // Keep this a bare alumni SELECT, not the joined read: writes return alumni columns only (gotcha G25).
     if (assignments.length === 0) {
       const current = await pool.query(`SELECT * FROM alumni WHERE id = $1`, [
         id,

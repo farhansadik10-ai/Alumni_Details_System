@@ -22,7 +22,6 @@ export class PostQuery {
         );
         const posts: PostDTO[] = [];
         for (const post of info.rows) {
-            console.log(post);
             posts.push(post);
         }
         return posts;
