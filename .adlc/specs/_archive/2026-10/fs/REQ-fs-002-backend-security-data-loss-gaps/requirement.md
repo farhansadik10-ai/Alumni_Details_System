@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | REQ | REQ-fs-002 |
-| Status | validated |
-| Phase | spec |
+| Status | complete — merged 2026-10-06 |
+| Phase | wrapup |
 | Created | 2026-10-06 |
 | Primary repo | alumni-details-system |
 | Touched repos | alumni-details-system |

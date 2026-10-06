@@ -17,7 +17,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ | Title | Status | Path |
 |---|---|---|---|
 | REQ-fs-001 | Fix AlumniQuery and CommentQuery against db/schema.md | merged | `specs/_archive/2026-10/fs/REQ-fs-001-fix-alumni-comment-queries` |
-| REQ-fs-002 | Close the security and data-loss gaps in the backend | ready to merge | `specs/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
+| REQ-fs-002 | Close the security and data-loss gaps in the backend | merged | `specs/_archive/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
 
 ## ADRs
 
