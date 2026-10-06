@@ -67,7 +67,7 @@ Where each old item went:
 
 **Don't:** Don't build a "create alumni profile" screen on this endpoint before the query is fixed. Use the real names in `db/schema.md` (`alumni`, `graduation_year`).
 
-**Update 2026-10-05 (REQ-fs-001):** The insert now targets `alumni` with the schema's column names. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-05 (REQ-fs-001):** The insert now targets `alumni` with the schema's column names. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g02|G02]], [[knowledge/gotchas#^g12|G12]], [[context/architecture]] (Database schema). Origin: SQL problems.
 
@@ -93,7 +93,7 @@ Where each old item went:
 
 **Update 2026-10-05 (REQ-fs-001):** The table, column names and `$8` binding are fixed, so the update now runs. It still writes all seven columns: any field the request leaves out is set to NULL. The owner chose at the spec gate to leave that for a later REQ. Callers must send all seven fields.
 
-**Update 2026-10-06 (REQ-fs-002):** `updateAlumni` writes only the columns that were sent. `null` clears a field; a body with no updatable field is 400. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `updateAlumni` writes only the columns that were sent. `null` clears a field; a body with no updatable field is 400. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g01|G01]], [[knowledge/gotchas#^g12|G12]], [[knowledge/gotchas#^g19|G19]]. Origin: SQL problems.
 
@@ -259,7 +259,7 @@ Where each old item went:
 
 **Don't:** Don't build a profile-edit form that sends only the changed fields until this query stops overwriting omitted ones.
 
-**Update 2026-10-06 (REQ-fs-002):** `updateUser` writes only the sent ones of `name`, `email`, `password`, `photo_url`. No password sent keeps the hash. `email` or `password` sent as `null`, empty or only spaces is 400. `role` cannot be changed through this route. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `updateUser` writes only the sent ones of `name`, `email`, `password`, `photo_url`. No password sent keeps the hash. `email` or `password` sent as `null`, empty or only spaces is 400. `role` cannot be changed through this route. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g10|G10]], [[knowledge/gotchas#^g18|G18]], [[knowledge/gotchas#^g17|G17]]. Origin: SQL problems.
 
@@ -283,7 +283,7 @@ Where each old item went:
 
 **Don't:** Until the query is fixed, any caller must send both `caption` and `media_url` on every edit.
 
-**Update 2026-10-06 (REQ-fs-002):** `updatePost` writes only `caption` / `media_url` when sent; editing the caption keeps the media. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `updatePost` writes only `caption` / `media_url` when sent; editing the caption keeps the media. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g09|G09]], [[knowledge/gotchas#^g21|G21]]. Origin: SQL problems, L.10.
 
@@ -375,7 +375,7 @@ Where each old item went:
 
 **Don't:** Don't rely on the form. [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]] decides that admin is never selectable; the backend must enforce it.
 
-**Update 2026-10-06 (REQ-fs-002):** `createUser` accepts only the exact values `student` and `alumni`; anything else, or no role, is 400 and no user is created. Sign-up can no longer create an admin: today the first admin is made by hand in the database (ADR-01 leaves this open). Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `createUser` accepts only the exact values `student` and `alumni`; anything else, or no role, is 400 and no user is created. Sign-up can no longer create an admin: today the first admin is made by hand in the database (ADR-01 leaves this open). Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]]. Origin: SQL problems (related), L.4.
 
@@ -445,7 +445,7 @@ Where each old item went:
 
 **Don't:** Don't add a join to `"User"` with `SELECT *`. No endpoint may return `password`. The login path still needs the hash internally, so don't remove it from `findUserByEmail` without giving login another way to read it.
 
-**Update 2026-10-06 (REQ-fs-002):** Every `UserQuery` read and write names its columns without `password`. One read, `findUserWithPasswordByEmail`, selects the hash and is used only by login. The row log in `getAllUsers` is gone. See [[knowledge/lessons/LESSON-REQ-fs-002-2]]. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** Every `UserQuery` read and write names its columns without `password`. One read, `findUserWithPasswordByEmail`, selects the hash and is used only by login. The row log in `getAllUsers` is gone. See [[knowledge/lessons/LESSON-REQ-fs-002-2]]. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g05|G05]], [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]]. Origin: L.1.
 
@@ -469,7 +469,7 @@ Where each old item went:
 
 **Don't:** Don't treat the UI as the guard. Allow only the owner or an admin.
 
-**Update 2026-10-06 (REQ-fs-002):** `PUT /api/users/:id` is allowed only for that user or an admin; anyone else gets 403. The 403 comes before the 404, so a non-admin cannot learn which ids exist. An admin can change another user's email or password (the owner asked for owner-or-admin). Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/users/:id` is allowed only for that user or an admin; anyone else gets 403. The 403 comes before the 404, so a non-admin cannot learn which ids exist. An admin can change another user's email or password (the owner asked for owner-or-admin). The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[knowledge/gotchas#^g09|G09]], [[knowledge/gotchas#^g19|G19]], [[knowledge/gotchas#^g21|G21]], [[knowledge/gotchas#^g23|G23]]. Origin: L.2.
 
@@ -495,7 +495,7 @@ Where each old item went:
 
 **Update 2026-10-05 (REQ-fs-001):** The query now works, so this is no longer masked: any logged-in user can edit any alumni profile. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoint.
 
-**Update 2026-10-06 (REQ-fs-002):** `PUT /api/alumni/:id` is allowed only for the profile's owner or an admin; a missing id is 404; `req.body` is no longer passed through. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/alumni/:id` is allowed only for the profile's owner or an admin; a missing id is 404; `req.body` is no longer passed through. The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[knowledge/gotchas#^g02|G02]], [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]. Origin: L.5.
 
@@ -519,7 +519,7 @@ Where each old item went:
 
 **Don't:** Don't design the frontend to choose the author. Take `user_id` from `req.user.sub`.
 
-**Update 2026-10-06 (REQ-fs-002):** `createPost` stores `req.user.sub`; a `user_id` in the body is ignored. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `createPost` stores `req.user.sub`; a `user_id` in the body is ignored. Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g22|G22]]. Origin: L.8.
 
@@ -543,7 +543,7 @@ Where each old item went:
 
 **Don't:** Don't copy the delete rule as it is. [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]]: an admin may delete any post but edit only their own, so edit is owner-only.
 
-**Update 2026-10-06 (REQ-fs-002):** `PUT /api/posts/:id` is author-only, admins included (ADR-02); a missing id is 404. Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `PUT /api/posts/:id` is author-only, admins included (ADR-02); a missing id is 404. The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]], [[knowledge/gotchas#^g10|G10]]. Origin: L.9.
 
@@ -567,7 +567,7 @@ Where each old item went:
 
 **Don't:** Don't send or trust `user_id` from the client. Take it from `req.user.sub`.
 
-**Update 2026-10-06 (REQ-fs-002):** `createComment` stores `req.user.sub`; a `user_id` in the body is ignored. It still reads `post_id` (G13). Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** `createComment` stores `req.user.sub`; a `user_id` in the body is ignored. It still reads `post_id` (G13). Confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed).
 
 **Related:** [[knowledge/gotchas#^g20|G20]], [[knowledge/gotchas#^g13|G13]]. Origin: L.12.
 
@@ -593,7 +593,7 @@ Where each old item went:
 
 **Update 2026-10-05 (REQ-fs-001):** Both queries now work, so this is no longer masked: any logged-in user can edit or delete any comment. The owner accepted this at the spec gate; the check is follow-up work and should land before any screen uses the endpoints.
 
-**Update 2026-10-06 (REQ-fs-002):** Edit is author-only (admins too) and changes only `content`; delete is author or admin; a missing id is 404 on both. Deleting a comment with replies still fails (G08). Not yet run against the database (`STATUS: needs verification` until the owner's manual check).
+**Update 2026-10-06 (REQ-fs-002):** Edit is author-only (admins too) and changes only `content`; delete is author or admin; a missing id is 404 on both. Deleting a comment with replies still fails (G08). The non-admin paths are confirmed by the owner's 39-check run against the real database (2026-10-06, 39 passed). The admin path is not yet tested (`STATUS: needs verification`).
 
 **Related:** [[knowledge/gotchas#^g06|G06]], [[knowledge/gotchas#^g07|G07]], [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]. Origin: L.13.
 

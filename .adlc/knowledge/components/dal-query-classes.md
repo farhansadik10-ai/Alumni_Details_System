@@ -24,7 +24,7 @@ One class per table (`UserQuery`, `AlumniQuery`, `PostQuery`, `CommentQuery`). E
 
 ## State of each class (2026-10-06)
 
-Nothing below has been run against the database by the pipeline; the owner's manual checklist is the proof.
+The REQ-fs-002 changes were run against the real database by the owner (39 checks, 39 passed, 2026-10-06). Not covered by that run: admin paths and deleting a user.
 
 | Class | State |
 |---|---|

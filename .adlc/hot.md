@@ -17,6 +17,9 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] verified | REQ-fs-002-backend-security-data-loss-gaps | owner ran 39 checks against the real database, twice (before review and after round 2): 39 passed; admin paths and deleting a user not tested
+## [2026-10-06] gotcha-status | G01, G02, G09, G10, G14, G17, G20, G22 confirmed fixed; G18, G19, G21, G23 confirmed for non-admin paths, admin path still needs verification
+
 ## [2026-10-06] ship-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps
 
 ## [2026-10-06] req-ready-to-merge | REQ-fs-002-backend-security-data-loss-gaps | partial updates, no password in responses, sign-up roles, owner checks, author from token, login-stamp route removed; manual database check still to run

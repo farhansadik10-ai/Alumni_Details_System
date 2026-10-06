@@ -6,7 +6,7 @@
 | Status | built in REQ-fs-002 (2026-10-06) |
 | Created | 2026-10-06 |
 
-> **STATUS: needs verification** — built and reviewed by reading; not yet run against the database. Remove this banner after the owner's manual check.
+Confirmed against the real database by the owner's 39-check run (2026-10-06, 39 passed): unsent fields are kept on user, post and alumni updates; an empty update is 400; a wrong type for `graduation_year` is 400. Updates made by an admin on someone else's row are not yet tested (`STATUS: needs verification` for that path only).
 
 ## The rule
 

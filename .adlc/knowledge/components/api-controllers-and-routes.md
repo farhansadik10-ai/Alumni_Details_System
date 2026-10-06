@@ -10,7 +10,7 @@ Express routes map URLs to controller functions, which call the Managers. Routes
 
 ## What to know before changing it
 
-- **Who may do what** (since REQ-fs-002; not yet run against the database by the pipeline):
+- **Who may do what** (since REQ-fs-002; the non-admin rows were confirmed by the owner's 39-check run against the real database on 2026-10-06 — the "or an admin" halves and `DELETE /api/users/:id` are not yet tested, `STATUS: needs verification`):
 
   | Route | Allowed |
   |---|---|

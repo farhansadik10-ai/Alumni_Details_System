@@ -22,7 +22,7 @@ Full reviewer narratives: `review-log.md` — not loaded by later phases; open o
 - **ADRs:** no conflict with an accepted ADR. One gap recorded against ADR-03 (m7): "one profile per user" is still not enforced; that needs a schema change or a new check and is out of scope in the spec.
 - **Vault-stale:** M1 (13 gotchas), M2 (two component pages, one concept page, `context/architecture.md`, `docs/roadmap.md` row B2). Routed to `/wrapup`.
 - **UI check:** ran at the static tier only (no server, no browser — the owner's session rules forbid database writes). No legacy screen breaks. It left a 5-step manual list in `review-log.md`; steps 1–4 write to the database.
-- **Not run:** nothing was exercised against a database. AC1–AC24 are met by reading the code; the owner's `manual-test-checklist.md` (39 steps) is the proof.
+- **Database run (owner, 2026-10-06):** see "Owner's database run" below — 39 checks, 39 passed, twice. The reviewers themselves ran nothing against a database.
 - **Packet:** 84KB (target ≤120KB). No packet gaps reported.
 
 ## Findings at a glance
@@ -81,7 +81,7 @@ Reviewed by: correctness (balanced) · quality (balanced) · architecture (balan
 
 ## Acceptance criteria check
 
-Met by reading the code (correctness reviewer plus the orchestrator's own read). None has been run against a database yet.
+Met by reading the code (correctness reviewer plus the orchestrator's own read), and at run time by the owner's database run below, except the admin paths.
 
 - [✓] AC1–AC3 — user update writes only sent columns; no password sent keeps the hash; `role` is not in the allowed list
 - [✓] AC4 — post update writes only `caption` / `media_url` when sent; `user_id` not writable
@@ -106,4 +106,17 @@ Met by reading the code (correctness reviewer plus the orchestrator's own read).
 - [✓] AC25 — `npm run build` exit 0 (run by the orchestrator after all tasks)
 - [✓] AC26, AC27 — no change under `db/`, `frontend/` or `shared/`
 - [✓] AC28 — SQL only in `dal/query/`, values bound, layers kept
-- [⚠] AC1–AC24 at run time — waiting for the owner's manual checklist
+- [✓] At run time — owner's 39-check run, 39 passed (see below)
+- [⚠] Admin paths at run time (the admin halves of AC13, AC14, AC15, AC16, AC17 and AC22) — not yet tested
+
+## Owner's database run (2026-10-06)
+
+Reported by the owner; the pipeline did not run it and has not seen the script or its output.
+
+- **What:** a 39-check script against the real database, with the API running on this feature branch.
+- **When:** twice — once before the review, once after the round-2 fixes.
+- **Result:** both runs 39 passed, 0 failed.
+- **Covered:** sign-up role rules; no password in any answer; 401 without a token; `PUT /api/users/:id/login` returns 404; owner checks (403) on user update, logout, post edit, comment edit and delete, alumni update; partial updates keep unsent fields on user, post and alumni; the password still works after a name-only update; an empty update returns 400; a user cannot make themselves admin; the owner comes from the token for post, comment and alumni; a spaces-only comment returns 400; a wrong type for `graduation_year` returns 400.
+- **Not tested:** admin paths, and deleting a user.
+- **Not named in the owner's summary** (so neither confirmed nor refuted here): a field sent as `null` being cleared; `email` / `password` sent as `null` or empty; 404 for a missing id on the update and delete routes.
+- **Vault effect:** the "needs verification" marks this run covers were removed from G01 (the alumni insert from REQ-fs-001, which the alumni checks exercised), G02, G09, G10, G14, G17, G20, G22, the concept page `partial-update-sent-fields` and the two component pages. The mark stays, for the admin path only, on G18, G19, G21 and G23.
