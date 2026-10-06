@@ -63,7 +63,7 @@ Real tables: `"User"`, `alumni`, `posts`, `comment`. There is **no** `users` tab
 | Table | Columns (type) | Constraints |
 |---|---|---|
 | `"User"` | `id` serial, `name` varchar(100), `email` varchar(100) NOT NULL, `password` varchar(255) NOT NULL, `role` varchar(50), `photo_url` text, `login_at`, `logout_at` timestamp, `created_at`, `updated_at` timestamp default now | PK `id`; `email` UNIQUE |
-| `alumni` | `id` serial, `user_id` int, `graduation_year` **integer**, `department` varchar(100), `current_company` varchar(100), `job_title` varchar(100), `experience` varchar(100), `bio` text, `linkedin_url` text, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`; **no UNIQUE on `user_id`**; no `email` column, no `created_at` |
+| `alumni` | `id` serial, `user_id` int, `graduation_year` **integer**, `department` varchar(100), `current_company` varchar(100), `job_title` varchar(100), `experience` varchar(100), `bio` text, `linkedin_url` text, `mentorship_available` boolean NOT NULL default `false`, `field` text, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`; **no UNIQUE on `user_id`**; no `email` column, no `created_at` |
 | `posts` | `id` serial, `user_id` int, `caption` text, `media_url` text, `comment_count` int default 0, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)` |
 | `comment` | `id` serial, `user_id` int, `posts_id` int, `parent_id` int, `content` text, `created_at`, `updated_at` timestamp default now | PK `id`; FK `user_id` → `"User"(id)`, `posts_id` → `posts(id)`, `parent_id` → `comment(id)` |
 
@@ -76,7 +76,7 @@ What follows from it:
 - `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database.
 - The `"User".email` UNIQUE constraint is case-sensitive, so the same email in different letter case can register twice.
 - No schema change without the owner's approval.
-- **Decided, not in the database yet (2026-10-06):** `alumni` gets `mentorship_available` (boolean, default `false`) and `field` (text, nullable) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The table above shows the database as it is today; do not write SQL against the two columns until `db/schema.md` lists them.
+- **In the database since 2026-10-06:** `alumni` has `mentorship_available` (boolean, NOT NULL, default `false`) and `field` (text, nullable) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The owner added them with one `ALTER TABLE`; `db/schema.md` lists them, typed in by hand from that statement.
 
 ## External integrations
 
