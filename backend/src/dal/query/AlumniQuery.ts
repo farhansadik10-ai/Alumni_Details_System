@@ -1,5 +1,18 @@
 import pool from "../config/db.js";
 import { AlumniDTO } from "../dto/AlumniDTO.js";
+import { buildUpdateSet } from "./updateSet.js";
+
+// The only columns updateAlumni may write. user_id is not here on purpose.
+const UPDATABLE_COLUMNS = [
+  "department",
+  "graduation_year",
+  "current_company",
+  "job_title",
+  "experience",
+  "bio",
+  "linkedin_url",
+] as const;
+
 export class AlumniQuery {
   constructor() {}
   public async createAlumni(alumni: AlumniDTO): Promise<AlumniDTO> {
@@ -40,18 +53,20 @@ export class AlumniQuery {
     id: number,
     alumni: Partial<AlumniDTO>,
   ): Promise<AlumniDTO> {
-    const info = await pool.query(
-      `UPDATE alumni SET department=$1, graduation_year=$2, current_company=$3, job_title=$4, experience=$5, bio=$6, linkedin_url=$7, updated_at=NOW() WHERE id=$8 RETURNING *`,
-      [
-        alumni.department,
-        alumni.graduation_year,
-        alumni.current_company,
-        alumni.job_title,
-        alumni.experience,
-        alumni.bio,
-        alumni.linkedin_url,
+    const { assignments, values } = buildUpdateSet(alumni, UPDATABLE_COLUMNS);
+
+    // Nothing was sent: write nothing and return the row as it is, with the
+    // alumni columns only, the same shape the UPDATE returns.
+    if (assignments.length === 0) {
+      const current = await pool.query(`SELECT * FROM alumni WHERE id = $1`, [
         id,
-      ],
+      ]);
+      return current.rows[0];
+    }
+
+    const info = await pool.query(
+      `UPDATE alumni SET ${assignments.join(", ")}, updated_at = NOW() WHERE id = $${values.length + 1} RETURNING *`,
+      [...values, id],
     );
     return info.rows[0];
   }
