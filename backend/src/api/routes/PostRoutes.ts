@@ -12,7 +12,7 @@ const router = Router();
 
 router.post("/", authMiddleware, requireRole("alumni", "admin"), createPost);
 router.get("/", authMiddleware, getAllPosts);
-router.put("/:id", authMiddleware, updatePost);   // ownership check ideally in controller
+router.put("/:id", authMiddleware, updatePost);   // author only (admins too, ADR-02); checked in the controller
 router.delete("/:id", authMiddleware, deletePost); // ownership check ideally in controller
 
 export default router;
