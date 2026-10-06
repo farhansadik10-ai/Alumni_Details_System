@@ -69,10 +69,10 @@ Contrast was checked by the owner (2026-10-06): every text pair passes WCAG AA i
 
 ## Open questions
 
-- [ ] Where do the tokens live in the code (file and format)?
-- [ ] How is the font loaded: self-hosted or from a font service?
-- [ ] How and under which key is the theme choice saved in the browser?
-- [ ] At which width does the layout switch to the phone layout? The README gives 360px as the smallest width and draws the phone at 390px, but no breakpoint.
+- [ ] Where do the tokens live in the code (file and format)? Decide in the REQ that builds it.
+- [ ] How is the font loaded: self-hosted or from a font service? Decide in the REQ that builds it.
+- [ ] How and under which key is the theme choice saved in the browser? Decide in the REQ that builds it.
+- [ ] At which width does the layout switch to the phone layout? The README gives 360px as the smallest width and draws the phone at 390px, but no breakpoint. Decide in the REQ that builds it.
 
 ## Related
 

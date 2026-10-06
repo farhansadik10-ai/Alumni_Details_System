@@ -47,6 +47,8 @@ The app name is "University Alumni". It is text from one constant and is never h
 
 "One constant" means a single exported constant in one config file. The README's "one config value" means the same thing (confirmed by the owner, 2026-10-06); the vault uses the wording of the root `CLAUDE.md`, "one constant".
 
+The same config file also holds one contact email for the alumni office (owner, 2026-10-06). The log-in page and the About page read it ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]).
+
 ## Consequences
 
 | Consequence | Type |
@@ -57,8 +59,9 @@ The app name is "University Alumni". It is text from one constant and is never h
 
 ## Open questions
 
-- [ ] Which config file holds the constant (its path in `frontend/src`)?
-- [ ] Does the browser tab title (`index.html`) use the same constant?
+- [ ] Which config file holds the constant (its path in `frontend/src`)? Decide in the REQ that builds it.
+- [ ] Does the browser tab title (`index.html`) use the same constant? Decide in the REQ that builds it.
+- [ ] The value of the contact email. Decide in the REQ that builds it.
 
 ## Related
 

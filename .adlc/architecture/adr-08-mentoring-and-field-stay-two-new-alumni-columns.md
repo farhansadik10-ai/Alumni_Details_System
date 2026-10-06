@@ -56,6 +56,12 @@ Mentoring and field stay. The owner approves adding two columns to `alumni`:
 
 The column names are final (confirmed by the owner, 2026-10-06).
 
+How the two fields are used (owner, 2026-10-06):
+
+- On My profile, Field is a free text input.
+- The directory's Field filter lists the distinct non-empty values of `alumni.field`, sorted A to Z.
+- The Department and Graduation year filters work the same way.
+
 The rule "screens show only fields that exist in `db/schema.md`" still holds. It is met by adding the columns first: the columns go into the database and into `db/schema.md` before any screen shows them. The owner runs the migration himself, in a later REQ.
 
 This does not change [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]], which rules out a migration for deletes only.
@@ -70,12 +76,14 @@ This does not change [[architecture/adr-06-deleting-rows-that-other-rows-referen
 | Alumni search gains filters for field and mentoring, beside department and graduation year | new work |
 | My profile gains a mentoring checkbox and a field input; the directory and profile show the tags | new work |
 | Until the columns exist, the mentoring and field parts of the screens cannot be built | follow-up |
+| The backend must return the distinct non-empty values of `field`, `department` and `graduation_year` for the filters | new work |
+| Free text means near-duplicates ("IT", "I.T.") show up as separate filter choices | trade-off |
 | Existing alumni rows start with mentoring `false` and no field until their owners fill them in | trade-off |
 
 ## Open questions
 
-- [ ] Where does the directory's field filter get its choices from? `field` is a free text column.
-- [ ] A length limit for `field` in the form.
+- [ ] A length limit for `field` in the form. Decide in the REQ that builds it.
+- [ ] How the filter choices reach the frontend (which endpoint returns the distinct values). Decide in the REQ that builds it.
 
 ## Related
 

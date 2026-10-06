@@ -67,7 +67,7 @@ Out-of-scope adjacencies. Worth listing because they recur as suggestions.
 
 - Not branded for one university: no logo.
 - Not an Ant Design app any more.
-- No Privacy page and no password reset in the redesign; both are later work. The About page is planned and built last ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]).
+- No Privacy page and no password reset in the redesign; both are later work. Until reset exists, the log-in page tells the user to contact the alumni office. The About page is planned and built last, and the footer has no "About" link until then ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]).
 
 _(nothing else written down — fill in)_
 

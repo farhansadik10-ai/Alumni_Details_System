@@ -5,7 +5,7 @@
 | Status | agreed (what the owner decided) |
 | Approved | 2026-10-06, by farhansadik10-ai (owner). Direction name: **Oak, ink band** |
 | Last audited | not audited yet (`/ux-doctor` has not run) |
-| Token source | not decided. The README fixes the mechanism (CSS variables on the root element, switched with a `data-theme` attribute, plus `color-scheme`) but not the file |
+| Token source | decide in the REQ that builds it. The README fixes the mechanism (CSS variables on the root element, switched with a `data-theme` attribute, plus `color-scheme`) but not the file |
 | Component library | none. We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]) |
 | Copied from | `docs/design/README.md` (sections 1 to 10), on 2026-10-06. Rules marked "owner, 2026-10-06" are the owner's answers to gaps in the README, given the same day |
 
@@ -16,7 +16,7 @@ This file is the UI contract the toolkit audits against: `/ux-doctor` measures d
 - `docs/design/README.md` holds the rules. This file is a copy of them in the vault's shape, plus the owner's answers where the README is silent (marked "owner, 2026-10-06"). If the two differ on something the README does say, the README is right: stop and tell the owner.
 - `docs/design/screens/*.html` are static pictures (plain HTML, inline styles, no JavaScript). Use them for layout, wording and proportions. Where a screen and the README disagree, the README wins; tell the owner about the difference.
 - Do not copy the inline styles from the screens into React. Build real components that read the tokens.
-- "not decided" below means the README gives no value. Do not fill the gap by guessing; ask the owner.
+- "decide in the REQ that builds it" below means neither the README nor the owner has fixed a value (owner, 2026-10-06). The REQ that builds that part proposes one and the owner approves it at that REQ's gate. Do not fill the gap silently.
 
 Decisions behind this file: [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]], [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]], [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]].
 
@@ -26,10 +26,10 @@ Components use the semantic tokens only. Never copy a hex value into a component
 
 | Tier | Examples | Source |
 |---|---|---|
-| Palette | not decided. The README defines no raw palette tier (no names like `oak-500`); it gives semantic tokens with their values directly | — |
-| Semantic | `--ground`, `--surface`, `--text`, `--edge`, `--action`, `--accent`, `--danger`, `--band` — full list under "Color" | `docs/design/README.md` section 2; code file not decided |
+| Palette | decide in the REQ that builds it. The README defines no raw palette tier (no names like `oak-500`); it gives semantic tokens with their values directly | — |
+| Semantic | `--ground`, `--surface`, `--text`, `--edge`, `--action`, `--accent`, `--danger`, `--band` — full list under "Color" | `docs/design/README.md` section 2; code file: decide in the REQ that builds it |
 
-Token **names** exist only for color. The README gives values for type, spacing, radius, borders and control heights, but no token names for them: names not decided.
+Token **names** exist only for color. The README gives values for type, spacing, radius, borders and control heights, but no token names for them. Names: decide in the REQ that builds it.
 
 ## Scales
 
@@ -37,7 +37,7 @@ A value outside a scale is a finding, not a variation.
 
 ### Type
 
-Font: **Hanken Grotesk**, weights 400, 500, 600, 700. Fallback: `'Segoe UI', Helvetica, sans-serif`. How the font is loaded (self-hosted or from a font service): not decided.
+Font: **Hanken Grotesk**, weights 400, 500, 600, 700. Fallback: `'Segoe UI', Helvetica, sans-serif`. How the font is loaded (self-hosted or from a font service): decide in the REQ that builds it.
 
 | Style | Size / line height / weight |
 |---|---|
@@ -67,11 +67,11 @@ Steps: 4, 8, 12, 16, 24, 32, 48, 64 px.
 - **Focus ring:** 3px `--focus`, offset 2px, on every control and link.
 - **Content width:** max 1200px, centered, 32px side padding (16px on phone).
 - **Header height:** 72px (60px on phone).
-- **z-index:** not decided.
+- **z-index:** decide in the REQ that builds it.
 
 ### Breakpoints
 
-Not decided. What the README does give:
+The switch width: decide in the REQ that builds it. What the README does give:
 
 - The layout must work from 360px wide.
 - The phone pictures are drawn at 390px.
@@ -128,12 +128,12 @@ Color rules:
 | Danger text button ("Delete" in tables) | text `--danger-hover` | owner, 2026-10-06 |
 | Solid danger button | `--danger-hover` | README ("Danger hover") |
 
-Not decided: a hover color for table rows; a pressed (active) color for buttons; a warning or info color.
+A hover color for table rows, a pressed (active) color for buttons, and a warning or info color: decide in the REQ that builds it.
 
 ### Themes
 
 - Three choices: light, dark, system. Default is system.
-- The choice is saved in the browser. The storage key and method are not decided.
+- The choice is saved in the browser. The storage key and method: decide in the REQ that builds it.
 - System mode follows `prefers-color-scheme` (from [[context/conventions]]).
 - Screens without a dark picture (sign-up, dashboard, feed, users, my profile) use the same layout with the dark tokens.
 
@@ -176,8 +176,8 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Theme switch | not built | light, dark, system; pressed | Three icon buttons in the header; three text buttons (Light, Dark, System) in the phone menu. The pressed one uses `--action` |
 | Header | not built | desktop, phone | See "Page pattern" |
 | Band | not built | page heading; avatar and name on profile pages | See "Page pattern" |
-| Footer | not built | — | App name on the left, "About" link on the right |
-| Icons | not built | — | Simple line icons, 2px stroke, `currentColor`. No emoji. The icon set is not decided |
+| Footer | not built | before and after the About page exists | App name on the left. The "About" link on the right is not rendered until the About page exists; the About REQ adds it. No dead links |
+| Icons | not built | — | Simple line icons, 2px stroke, `currentColor`. No emoji. The icon set: decide in the REQ that builds it |
 
 ## Patterns
 
@@ -189,7 +189,7 @@ Every main page after log in has the same three parts:
 2. **Band.** Full-width `--band` block. Inside: a 72×8px accent bar, the page heading, one line of sub text.
 3. **First card overlaps the band** by 56px (`margin-top: -56px`, 52px on phone). On the Profile and My profile pages the band holds the avatar and name instead, and the cards start below it.
 
-Footer: app name on the left, "About" link on the right.
+Footer: app name on the left. The README also draws an "About" link on the right, but the link is not rendered until the About page exists; the About REQ adds it. No dead links. _(Owner, 2026-10-06; this overrides README sections 1 and 4 until then.)_
 
 Phone and other narrow screens: the header is 60px with the app name and a menu button. The menu opens full screen with large links, the theme switch as three text buttons (Light, Dark, System), the user block and Log out. The band heading drops to 36px. Cards stack in one column. Screens without a phone picture follow these rules.
 
@@ -199,7 +199,7 @@ Names, companies and numbers in the screen files are sample data.
 
 | File | Screen | Who sees it | Main content |
 |---|---|---|---|
-| `login.html`, `login-dark.html` | Log in | Everyone | Email, password, link to sign up |
+| `login.html`, `login-dark.html` | Log in | Everyone | Email, password, link to sign up. Plus one line not in the picture: "Forgot your password? Contact the alumni office." with the contact email (owner, 2026-10-06) |
 | `signup.html` | Create an account | Everyone | Name, email, password, optional photo link, role choice (Student or Graduate) |
 | `dashboard.html` | Dashboard | Logged in | Greeting, counts, recent posts, a summary of your own profile, new people in the directory |
 | `feed.html` | Feed | Logged in | Write a post (optional image link), posts with author and date, Reply, Edit and Delete, comments |
@@ -210,6 +210,8 @@ Names, companies and numbers in the screen files are sample data.
 | `phone-directory.html`, `phone-menu.html` | Phone size, 390px | Logged in | Directory and the open menu |
 
 Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]): About page (planned, built last), Privacy page, password reset.
+
+The About page will say: what the system is, who can join, how to contact the alumni office (the contact email), and the app version. _(Owner, 2026-10-06.)_ Its layout: decide in the REQ that builds it.
 
 ### Loading, empty and error states
 
@@ -223,6 +225,8 @@ Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-res
 - Label above the field (14px, 600); help or error text below.
 - A user cannot change their own email. The field is disabled with the note "Ask an admin to change your email."
 - Students do not have an alumni profile form. They see only the Account card on My profile.
+- On My profile, Field is a free text input. _(Owner, 2026-10-06.)_
+- The log-in page shows one line: "Forgot your password? Contact the alumni office." with the contact email. It stays until reset by email is built in a later REQ. _(Owner, 2026-10-06.)_
 - Sign-up shows the roles "Student" and "Graduate". "Graduate" saves the role `alumni` ([[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]]).
 
 ### Deleting
@@ -234,6 +238,8 @@ Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-res
 
 - Nav links: Dashboard, Directory, Feed, plus Users for admins.
 - On phone the directory filters sit behind a "Filters" button. Search stays visible.
+- The Field filter lists the distinct non-empty values of `alumni.field`, sorted A to Z. The Department and Graduation year filters work the same way, from `alumni.department` and `alumni.graduation_year`. _(Owner, 2026-10-06.)_
+- The footer's "About" link is not rendered until the About page exists. No dead links.
 
 ### Fields the screens need that the database does not have yet
 
@@ -271,12 +277,13 @@ Places we deliberately break our own rules, each with a reason and scope. If it'
 ### Theming / brands
 
 - White-label: no university logo. The app name is text from one constant (a single exported constant in one config file); it is never hard-coded in components ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
+- One contact email for the alumni office, a constant in the same config file as the app name. Used on the log-in page and the About page. Its value: decide in the REQ that builds it.
 - Two token sets (light, dark) under one set of names. Components never branch on the theme; they read the tokens.
-- Whether a buyer may change the tokens (their own accent color, for example): not decided.
+- Whether a buyer may change the tokens (their own accent color, for example): decide in the REQ that builds it.
 
 ### How the system grows
 
-Not decided.
+Decide in the REQ that builds it.
 
 ## Related
 

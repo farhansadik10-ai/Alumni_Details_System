@@ -17,6 +17,11 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] design-system | remaining questions answered by the owner; anything still open is "decide in the REQ that builds it"
+## [2026-10-06] adr-updated | ADR-10 footer About link not rendered until the page exists; About content set; log-in page shows "Forgot your password? Contact the alumni office."
+## [2026-10-06] adr-updated | ADR-09 the app-name config file also holds one contact email for the alumni office
+## [2026-10-06] adr-updated | ADR-08 Field is free text; Field, Department and Graduation year filters list distinct non-empty values, A to Z
+
 ## [2026-10-06] design-system | open items filled by the owner: skeleton loading, hover colors, Small and Caption weight 400, contrast checked, no UI library
 ## [2026-10-06] adr-updated | ADR-09 wording is "one constant" (a single exported constant in one config file); file renamed to adr-09-white-label-app-name-from-one-constant
 ## [2026-10-06] adr-updated | ADR-08 column names final: mentorship_available (boolean, default false), field (text, nullable); owner runs the migration in a later REQ

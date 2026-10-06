@@ -7,13 +7,13 @@
 | Author | farhansadik10-ai (owner) |
 | Supersedes | (none) |
 | Superseded by | (none) |
-| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1, 4 and 9 |
+| Based on | `docs/design/README.md` (approved by the owner on 2026-10-06), sections 1, 4 and 9; the owner's answers of 2026-10-06 (footer link, About content, forgotten password) |
 
 ## Context
 
 The approved design covers log in, sign-up, dashboard, feed, directory, profile, users and My profile. Three things are not designed: an About page, a Privacy page, and password reset.
 
-The footer on every page already has an "About" link.
+The README draws an "About" link in the footer of every page.
 
 The question was whether these three are part of the redesign, and in what order.
 
@@ -47,24 +47,33 @@ Build the designed screens first. Build the About page at the end of the redesig
 
 - **About page:** planned, built last in the redesign.
 - **Privacy page:** later work. Needed before selling in Europe.
-- **Password reset:** later work.
+- **Password reset:** reset by email is a later REQ.
 
 None of the three has a design yet. Each needs one, approved by the owner, before it is built.
+
+Until they exist (owner, 2026-10-06):
+
+- **Footer "About" link:** not rendered until the About page exists. The About REQ adds the link. No dead links. This overrides the footer drawn in the README and the screens until then.
+- **About page content:** what the system is, who can join, how to contact the alumni office, and the app version. The contact is one email, a constant in the same config file as the app name ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
+- **Forgotten password:** the log-in page shows one line: "Forgot your password? Contact the alumni office." with the contact email.
 
 ## Consequences
 
 | Consequence | Type |
 |---|---|
 | The About page is the last screen of the redesign and needs a design first | follow-up |
-| The log in screen has no "forgot password" link | trade-off |
+| The footer is built without the "About" link; the About REQ adds it | new work |
+| One contact email constant in the app-name config file; the log-in page reads it | new work |
+| The log-in page gets one line of text that is not in `login.html` | new work |
+| A user who forgets their password depends on the alumni office until reset by email exists | trade-off |
 | No Privacy page in the redesign; it blocks selling in Europe | trade-off |
-| Privacy page and password reset each need their own request later | follow-up |
+| Privacy page and password reset each need their own REQ later | follow-up |
 
 ## Open questions
 
-- [ ] What does the footer's "About" link do until the About page is built?
-- [ ] What goes on the About page?
-- [ ] Until password reset exists, how does a user who forgot their password get back in?
+- [ ] The About page layout. Decide in the REQ that builds it.
+- [ ] Where the app version on the About page comes from. Decide in the REQ that builds it.
+- [ ] How the alumni office resets a password for a user today. Decide in the REQ that builds it.
 
 ## Related
 
