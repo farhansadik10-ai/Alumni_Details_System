@@ -17,6 +17,13 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] adr-accepted | ADR-10 About page built last; Privacy page and password reset are later work
+## [2026-10-06] adr-accepted | ADR-09 white-label app name "University Alumni" from one config value
+## [2026-10-06] adr-accepted | ADR-08 mentoring and field stay; alumni gets mentorship_available (boolean) and field (text)
+## [2026-10-06] adr-accepted | ADR-07 design direction "Oak, ink band" with light, dark and system themes
+## [2026-10-06] design-system | context/design-system.md written from docs/design/README.md (status: agreed)
+## [2026-10-06] design-approved | "Oak, ink band" approved by the owner; docs/design/ added (README.md + 15 screens)
+
 ## [2026-10-05] req-archived | REQ-fs-001-fix-alumni-comment-queries
 ## [2026-10-05] req-merged | REQ-fs-001-fix-alumni-comment-queries | merge commit 2f51e18f on redesign
 ## [2026-10-05] ship-gate-cleared | REQ-fs-001-fix-alumni-comment-queries

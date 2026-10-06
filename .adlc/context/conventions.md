@@ -72,7 +72,7 @@ _From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/s
 - White-label: no university logo; the app name is text from one constant.
 - Theme: light, dark, system; toggle in the header; the choice is persisted; system mode follows `prefers-color-scheme`.
 - All colors, spacing and type come from design tokens; no hardcoded values in components.
-- Designs live in `docs/design/`; the written rules live in `.adlc/context/design-system.md`. Follow both. _(Neither exists yet as of 2026-10-05.)_
+- Designs live in `docs/design/`; the written rules live in `.adlc/context/design-system.md`. Follow both. _(Both exist since 2026-10-06: `docs/design/README.md` with `screens/`, and [[context/design-system]].)_
 - Screens show only fields that exist in `db/schema.md`.
 - Every list and form has loading, empty and error states.
 - Responsive from 360px up; no layout breaks at 200% zoom.

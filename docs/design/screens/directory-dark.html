@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alumni directory, dark</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button,input{font:inherit}
+a{color:#F2F1EC}a:hover{color:#EBC878}
+</style>
+</head>
+<body>
+<div style="--ground: #121212; --surface: #1B1B1A; --sunken: #242422; --text: #F2F1EC; --muted: #A8A7A0; --line: #3A3A36; --edge: #6B6A64; --focus: #E0AE4A; --action: #F2F1EC; --on-action: #161616; --accent: #E0AE4A; --on-accent: #161616; --accent-edge: #E0AE4A; --accent-soft: #3A2E12; --accent-soft-text: #EBC878; --band: #262624; --band-text: #F2F1EC; --band-muted: #A8A7A0; color-scheme: dark; min-height: 100vh; box-sizing: border-box; background: var(--ground); color: var(--text); font-family: 'Hanken Grotesk', 'Segoe UI', Helvetica, sans-serif; font-size: 16px; line-height: 1.5; display: flex; flex-direction: column">
+
+<header style="background: var(--surface); border-bottom: 1.5px solid var(--edge)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 0 32px; min-height: 72px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0 40px">
+<a href="directory-dark.html" style="color: var(--text); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; text-decoration: none">University Alumni</a>
+<nav aria-label="Main" style="display: flex; gap: 4px">
+<a href="#" style="height: 72px; padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: none">Dashboard</a>
+<a href="directory-dark.html" aria-current="page" style="height: 72px; padding: 0 14px; display: flex; align-items: center; box-shadow: inset 0 -4px 0 var(--accent); color: var(--text); font-size: 15px; font-weight: 700; text-decoration: none">Directory</a>
+<a href="#" style="height: 72px; padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: none">Feed</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="display: flex; border: 1.5px solid var(--edge); border-radius: 2px">
+<button type="button" aria-label="Light theme" aria-pressed="false" style="width: 40px; height: 40px; border: 0; border-radius: 0; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"></path></svg></button>
+<button type="button" aria-label="Dark theme" aria-pressed="true" style="width: 40px; height: 40px; border: 0; border-left: 1.5px solid var(--edge); border-radius: 0; background: var(--action); color: var(--on-action); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></button>
+<button type="button" aria-label="System theme" aria-pressed="false" style="width: 40px; height: 40px; border: 0; border-left: 1.5px solid var(--edge); border-radius: 0; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8M12 16v4"></path></svg></button>
+</div>
+<button type="button" aria-haspopup="menu" style="height: 44px; padding: 0 8px 0 6px; border: 1.5px solid transparent; border-radius: 2px; background: transparent; color: var(--text); font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">TA</span>Tanvir Ahmed<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+</div>
+</header>
+
+<section style="background: var(--band); color: var(--band-text); border-bottom: 1.5px solid var(--edge)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 56px 32px 100px; display: flex; flex-direction: column; gap: 14px">
+<div aria-hidden="true" style="width: 72px; height: 8px; background: var(--accent)"></div>
+<h1 style="margin: 0; font-size: 60px; line-height: 1; font-weight: 700; letter-spacing: -0.035em">Alumni directory</h1>
+<div style="font-size: 19px; line-height: 1.45; color: var(--band-muted); max-width: 620px">Find graduates by name, company or job title, and see who is open to mentoring.</div>
+</div>
+</section>
+
+<main style="flex-grow: 1; width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 0 32px 72px; display: flex; flex-direction: column; gap: 32px">
+
+<form role="search" style="position: relative; margin-top: -56px; background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px">
+<div style="flex: 3 1 280px; display: flex; flex-direction: column; gap: 6px">
+<label for="dir-d-q" style="font-size: 14px; font-weight: 600">Search</label>
+<input id="dir-d-q" type="search" placeholder="Name, company or job title" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="flex: 1 1 170px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; font-weight: 600">Department</div>
+<button type="button" aria-haspopup="listbox" style="height: 44px; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer">All departments<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<div style="flex: 1 1 150px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; font-weight: 600">Graduation year</div>
+<button type="button" aria-haspopup="listbox" style="height: 44px; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer">Any year<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<div style="flex: 1 1 150px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; font-weight: 600">Field</div>
+<button type="button" aria-haspopup="listbox" style="height: 44px; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer">Any field<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<button type="submit" style="height: 44px; padding: 0 24px; border: 1.5px solid var(--accent-edge); border-radius: 2px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 700; cursor: pointer">Search</button>
+</div>
+<label style="align-self: flex-start; min-height: 44px; display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer"><input type="checkbox" style="width: 20px; height: 20px; margin: 0; accent-color: var(--action)">Only show alumni open to mentoring</label>
+</form>
+
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="font-size: 15px; font-weight: 600">86 alumni</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 24px">
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">NR</div>
+<span style="padding: 4px 10px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 13px; font-weight: 600">Open to mentoring</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Nadia Rahman</h2>
+<div style="font-size: 15px">Software Engineer</div>
+<div style="font-size: 15px; color: var(--muted)">Nordlys Systems</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Computer Science</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2019</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Software</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">EL</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Erik Lindqvist</h2>
+<div style="font-size: 15px">Product Designer</div>
+<div style="font-size: 15px; color: var(--muted)">Havn Studio</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Architecture</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2016</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Design</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">AK</div>
+<span style="padding: 4px 10px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 13px; font-weight: 600">Open to mentoring</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Ayesha Karim</h2>
+<div style="font-size: 15px">Research Associate</div>
+<div style="font-size: 15px; color: var(--muted)">Delta Health Institute</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Pharmacy</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2018</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Healthcare</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">JW</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Jonas Weber</h2>
+<div style="font-size: 15px">Embedded Engineer</div>
+<div style="font-size: 15px; color: var(--muted)">Kessel Robotics</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Electrical Engineering</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2017</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Robotics</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">FI</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Farzana Islam</h2>
+<div style="font-size: 15px">Marketing Lead</div>
+<div style="font-size: 15px; color: var(--muted)">Brightleaf Foods</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Business Administration</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2015</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Marketing</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+<article style="background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div aria-hidden="true" style="width: 56px; height: 56px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center">SM</div>
+<span style="padding: 4px 10px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 13px; font-weight: 600">Open to mentoring</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em">Sofia Marchetti</h2>
+<div style="font-size: 15px">Civil Engineer</div>
+<div style="font-size: 15px; color: var(--muted)">Ponte Group</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Civil Engineering</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Class of 2014</span>
+<span style="padding: 3px 9px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px">Construction</span>
+</div>
+<a href="profile-dark.html" style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); color: var(--text); font-size: 14px; font-weight: 700">View profile</a>
+</article>
+
+</div>
+</div>
+
+<nav aria-label="Pages" style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<span aria-disabled="true" style="height: 44px; padding: 0 14px; display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 2px; color: var(--muted); font-size: 14px; font-weight: 600">Previous</span>
+<a href="#" aria-current="page" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--action); border-radius: 2px; background: var(--action); color: var(--on-action); font-size: 14px; font-weight: 700; text-decoration: none">1</a>
+<a href="#" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 1.5px solid transparent; border-radius: 2px; color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none">2</a>
+<a href="#" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 1.5px solid transparent; border-radius: 2px; color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none">3</a>
+<a href="#" style="height: 44px; padding: 0 14px; display: flex; align-items: center; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none">Next</a>
+<span style="padding-left: 12px; font-size: 14px; color: var(--muted)">Page 1 of 15</span>
+</nav>
+
+</main>
+
+<footer style="border-top: 1px solid var(--line)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 20px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; font-size: 14px; color: var(--muted)">
+<span>University Alumni</span>
+<a href="#" style="color: var(--muted)">About</a>
+</div>
+</footer>
+
+</div>
+</body>
+</html>

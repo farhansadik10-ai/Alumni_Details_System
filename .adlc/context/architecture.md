@@ -76,6 +76,7 @@ What follows from it:
 - `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database.
 - The `"User".email` UNIQUE constraint is case-sensitive, so the same email in different letter case can register twice.
 - No schema change without the owner's approval.
+- **Decided, not in the database yet (2026-10-06):** `alumni` gets `mentorship_available` (boolean) and `field` (text) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The table above shows the database as it is today; do not write SQL against the two columns until `db/schema.md` lists them.
 
 ## External integrations
 
@@ -111,5 +112,9 @@ What follows from it:
 - [[architecture/adr-04-profile-photo-is-a-url-field|ADR-04]] — A profile photo is a URL field, with an initials avatar as fallback
 - [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]] — `GET /api/posts` returns each post's author name and photo
 - [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]] — Deleting rows that other rows reference
+- [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]] — Design direction is "Oak, ink band", with light, dark and system themes
+- [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]] — Mentoring and field stay in the design; `alumni` gets two new columns
+- [[architecture/adr-09-white-label-app-name-from-one-config-value|ADR-09]] — The app is white-label; its name "University Alumni" comes from one config value
+- [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]] — The About page is built last; the Privacy page and password reset are later work
 
 Known backend problems are in [[knowledge/gotchas]] (G01–G24).

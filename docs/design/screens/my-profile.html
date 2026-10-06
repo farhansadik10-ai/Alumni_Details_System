@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button,input,textarea{font:inherit}
+a{color:#161616}a:hover{color:#5A3F06}
+</style>
+</head>
+<body>
+<div style="--ground: #F7F5EF; --surface: #FFFFFF; --sunken: #EFECE4; --text: #161616; --muted: #5C5B55; --line: #D2CFC6; --edge: #161616; --focus: #9A6B12; --action: #161616; --on-action: #FFFFFF; --accent: #C8922A; --on-accent: #161616; --accent-edge: #161616; --accent-soft: #F4E6C4; --accent-soft-text: #5A3F06; --band: #161616; --band-text: #FFFFFF; --band-muted: #D9D6CD; color-scheme: light; min-height: 100vh; box-sizing: border-box; background: var(--ground); color: var(--text); font-family: 'Hanken Grotesk', 'Segoe UI', Helvetica, sans-serif; font-size: 16px; line-height: 1.5; display: flex; flex-direction: column">
+
+<header style="background: var(--surface); border-bottom: 1.5px solid var(--edge)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 0 32px; min-height: 72px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0 40px">
+<a href="dashboard.html" style="color: var(--text); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; text-decoration: none">University Alumni</a>
+<nav aria-label="Main" style="display: flex; gap: 4px">
+<a href="dashboard.html" style="height: 72px; padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: none">Dashboard</a>
+<a href="directory.html" style="height: 72px; padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: none">Directory</a>
+<a href="feed.html" style="height: 72px; padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 15px; font-weight: 500; text-decoration: none">Feed</a>
+</nav>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="display: flex; border: 1.5px solid var(--edge); border-radius: 2px">
+<button type="button" aria-label="Light theme" aria-pressed="true" style="width: 40px; height: 40px; border: 0; border-radius: 0; background: var(--action); color: var(--on-action); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"></path></svg></button>
+<button type="button" aria-label="Dark theme" aria-pressed="false" style="width: 40px; height: 40px; border: 0; border-left: 1.5px solid var(--edge); border-radius: 0; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></button>
+<button type="button" aria-label="System theme" aria-pressed="false" style="width: 40px; height: 40px; border: 0; border-left: 1.5px solid var(--edge); border-radius: 0; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8M12 16v4"></path></svg></button>
+</div>
+<a href="my-profile.html" aria-current="page" style="height: 44px; padding: 0 8px 0 6px; border-radius: 2px; box-shadow: inset 0 -3px 0 var(--accent); color: var(--text); font-size: 15px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">TA</span>Tanvir Ahmed</a>
+</div>
+</div>
+</header>
+
+<section style="background: var(--band); color: var(--band-text); border-bottom: 1.5px solid var(--edge)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 48px 32px 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px 32px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px">
+<div aria-hidden="true" style="width: 96px; height: 96px; border-radius: 2px; background: var(--accent-soft); color: var(--accent-soft-text); font-size: 32px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; justify-content: center">TA</div>
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px">
+<span style="padding: 4px 10px; border-radius: 2px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 600">Alumni</span>
+<h1 style="margin: 0; font-size: 56px; line-height: 1; font-weight: 700; letter-spacing: -0.035em">My profile</h1>
+<div style="font-size: 19px; line-height: 1.45; color: var(--band-muted)">Tanvir Ahmed, tanvir.ahmed@example.com</div>
+</div>
+</div>
+<a href="profile.html" style="height: 44px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; border: 1.5px solid var(--band-text); border-radius: 2px; background: transparent; color: var(--band-text); font-size: 14px; font-weight: 600; text-decoration: none">See my public profile</a>
+</div>
+</section>
+
+<main style="flex-grow: 1; width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 48px 32px 72px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px 40px">
+
+<form style="flex: 2 1 480px; background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 28px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em">Alumni profile</h2>
+<div style="font-size: 15px; color: var(--muted)">This is what other people see in the directory.</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; font-weight: 600">Department</div>
+<button type="button" aria-haspopup="listbox" style="height: 44px; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer">Economics<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-year" style="font-size: 14px; font-weight: 600">Graduation year</label>
+<input id="me-year" type="text" inputmode="numeric" value="2020" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-company" style="font-size: 14px; font-weight: 600">Current company</label>
+<input id="me-company" type="text" value="Meridian Bank" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-title" style="font-size: 14px; font-weight: 600">Job title</label>
+<input id="me-title" type="text" value="Data Analyst" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-field" style="font-size: 14px; font-weight: 600">Field</label>
+<input id="me-field" type="text" value="Finance" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-exp" style="font-size: 14px; font-weight: 600">Experience</label>
+<input id="me-exp" type="text" value="5 years" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-linkedin" style="font-size: 14px; font-weight: 600">LinkedIn link <span style="font-weight: 400; color: var(--muted)">(optional)</span></label>
+<input id="me-linkedin" type="url" value="https://www.linkedin.com/in/tanvir-ahmed" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-bio" style="font-size: 14px; font-weight: 600">Bio</label>
+<textarea id="me-bio" rows="4" style="box-sizing: border-box; padding: 10px 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px; line-height: 1.5; resize: vertical">Data analyst at Meridian Bank, working on credit risk reports. I run a free workshop for students every autumn.</textarea>
+</div>
+<label style="align-self: flex-start; min-height: 44px; padding: 0 14px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--accent-soft); display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; cursor: pointer"><input type="checkbox" checked style="width: 20px; height: 20px; margin: 0; accent-color: var(--action)">I am open to mentoring students</label>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 20px; border-top: 1px solid var(--line)">
+<button type="submit" style="height: 44px; padding: 0 24px; border: 1.5px solid var(--accent-edge); border-radius: 2px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 700; cursor: pointer">Save profile</button>
+<button type="button" style="height: 44px; padding: 0 20px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer">Discard changes</button>
+</div>
+</form>
+
+<form style="flex: 1 1 300px; background: var(--surface); border: 1.5px solid var(--edge); border-radius: 2px; padding: 28px; display: flex; flex-direction: column; gap: 20px">
+<h2 style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em">Account</h2>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-name" style="font-size: 14px; font-weight: 600">Full name</label>
+<input id="me-name" type="text" autocomplete="name" value="Tanvir Ahmed" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-email" style="font-size: 14px; font-weight: 600">Email</label>
+<input id="me-email" type="email" value="tanvir.ahmed@example.com" disabled aria-describedby="me-email-hint" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 2px; background: var(--sunken); color: var(--muted); font-size: 15px">
+<div id="me-email-hint" style="font-size: 13px; color: var(--muted)">Ask an admin to change your email.</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="me-photo" style="font-size: 14px; font-weight: 600">Photo link <span style="font-weight: 400; color: var(--muted)">(optional)</span></label>
+<input id="me-photo" type="url" placeholder="https://" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 15px">
+<div style="font-size: 13px; color: var(--muted)">Without a photo, your initials are shown.</div>
+</div>
+<button type="submit" style="align-self: flex-start; height: 44px; padding: 0 20px; border: 1.5px solid var(--edge); border-radius: 2px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer">Save account</button>
+<div style="padding-top: 20px; border-top: 1px solid var(--line)">
+<a href="login.html" style="color: var(--text); font-size: 14px; font-weight: 700">Log out</a>
+</div>
+</form>
+
+</div>
+</main>
+
+<footer style="border-top: 1px solid var(--line)">
+<div style="max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 20px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; font-size: 14px; color: var(--muted)">
+<span>University Alumni</span>
+<a href="#" style="color: var(--muted)">About</a>
+</div>
+</footer>
+
+</div>
+</body>
+</html>
