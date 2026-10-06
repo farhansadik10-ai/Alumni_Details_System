@@ -28,3 +28,6 @@ export class UserDTO implements BaseDTO{
     }
 
 }
+
+/** A user as the API may show it: every column except the password hash. */
+export type PublicUserDTO = Omit<UserDTO, "password">;

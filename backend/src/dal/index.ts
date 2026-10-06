@@ -1,6 +1,7 @@
 export { PostDTO } from "./dto/PostDTO.js"
 export { AlumniDTO } from "./dto/AlumniDTO.js"
 export { UserDTO } from "./dto/UserDTO.js"
+export type { PublicUserDTO } from "./dto/UserDTO.js"
 export { CommentDTO } from "./dto/CommentDTO.js"
 export { UserQuery } from "./query/UserQuery.js"
 export { PostQuery } from "./query/PostQuery.js"

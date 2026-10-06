@@ -17,13 +17,21 @@ export class UserManager {
     return user;
   }
 
+  // The only read that returns the password hash. For login only; never send
+  // its result to a client.
+  public async findUserForLogin(email: string) {
+    const user = await this.userQuery.findUserWithPasswordByEmail(email);
+    return user;
+  }
+
   public async findUserById(id: number) {
     const user = await this.userQuery.findUserById(id);
     return user;
   }
 
-  public async updateUser(id: number, user: Partial<UserDTO>) {
-    const updatedUser = await this.userQuery.updateUser(id, user);
+  // `fields` holds only the columns to change; anything left out is untouched.
+  public async updateUser(id: number, fields: Record<string, unknown>) {
+    const updatedUser = await this.userQuery.updateUser(id, fields);
     return updatedUser;
   }
 
@@ -35,10 +43,6 @@ export class UserManager {
   public async deleteUser(id: number) {
     const deletedUser = await this.userQuery.deleteUser(id);
     return deletedUser;
-  }
-
-  public async updateLoginTime(id: number) {
-    await this.userQuery.updateLoginTime(id);
   }
 
   public async updateLogoutTime(id: number) {
