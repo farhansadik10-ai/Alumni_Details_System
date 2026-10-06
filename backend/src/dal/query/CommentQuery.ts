@@ -22,6 +22,11 @@ export class CommentQuery {
         return comments;
   }
 
+  public async findCommentById(id: number): Promise<CommentDTO | undefined> {
+    const info = await pool.query("SELECT * FROM comment WHERE id = $1", [id]);
+    return info.rows[0];
+  }
+
   public async updateComment(comment: CommentDTO): Promise<CommentDTO> {
     const info = await pool.query(
       `UPDATE comment SET content=$1, updated_at=NOW()
