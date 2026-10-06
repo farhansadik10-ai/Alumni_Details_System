@@ -1,16 +1,10 @@
-import { login } from "../controllers/UserController";
 import { Router } from "express";
-
+import { AuthController } from "../controllers/AuthController";
+import { handler } from "../utils/asyncHandler";
 
 const router = Router();
+const auth = new AuthController();
 
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const result = await login(email, password);
-    res.json(result);
-  } catch (err: any) {
-    res.status(err.status || 500).json({ message: err.message });
-  }
-});
+router.post("/login", handler(auth, "login"));                         // public
+
 export default router;

@@ -1,18 +1,24 @@
 import { Request, Response } from "express";
-import { UserManager } from "@alumni/businesslogic";
+import {
+  UserManager,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@alumni/businesslogic";
 import { UserDTO } from "@alumni/dal";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import {
   pickSent,
   isAdmin,
   isSelf,
   isNonEmptyString,
   isStringOrNull,
+  parseId,
+  parsePaging,
+  queryText,
+  checkFields,
 } from "../utils/requestHelpers";
 
-const userManager = new UserManager();
-const JWT_SECRET = process.env.JWT_SECRET as string;
 const PASSWORD_SALT_ROUNDS = 10;
 
 // The roles a person may pick at sign-up. Admin is never one of them (ADR-01).
@@ -22,141 +28,121 @@ const SIGNUP_ROLES: readonly unknown[] = ["student", "alumni"];
 const USER_UPDATE_FIELDS = ["name", "email", "password", "photo_url"] as const;
 // NOT NULL in the database: when sent, must be a non-empty string.
 const REQUIRED_USER_FIELDS = ["email", "password"] as const;
-// Nullable in the database: when sent, must be a string or null.
-const NULLABLE_USER_FIELDS = ["name", "photo_url"] as const;
+// One rule per updatable field. `name` and `photo_url` are nullable in the
+// database: when sent, a string or null.
+const USER_UPDATE_RULES = {
+  email: isNonEmptyString,
+  password: isNonEmptyString,
+  name: isStringOrNull,
+  photo_url: isStringOrNull,
+};
 
+const SIGNUP_ROLE_MESSAGE = "Role must be student or alumni";
+const CREDENTIALS_REQUIRED_MESSAGE = "Email and password are required";
+const USER_NOT_FOUND_MESSAGE = "User not found";
+const UPDATE_FORBIDDEN_MESSAGE = "Not authorized to update this user";
+const LOGOUT_FORBIDDEN_MESSAGE = "Not authorized to log out this user";
+const NO_FIELDS_MESSAGE = "No fields to update";
+const USER_DELETED_MESSAGE = "User deleted successfully";
 
+export class UserController {
+  private readonly userManager = new UserManager();
 
-export async function login(email: string, password: string) {
-  const user = await userManager.findUserForLogin(email);
-  if (!user) throw { status: 401, message: "Invalid" };
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) throw { status: 401, message: "Invalid" };
-
-  const token = jwt.sign(
-    { sub: user.id, role: user.role },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  return { token };
-}
-
-export function verifyToken(token: string) {
-  return jwt.verify(token, JWT_SECRET) as unknown as { sub: number; role: string };
-}
-
-
-
-export const createUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email, password, role, photo_url } = req.body;
+  public async createUser(req: Request, res: Response): Promise<void> {
+    const { name, email, password, role, photo_url } = req.body ?? {};
     if (!SIGNUP_ROLES.includes(role)) {
-      res.status(400).json({ error: "Role must be student or alumni" });
-      return;
+      throw new ValidationError(SIGNUP_ROLE_MESSAGE);
     }
+    if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+      throw new ValidationError(CREDENTIALS_REQUIRED_MESSAGE);
+    }
+
     const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
     const user = new UserDTO(name, email, hashedPassword, role, photo_url);
-    const newUser = await userManager.createUser(user);
+    const newUser = await this.userManager.createUser(user);
     res.status(201).json(newUser);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
 
-export const getAllUsers = async (req: Request, res: Response) => {
-  try {
-    const users = await userManager.getAllUsers();
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+  public async getAllUsers(req: Request, res: Response): Promise<void> {
+    const { page, limit, offset } = parsePaging(req.query);
+    const filter = {
+      q: queryText(req.query, "q"),
+      role: queryText(req.query, "role"),
+    };
+
+    const { rows, total } = await this.userManager.listUsers(filter, {
+      limit,
+      offset,
+    });
+    res.status(200).json({ items: rows, total, page, limit });
   }
-};
 
-export const findUserById = async (req: Request, res: Response) => {
-  try {
-    const user = await userManager.findUserById(Number(req.params.id));
+  public async findUserById(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const user = await this.userManager.findUserById(id);
+    if (!user) {
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+    }
     res.status(200).json(user);
-  } catch (error) {
-    res.status(404).json({ error: (error as Error).message });
   }
-};
 
-export const findUserByEmail = async (req: Request, res: Response) => {
-  try {
-    const email = Array.isArray(req.params.email) ? req.params.email[0] : req.params.email;
-    const user = await userManager.findUserByEmail(email);
+  public async findUserByEmail(req: Request, res: Response): Promise<void> {
+    const email = Array.isArray(req.params.email)
+      ? req.params.email[0]
+      : req.params.email;
+    const user = await this.userManager.findUserByEmail(email);
+    if (!user) {
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+    }
     res.status(200).json(user);
-  } catch (error) {
-    res.status(404).json({ error: (error as Error).message });
   }
-};
 
-export const updateUser = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    // 403 comes before 400 and 404 here, so a non-admin cannot learn which
-    // user ids exist.
+  public async updateUser(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    // 403 comes before the 400 body checks and the 404 here, so a non-admin
+    // cannot learn which user ids exist.
     if (!isSelf(req, id) && !isAdmin(req)) {
-      res.status(403).json({ error: "Not authorized to update this user" });
-      return;
+      throw new ForbiddenError(UPDATE_FORBIDDEN_MESSAGE);
     }
 
-    const fields = pickSent(req.body, USER_UPDATE_FIELDS);
-    if (Object.keys(fields).length === 0) {
-      res.status(400).json({ error: "No fields to update" });
-      return;
+    const sent = pickSent(req.body, USER_UPDATE_FIELDS);
+    if (Object.keys(sent).length === 0) {
+      throw new ValidationError(NO_FIELDS_MESSAGE);
     }
 
     for (const field of REQUIRED_USER_FIELDS) {
-      if (field in fields && !isNonEmptyString(fields[field])) {
-        res.status(400).json({ error: `${field} must be a non-empty string` });
-        return;
+      if (field in sent && !isNonEmptyString(sent[field])) {
+        throw new ValidationError(`${field} must be a non-empty string`);
       }
     }
-    for (const field of NULLABLE_USER_FIELDS) {
-      if (field in fields && !isStringOrNull(fields[field])) {
-        res.status(400).json({ error: `${field} has the wrong type` });
-        return;
-      }
-    }
+    const fields = checkFields(sent, USER_UPDATE_RULES);
 
-    if (isNonEmptyString(fields.password)) {
+    if (typeof fields.password === "string") {
       fields.password = await bcrypt.hash(fields.password, PASSWORD_SALT_ROUNDS);
     }
 
-    const updated = await userManager.updateUser(id, fields);
+    const updated = await this.userManager.updateUser(id, fields);
     if (!updated) {
-      res.status(404).json({ error: "User not found" });
-      return;
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
     }
     res.status(200).json(updated);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
 
-export const deleteUser = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    await userManager.deleteUser(id);
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+  public async deleteUser(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const deleted = await this.userManager.deleteUser(id);
+    if (!deleted) {
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+    }
+    res.status(200).json({ message: USER_DELETED_MESSAGE });
   }
-};
 
-export const updateLogoutTime = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
+  public async updateLogoutTime(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
     if (!isSelf(req, id)) {
-      res.status(403).json({ error: "Not authorized to log out this user" });
-      return;
+      throw new ForbiddenError(LOGOUT_FORBIDDEN_MESSAGE);
     }
-    const updated = await userManager.updateLogoutTime(id);
+    const updated = await this.userManager.updateLogoutTime(id);
     res.status(200).json(updated);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
+}
