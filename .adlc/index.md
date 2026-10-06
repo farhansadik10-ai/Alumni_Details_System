@@ -17,6 +17,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ | Title | Status | Path |
 |---|---|---|---|
 | REQ-fs-001 | Fix AlumniQuery and CommentQuery against db/schema.md | merged | `specs/_archive/2026-10/fs/REQ-fs-001-fix-alumni-comment-queries` |
+| REQ-fs-002 | Close the security and data-loss gaps in the backend | ready to merge | `specs/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
 
 ## ADRs
 
@@ -40,6 +41,7 @@ Patterns, rules that must always hold, domain models.
 | Page | One-line summary |
 |---|---|
 | [[knowledge/concepts/user-join-read-shape]] | Reads that need the person join `"User"` with named columns, never `password` |
+| [[knowledge/concepts/partial-update-sent-fields]] | An update writes only the fields that were sent; `null` clears; column names never come from the request |
 
 ## Components
 
@@ -48,6 +50,7 @@ One page per major module.
 | Page | Module | Owner |
 |---|---|---|
 | [[knowledge/components/dal-query-classes]] | `backend/src/dal/query/`, `dal/dto/` | farhansadik10-ai |
+| [[knowledge/components/api-controllers-and-routes]] | `backend/src/api/controllers/`, `routes/`, `MiddleWare/`, `utils/` | farhansadik10-ai |
 
 ## Lessons
 

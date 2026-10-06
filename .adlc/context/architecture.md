@@ -91,8 +91,9 @@ What follows from it:
 - SQL lives only in `dal/query/*Query.ts`, always parameterized, and uses the real names above. Managers contain no SQL.
 - Controllers are classes; routes bind instance methods. _(Target rule from the owner, 2026-10-05. Today's controllers are exported functions.)_
 - One shared error middleware maps errors to HTTP responses; no per-method `try`/`catch` for that. _(Target rule from the owner, 2026-10-05. Today every controller function has its own `try`/`catch` and there is no error middleware.)_
-- Every non-public route uses `authMiddleware`, plus `requireRole` and an owner check where needed.
-- No endpoint returns the `password` column ([[knowledge/gotchas#^g17|G17]]).
+- Every non-public route uses `authMiddleware`, plus `requireRole` and an owner check where needed. The owner checks were added in REQ-fs-002 and live in the controllers; who may do what is listed in [[knowledge/components/api-controllers-and-routes]].
+- No endpoint returns the `password` column. Since REQ-fs-002 only the login read selects it ([[knowledge/gotchas#^g17|G17]], [[knowledge/lessons/LESSON-REQ-fs-002-2]]).
+- An update writes only the fields that were sent ([[knowledge/concepts/partial-update-sent-fields]]).
 - Frontend: API calls live in `src/services/` and use relative `/api` paths; no API calls inside UI components. State is Jotai atoms in `src/store/`. Types come from `@alumni/shared`.
 
 ## Cross-cutting concerns
@@ -101,7 +102,7 @@ What follows from it:
 
 - **Auth:** there is no `AuthController` or `AuthManager`. Login and JWT logic (`login`, `verifyToken`) live in `UserController.ts`. `api/MiddleWare/authMiddleware.ts` verifies the bearer token and sets `req.user = { sub, role }`. `api/MiddleWare/roleMiddleware.ts` exports `requireRole(...roles)`, which checks `req.user.role`. Route files compose the two per route (see `AlumniRoutes.ts`); auth is not applied globally. The token lasts 1 hour.
 - **Config:** one root-level `.env`, read with `dotenv` using relative paths from `backend/src/server.ts`, `backend/src/dal/config/db.ts` and `backend/src/api/app.ts`. `db.ts` throws at import time if `DB_PASSWORD` is missing or empty.
-- **Error handling:** see the two target rules under "Layering rules". Until they are built, each controller catches its own errors and returns `{ error: <message> }` with the raw database message.
+- **Error handling:** see the two target rules under "Layering rules". Until they are built, each controller catches its own errors and returns `{ error: <message> }`. Checks added in REQ-fs-002 answer 400 / 403 / 404 with their own messages; anything the database rejects still comes back as its raw message ([[knowledge/gotchas#^g34|G34]]), and the middlewares answer `{ message }` instead ([[knowledge/gotchas#^g29|G29]]).
 - **Logging, observability:** _(not described in the source docs — fill in)_
 
 ## Related ADRs
@@ -117,4 +118,4 @@ What follows from it:
 - [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]] — The app is white-label; its name "University Alumni" is text from one constant
 - [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]] — The About page is built last; the Privacy page and password reset are later work
 
-Known backend problems are in [[knowledge/gotchas]] (G01–G24).
+Known backend problems are in [[knowledge/gotchas]] (G01–G34; each entry's Status row says whether it is still open).

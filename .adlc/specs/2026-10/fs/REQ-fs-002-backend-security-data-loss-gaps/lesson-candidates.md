@@ -88,3 +88,90 @@
 **Claim:** When a test plan creates rows through the API, say up front which ones cannot be removed through it; alumni profiles have no delete route and block deleting their user.
 **Saw it in:** `backend/src/api/routes/AlumniRoutes.ts:14`
 **Context:** The owner runs the checklist against their real database, so leftover test rows need a hand-run statement or stay.
+
+## CAND-Q01 [review-qual]
+**Claim:** When a REQ removes a debug `console.log` that leaks data, grep the whole DAL for the same pattern in the same pass.
+**Saw it in:** `backend/src/dal/query/PostQuery.ts:27`, `CommentQuery.ts:21`
+**Context:** The user-row print was removed; identical row dumps stayed in two sibling Query classes.
+
+## CAND-Q02 [review-qual]
+**Claim:** When adding a shared auth helper (`isSelf`/`isAdmin`), convert every existing inline check in the same controllers.
+**Saw it in:** `backend/src/api/controllers/PostController.ts` (deletePost, raw `===`)
+**Context:** One old inline check survived beside the new helpers, with weaker id comparison.
+
+## CAND-A01 [review-arch]
+**Claim:** When a Query method can return no row, type it `| undefined` in the same change, for every sibling Query, not just the one you touched.
+**Saw it in:** `backend/src/dal/query/AlumniQuery.ts:29`, `CommentQuery.ts:27`
+**Context:** Users and posts got nullable types; alumni and comment kept `Promise<DTO>` while controllers now check for undefined.
+
+## CAND-A02 [review-arch]
+**Claim:** A field allow-list kept in both controller and Query must be documented as "change together", or exported from one place.
+**Saw it in:** `AlumniController.ts:17` and `AlumniQuery.ts:5`
+**Context:** A new column added to one list only is silently dropped with a 200.
+
+## CAND-A03 [review-arch]
+**Claim:** Give every Manager update method one input type shape (Partial of a Pick), not Record in one and Partial DTO in another.
+**Saw it in:** `UserManager.ts:33`, `PostManager.ts:14`
+**Context:** Three domains, three signatures, casts in controllers.
+
+## CAND-901 [review-corr]
+**Claim:** Build partial-UPDATE SQL from a fixed column list, never from request keys.
+**Saw it in:** `backend/src/dal/query/updateSet.ts:21`
+**Context:** Keeps dynamic SET safe from injection and mass assignment while still parameterizing values.
+
+## CAND-902 [review-corr]
+**Claim:** Put the owner check before the 400/404 so non-owners cannot probe which ids exist.
+**Saw it in:** `backend/src/api/controllers/UserController.ts:~100`
+**Context:** AC17 exception for PUT /users/:id; other routes load the row first.
+
+## CAND-R01 [review-reflect]
+**Claim:** Give the one query that must read a secret column a name that says so (`findUserWithPasswordByEmail`), and make every other read of that table list its columns.
+**Saw it in:** `backend/src/dal/query/UserQuery.ts:49` (and `UserManager.findUserForLogin`)
+**Context:** G17's "Don't" said login still needs the hash; this REQ solved it by splitting the read, a pattern with no vault page yet.
+
+## CAND-R02 [review-reflect]
+**Claim:** When removing a route, grep commented-out scratch files too (`TestManager.ts`), or the stale name survives.
+**Saw it in:** `backend/src/businessLogic/src/TestManager.ts:134` (`// userManager.updateLoginTime(1);`)
+**Context:** AC21 removed `updateLoginTime` from three layers; one dead comment still names it.
+
+## CAND-R03 [review-reflect]
+**Claim:** When an ADR says "one per user is not enforced by the database", record where it is enforced; a token-sourced `user_id` alone does not stop repeat creates.
+**Saw it in:** `backend/src/api/controllers/AlumniController.ts:44` (`createAlumni`)
+**Context:** ADR-03 consequence "backend or UI must check" is still open after AC23.
+
+## Candidate verdicts
+
+Issued at `/wrapup`, 2026-10-06. Checked against `knowledge/lessons/` on this branch and on `origin/redesign` (same four REQ-fs-001 lessons on both).
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 | promote | LESSON-REQ-fs-002-4 |
+| CAND-002 | discard | a working habit, not a rule; the helper outputs are recorded in `manual-test-checklist.md` |
+| CAND-003 | discard | captured in the code comment on `pickSent` and in the concept page `partial-update-sent-fields` |
+| CAND-004 | demote-to-gotcha | ^g28 |
+| CAND-005 | discard | captured as a rule in the component page `api-controllers-and-routes` (order of answers) |
+| CAND-006 | demote-to-gotcha | ^g31 |
+| CAND-007 | demote-to-gotcha | ^g31 |
+| CAND-008 | promote | LESSON-REQ-fs-002-1 |
+| CAND-009 | demote-to-gotcha | ^g33 |
+| CAND-010 | demote-to-gotcha | ^g31 |
+| CAND-011 | demote-to-gotcha | ^g32 |
+| CAND-012 | discard | already G16 |
+| CAND-013 | promote | LESSON-REQ-fs-002-2 |
+| CAND-014 | promote | LESSON-REQ-fs-002-1 (merged with CAND-008) |
+| CAND-015 | demote-to-gotcha | ^g31 |
+| CAND-016 | demote-to-gotcha | ^g33 |
+| CAND-017 | demote-to-gotcha | ^g29 |
+| CAND-018 | discard | one-off; the checklist's "Cleaning up" section says what stays |
+| CAND-Q01 | discard | duplicate of LESSON-REQ-fs-001-4; its "Saw it in" now records this second time |
+| CAND-Q02 | promote | LESSON-REQ-fs-002-3 |
+| CAND-A01 | promote | LESSON-REQ-fs-002-1 (merged with CAND-008) |
+| CAND-A02 | demote-to-gotcha | ^g30 |
+| CAND-A03 | demote-to-gotcha | ^g31 |
+| CAND-901 | discard | captured in the concept page `partial-update-sent-fields` |
+| CAND-902 | discard | captured in the component page `api-controllers-and-routes` (403 before 404 on users) |
+| CAND-R01 | promote | LESSON-REQ-fs-002-2 (merged with CAND-013) |
+| CAND-R02 | discard | trivial — one commented line in a scratch file |
+| CAND-R03 | demote-to-gotcha | ^g32 |
+
+Also written without a candidate: ^g34 (raw database messages on bad ids and duplicate emails — review findings m6 and t2).

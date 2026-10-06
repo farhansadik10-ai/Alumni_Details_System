@@ -17,6 +17,27 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] ship-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps
+
+## [2026-10-06] req-ready-to-merge | REQ-fs-002-backend-security-data-loss-gaps | partial updates, no password in responses, sign-up roles, owner checks, author from token, login-stamp route removed; manual database check still to run
+## [2026-10-06] lesson | L-REQ-fs-002-4 — refuse null and empty values before turning an id into a number
+## [2026-10-06] lesson | L-REQ-fs-002-3 — when a change adds a shared helper, convert every existing inline copy
+## [2026-10-06] lesson | L-REQ-fs-002-2 — a secret column is kept out of responses by the SQL column list, not by a type
+## [2026-10-06] lesson | L-REQ-fs-002-1 — type a Query method that returns rows[0] as row or undefined
+## [2026-10-06] gotcha | G34 — raw database messages still reach the client on bad ids and duplicate emails
+## [2026-10-06] gotcha | G33 — there is no GET /api/posts/:id route
+## [2026-10-06] gotcha | G32 — an alumni profile belongs to whoever created it; a second one is not stopped
+## [2026-10-06] gotcha | G31 — DTO types do not allow null, but the database sends it and updates accept it
+## [2026-10-06] gotcha | G30 — each update allowed-field list is written twice
+## [2026-10-06] gotcha | G29 — error responses use two keys: error and message
+## [2026-10-06] gotcha | G28 — npm run build does not compile a DAL file that nothing imports
+## [2026-10-06] gotcha-status | G02, G09, G10, G14, G15, G17–G23 fixed; G27 partly fixed (REQ-fs-002) — needs verification until the manual check
+## [2026-10-06] concept | partial-update-sent-fields — first captured
+## [2026-10-06] component | api-controllers-and-routes — first captured
+## [2026-10-06] verify-round | REQ-fs-002-backend-security-data-loss-gaps | round 2: m1, m2, m5, t1 fixed and re-checked
+
+## [2026-10-06] verify-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | findings: C0/M2/m5 open after round 2 (m1, m2, m5, t1 fixed); both majors are vault updates for wrap-up
+
 ## [2026-10-06] implement-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | 7 tasks done, build passes; AC1-AC24 wait for the owner's manual checklist; spaces-only values count as empty
 
 ## [2026-10-06] architect-gate-cleared | REQ-fs-002-backend-security-data-loss-gaps | 7 tasks, no ADR; owner chose 403 before 404 on PUT /api/users/:id and 400 for an empty update
