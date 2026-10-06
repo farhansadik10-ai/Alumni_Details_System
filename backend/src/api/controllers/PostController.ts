@@ -1,96 +1,103 @@
 import { Request, Response } from "express";
-import { PostManager } from "@alumni/businesslogic";
+import {
+  ForbiddenError,
+  NotFoundError,
+  PostManager,
+  ValidationError,
+} from "@alumni/businesslogic";
 import { PostDTO } from "@alumni/dal";
 import {
-  findWrongType,
+  checkFields,
   isAdmin,
   isSelf,
   isStringOrNull,
+  parseId,
+  parsePaging,
   pickSent,
 } from "../utils/requestHelpers";
 
-const postManager = new PostManager();
-
-// The only body keys an edit may change. user_id, id and anything else are dropped.
-const POST_UPDATE_FIELDS = ["caption", "media_url"] as const;
-
-export const createPost = async (req: Request, res: Response) => {
-  try {
-    const { caption, media_url } = req.body;
-    const post = new PostDTO(req.user.sub, caption, media_url);
-    const newPost = await postManager.createNewPost(post);
-    res.status(201).json(newPost);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
-  }
+// The only body keys a create or an edit may set. user_id, id and anything else are dropped.
+const POST_FIELDS = ["caption", "media_url"] as const;
+const POST_FIELD_RULES = {
+  caption: isStringOrNull,
+  media_url: isStringOrNull,
 };
 
-export const getAllPosts = async (req: Request, res: Response) => {
-  try {
-    const posts = await postManager.getAllPosts();
-    res.status(200).json(posts);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
+const POST_NOT_FOUND = "Post not found";
 
-export const findPostById = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    const post = await postManager.findPostById(id);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+/** A checked field as the text the DTO takes; absent or `null` is `null`. */
+function textOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+export class PostController {
+  private readonly postManager = new PostManager();
+
+  public async createPost(req: Request, res: Response): Promise<void> {
+    const fields = checkFields(pickSent(req.body, POST_FIELDS), POST_FIELD_RULES);
+
+    // The author is the caller; a user_id in the body is ignored.
+    const post = new PostDTO(
+      req.user.sub,
+      textOrNull(fields.caption),
+      textOrNull(fields.media_url),
+    );
+    const newPost = await this.postManager.createNewPost(post);
+    if (!newPost) {
+      // The insert went through but the row could not be read back.
+      throw new Error("Created post could not be read back");
     }
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(404).json({ error: (error as Error).message });
+    res.status(201).json(newPost);
   }
-};
 
-export const updatePost = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    const existing = await postManager.findPostById(id);
-    if (!existing) return res.status(404).json({ error: "Post not found" });
+  public async getAllPosts(req: Request, res: Response): Promise<void> {
+    const { page, limit, offset } = parsePaging(req.query);
+    const { rows, total } = await this.postManager.listPosts({ limit, offset });
+    res.status(200).json({ items: rows, total, page, limit });
+  }
+
+  // Not bound to a route (gotcha G33).
+  public async findPostById(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const post = await this.postManager.findPostById(id);
+    if (!post) throw new NotFoundError(POST_NOT_FOUND);
+    res.status(200).json(post);
+  }
+
+  public async updatePost(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const existing = await this.postManager.findPostById(id);
+    if (!existing) throw new NotFoundError(POST_NOT_FOUND);
 
     // Author only. An admin may delete any post but edit only their own (ADR-02).
     if (!isSelf(req, existing.user_id)) {
-      return res.status(403).json({ error: "Not authorized to edit this post" });
+      throw new ForbiddenError("Not authorized to edit this post");
     }
 
-    const fields = pickSent(req.body, POST_UPDATE_FIELDS);
-    if (Object.keys(fields).length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
+    const sent = pickSent(req.body, POST_FIELDS);
+    if (Object.keys(sent).length === 0) {
+      throw new ValidationError("No fields to update");
     }
-    const wrongField = findWrongType(fields, isStringOrNull);
-    if (wrongField) {
-      return res.status(400).json({ error: `${wrongField} has the wrong type` });
-    }
+    const fields = checkFields(sent, POST_FIELD_RULES);
 
-    const updated = await postManager.updatePost(id, fields as Partial<PostDTO>);
-    if (!updated) return res.status(404).json({ error: "Post not found" });
+    const updated = await this.postManager.updatePost(id, fields);
+    if (!updated) throw new NotFoundError(POST_NOT_FOUND);
     res.status(200).json(updated);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
 
-export const deletePost = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    const existing = await postManager.findPostById(id);
-    if (!existing) return res.status(404).json({ error: "Post not found" });
+  public async deletePost(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const existing = await this.postManager.findPostById(id);
+    if (!existing) throw new NotFoundError(POST_NOT_FOUND);
 
     // Author or admin (ADR-02).
     if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
-      return res.status(403).json({ error: "Not authorized to delete this post" });
+      throw new ForbiddenError("Not authorized to delete this post");
     }
 
-    const post = new PostDTO(0);
-    post.id = id;
-    await postManager.deletePost(post);
+    // The post and its comments and replies go together, or not at all (ADR-06).
+    const deleted = await this.postManager.deletePost(id);
+    if (!deleted) throw new NotFoundError(POST_NOT_FOUND);
     res.status(200).json({ message: "Post deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
+}

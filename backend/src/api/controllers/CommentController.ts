@@ -1,45 +1,94 @@
 import { Request, Response } from "express";
-import { CommentManager } from "@alumni/businesslogic";
+import {
+  CommentManager,
+  ForbiddenError,
+  NotFoundError,
+  PostManager,
+  ValidationError,
+} from "@alumni/businesslogic";
 import { CommentDTO } from "@alumni/dal";
-import { isAdmin, isNonEmptyString, isSelf } from "../utils/requestHelpers";
+import {
+  isAdmin,
+  isNonEmptyString,
+  isSelf,
+  parseId,
+} from "../utils/requestHelpers";
 
-const commentManager = new CommentManager();
+const POST_NOT_FOUND = "Post not found";
+const COMMENT_NOT_FOUND = "Comment not found";
+const CONTENT_REQUIRED = "Content is required";
+const PARENT_NOT_ON_POST = "parent_id must be a comment on the same post";
 
-export const createComment = async (req: Request, res: Response) => {
-  try {
+export class CommentController {
+  private readonly commentManager = new CommentManager();
+  private readonly postManager = new PostManager();
+
+  public async createComment(req: Request, res: Response): Promise<void> {
+    // The body key is posts_id, the same name as the column and the answer.
+    const postId = parseId(req.body?.posts_id, "posts_id");
+
+    // Absent and null both mean a top-level comment.
+    const sentParentId: unknown = req.body?.parent_id;
+    const parentId =
+      sentParentId === undefined || sentParentId === null
+        ? null
+        : parseId(sentParentId, "parent_id");
+
+    // Same rule as editing a comment: text with at least one visible character.
+    const content: unknown = req.body?.content;
+    if (!isNonEmptyString(content)) {
+      throw new ValidationError(CONTENT_REQUIRED);
+    }
+
+    const post = await this.postManager.findPostById(postId);
+    if (!post) throw new NotFoundError(POST_NOT_FOUND);
+
+    if (parentId !== null) {
+      const parent = await this.commentManager.findCommentById(parentId);
+      if (!parent || parent.posts_id !== postId) {
+        throw new ValidationError(PARENT_NOT_ON_POST);
+      }
+    }
+
     // The author is the caller; a user_id in the body is ignored.
-    const { post_id, content, parent_id } = req.body;
-    const comment = new CommentDTO(req.user.sub, post_id, content, parent_id);
-    const newComment = await commentManager.createComment(comment);
+    const comment = new CommentDTO(
+      req.user.sub,
+      postId,
+      content,
+      parentId,
+    );
+    const newComment = await this.commentManager.createComment(comment);
     res.status(201).json(newComment);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
 
-export const getAllComments = async (req: Request, res: Response) => {
-  try {
-    const comments = await commentManager.getAllComments();
+  public async getAllComments(req: Request, res: Response): Promise<void> {
+    const comments = await this.commentManager.getAllComments();
     res.status(200).json(comments);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
   }
-};
 
-export const updateComment = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    const existing = await commentManager.findCommentById(id);
-    if (!existing) return res.status(404).json({ error: "Comment not found" });
+  /** Bound in PostRoutes at GET /api/posts/:id/comments; `:id` is the post's id. */
+  public async getCommentsByPost(req: Request, res: Response): Promise<void> {
+    const postId = parseId(req.params.id);
+    const post = await this.postManager.findPostById(postId);
+    if (!post) throw new NotFoundError(POST_NOT_FOUND);
+
+    const comments = await this.commentManager.listCommentsByPost(postId);
+    res.status(200).json(comments);
+  }
+
+  public async updateComment(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const existing = await this.commentManager.findCommentById(id);
+    if (!existing) throw new NotFoundError(COMMENT_NOT_FOUND);
 
     // Author only: an admin may delete a comment but not rewrite it.
     if (!isSelf(req, existing.user_id)) {
-      return res.status(403).json({ error: "Not authorized to edit this comment" });
+      throw new ForbiddenError("Not authorized to edit this comment");
     }
 
     const content: unknown = req.body?.content;
     if (!isNonEmptyString(content)) {
-      return res.status(400).json({ error: "Content is required" });
+      throw new ValidationError(CONTENT_REQUIRED);
     }
 
     // Everything but the content comes from the stored row, never the body.
@@ -50,29 +99,23 @@ export const updateComment = async (req: Request, res: Response) => {
       existing.parent_id,
     );
     comment.id = id;
-    const updated = await commentManager.updateComment(comment);
-    if (!updated) return res.status(404).json({ error: "Comment not found" });
+    const updated = await this.commentManager.updateComment(comment);
+    if (!updated) throw new NotFoundError(COMMENT_NOT_FOUND);
     res.status(200).json(updated);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
 
-export const deleteComment = async (req: Request, res: Response) => {
-  try {
-    const id = Number(req.params.id);
-    const existing = await commentManager.findCommentById(id);
-    if (!existing) return res.status(404).json({ error: "Comment not found" });
+  public async deleteComment(req: Request, res: Response): Promise<void> {
+    const id = parseId(req.params.id);
+    const existing = await this.commentManager.findCommentById(id);
+    if (!existing) throw new NotFoundError(COMMENT_NOT_FOUND);
 
     if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
-      return res.status(403).json({ error: "Not authorized to delete this comment" });
+      throw new ForbiddenError("Not authorized to delete this comment");
     }
 
-    const comment = new CommentDTO(0, 0, "");
-    comment.id = id;
-    await commentManager.deleteComment(comment);
+    // The comment and every reply under it go in one statement (ADR-06).
+    const deletedCount = await this.commentManager.deleteComment(id);
+    if (deletedCount === 0) throw new NotFoundError(COMMENT_NOT_FOUND);
     res.status(200).json({ message: "Comment deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
   }
-};
+}
