@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-003 |
 | Tier | 2 |
-| Status | pending |
+| Status | implemented |
 | Repo | alumni-details-system |
 | Depends on | TASK-004 |
 | Blocks | TASK-012 |
@@ -51,6 +51,10 @@
 ## Notes
 
 - This task runs beside TASK-008 to TASK-010; it shares no file with them. It edits `app.ts` after TASK-004 did.
+- Implemented 2026-10-06. `tsc --noEmit` passes for `backend/src/dal` and `backend/src/businessLogic`. `-p backend/src/api` reports no error in `StatsController.ts`, `StatsRoutes.ts` or `app.ts`; the errors left are in the Alumni, Comment, Post and User controllers (TASK-008 to TASK-010, still in flight).
+- SQL checked by reading against `db/schema.md`: `alumni`, `"User"` (double-quoted), `posts`, `"User".role`, `alumni.mentorship_available` (boolean, not null) all exist. Not run against the database.
+- The return type of `getCounts()` is written inline in `StatsQuery.ts`, so `dal/index.ts` gets one export line as the task says. `rows[0]` is `any`, so the `::int` casts in the SQL, not the type, are what make the four values numbers.
+- `role = $1` is an exact, case-sensitive match on `"student"`, the same spelling signup accepts in `UserController.ts` (`SIGNUP_ROLES`). A row stored as `Student` would not be counted.
 
 ## Related
 

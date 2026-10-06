@@ -28,13 +28,17 @@
 
 ## Acceptance
 
-- [ ] `npx tsc --noEmit -p backend/src/businessLogic` passes
-- [ ] `new NotFoundError("x") instanceof AppError` is true by construction, and `.status` is 404
-- [ ] No Manager file is edited in this task
+- [x] `npx tsc --noEmit -p backend/src/businessLogic` passes
+- [x] `new NotFoundError("x") instanceof AppError` is true by construction, and `.status` is 404
+- [x] No Manager file is edited in this task
 
 ## Notes
 
 - Nothing here imports Express.
+- Implemented 2026-10-06. `npx tsc --noEmit -p backend/src/businessLogic` exited 0 with no output.
+- `this.name` is set once in `AppError` with `new.target.name`, so each subclass gets its own name without repeating the line.
+- The `instanceof` criterion was checked by reading, not by running: `NotFoundError extends AppError` and the root `tsconfig.json` targets ESNext, so native class inheritance from `Error` keeps the prototype chain. No code was executed to prove it.
+- The five status constants are private to `errors.ts` (not exported); the task asked only for the six classes.
 
 ## Related
 

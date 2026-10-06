@@ -69,6 +69,17 @@ Post reads carry the author and a counted `comment_count`; one post's comments c
 - No row logging. `"User"` double-quoted.
 - The API workspace will not compile after this task; TASK-010 fixes that. Do not edit controllers. Do not touch `TestManager.ts` / `TestDal.ts`.
 
+### Implementation notes (2026-10-06)
+
+- `PostQuery` exports `PostUpdateColumn` (`"caption" | "media_url"`), taken from its own column list. It is not re-exported from `dal/index.ts`; `PostManager.updatePost` takes `Parameters<PostQuery["updatePost"]>[1]`, and `listPosts` takes `Parameters<PostQuery["listPosts"]>[0]`.
+- `createPost` returns `PostDTO | undefined`, not `PostDTO`: it is an INSERT followed by `findPostById`, and the type says honestly that the second read can find nothing (LESSON-REQ-fs-002-1). TASK-010's `createPost` handler must handle `undefined`.
+- `deletePost(id)` returns `boolean`; `deleteComment(id)` returns the number of rows deleted (the comment plus its replies), 0 when the id does not exist. TASK-010 keeps its own 404 check before calling either.
+- `findPostById` now returns `undefined` for no row, where it returned `null`. `PostController` compares with `!post`, so both work.
+- `listCommentsByPost` uses `c.*`, as the task says. `comment` has no secret column; the `"User"` columns are named.
+- SQL read against `db/schema.md`: `posts` (id, user_id, caption, media_url, created_at, updated_at), `comment` (id, posts_id, parent_id, user_id, created_at), `"User"` (id, name, photo_url). Placeholder counts: insert 3/3, page 2/2, find 1/1, update n+1/n+1, both deletes in `deletePost` 1/1 each, comment list 1/1, comment delete 1/1.
+- Checks run: `npx tsc --noEmit -p backend/src/dal` and `-p backend/src/businessLogic`, both exit 0. Search for `getAllPosts`, `updateCommentCount`, `getPostsByUserId` in `backend/src`: only `api/controllers`, `api/routes` (the controller's own export name) and the commented-out `TestManager.ts`.
+- Not mine, found while reading: `backend/src/dal/query/listHelpers.ts:24` — `likePattern` is `text.replace(/[\%_]/g, "\$&")`. The class holds no backslash and the replacement is just the match, so nothing is escaped. It should be `/[\\%_]/g` and `"\\$&"`. This breaks AC for `q` search in TASK-005 / TASK-006 (a `%` in the search matches everything).
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-003-finish-backend-api/architecture]]

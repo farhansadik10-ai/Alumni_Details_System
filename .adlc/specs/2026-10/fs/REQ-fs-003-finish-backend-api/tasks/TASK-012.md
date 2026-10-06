@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-003 |
 | Tier | 3 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-008, TASK-009, TASK-010, TASK-011 |
 | Blocks | — |
@@ -18,6 +18,7 @@ The owner has one script that checks the whole API over HTTP against their own d
 | Path | Action |
 |---|---|
 | `scripts/api-check.mjs` | create |
+| `backend/src/dal/query/updateSet.ts` | edit — one line, moved here from TASK-002: change `buildUpdateSet`'s first parameter from `Record<string, unknown>` to `UpdateFields`. It could not compile before TASK-005 to TASK-007 converted the callers. If a caller still fails to compile with it, report the caller; do not edit it |
 | `.adlc/specs/2026-10/fs/REQ-fs-003-finish-backend-api/api-check.md` | create (how to run it, what it covers, what Claude already checked) |
 
 ## Approach
@@ -40,16 +41,29 @@ The owner has one script that checks the whole API over HTTP against their own d
 
 ## Acceptance
 
-- [ ] AC37: the script exists, passes `node --check`, and `api-check.md` maps every listed AC to at least one check
-- [ ] AC34, AC35, AC36 recorded with their real results in `api-check.md`
-- [ ] The script holds no secret and reads none from disk
-- [ ] Any whole-REQ check that fails is reported as a problem at the top of `api-check.md`, not fixed silently in files another task owns
+- [x] AC37: the script exists, passes `node --check`, and `api-check.md` maps every listed AC to at least one check
+- [x] AC34, AC35, AC36 recorded with their real results in `api-check.md`
+- [x] The script holds no secret and reads none from disk
+- [x] Any whole-REQ check that fails is reported as a problem at the top of `api-check.md`, not fixed silently in files another task owns
 
 ## Notes
 
 - **Never start the API server and never run `scripts/api-check.mjs`.** Both write to the owner's real database. Do not run `psql`. Do not read `.env`.
 - If a whole-REQ check finds a defect in another task's file, describe it (file, line, what is wrong) and stop; the orchestrator decides who fixes it.
 - Node on this machine is v25, so `fetch` and `crypto.randomUUID` are built in.
+
+### Implementation notes (task-implementer, 2026-10-06)
+
+- **Done.** `scripts/api-check.mjs` (100 checks), `api-check.md`, and the one-line change in `updateSet.ts`. The script was never run; only `node --check` (exit 0) and a static `tsc --allowJs --checkJs` pass to catch misspelled names.
+- **Whole-REQ checks, real results:** `npm run build` exit 0; `tsc --noEmit` exit 0 for `dal`, `businessLogic` and `api`; checks 4 to 7 all pass. Details are in `api-check.md`. No defect found in another task's file.
+- **`updateSet.ts`:** `buildUpdateSet(data: UpdateFields, ...)`. All three callers compile.
+- **Where expectations come from.** The spec first. Exact error texts are asserted only where the spec gives them (AC7, AC33, the 500 text) or where the orchestrator named a decision (`Invalid email or password`, `<key> has the wrong type`). Elsewhere a check asserts the status and the `{ error }` shape.
+- **Every error answer in every check** is also tested for a `message` key and for PostgreSQL wording, so AC4 and AC5 are checked on every refusal, not only in A01 to A07.
+- **Check order matters.** Wrong-type profile creates run before the real create (so they must create nothing). The admin block runs after the feed checks because it deletes Dana and Bob's post. `lookupChecks` (D01 to D05) runs last because D04 needs the admin token.
+- **Bob's department is three spaces** during the run, to prove `/filters` drops blank values; clean-up sets it to `null`.
+- **Added beyond the Approach:** the script refuses an `API_URL` that is not this machine unless `API_CHECK_ALLOW_REMOTE=1`, and prints only the URL's origin. With an admin, clean-up also deletes Sam.
+- **Assumes a quiet database.** The stats deltas (S06, E06, I03), `F11` (newest profile first) and `I05` fail if someone else writes during the run.
+- **Follow-up for the owner, not done:** `parseId` lets an id above 2147483647 reach the database (answer is still 400, via the error middleware). See "Problems found" in `api-check.md`.
 
 ## Related
 

@@ -52,6 +52,16 @@ Login is a method of `AuthController`; `UserController` is a class whose methods
 - The login answer shape `{ token }` and the token payload `{ sub, role }` must not change: the legacy frontend reads them.
 - Lessons: [[knowledge/lessons/LESSON-REQ-fs-002-3]] (convert every inline copy), [[knowledge/lessons/LESSON-REQ-fs-002-4]].
 
+### Implementation notes (task-implementer, 2026-10-06)
+
+- **Login input check does not trim.** The task says "non-empty string". `AuthController` uses its own `isSentText` (a string of length 1 or more), not `isNonEmptyString`, which trims. A password of only spaces therefore reaches bcrypt and answers 401, not 400. Reason: a row made before REQ-fs-002 could hold such a password, and login must compare what was typed. Sign-up and update still refuse it.
+- **`updateUser` check order.** `parseId` → 403 → `pickSent` → 400 "No fields to update" → the required-field loop ("<field> must be a non-empty string") → `checkFields` ("<field> has the wrong type" for `name`, `photo_url`) → hash → 404. The loop runs before `checkFields` so the two required fields keep their old message.
+- **`updateLogoutTime` answer is unchanged:** 200 with an empty body, because the Manager returns nothing. It does not answer 404 for a self id whose row is gone. Left as it was (AC12).
+- **Sign-up `name` and `photo_url` are not type-checked**, as before (the spec lists this as out of scope). A wrong type reaches the database and comes back through the error middleware as a generic 400.
+- **Login error key changed** from `{ message }` to `{ error }`, and the 401 text from "Invalid" to "Invalid email or password". This is the task's wording and ADR-11's one shape; the legacy login screen reads `message` if it shows the text at all.
+- **Not changed, worth a look later:** login answers faster for an unknown email than for a wrong password, because bcrypt only runs when the user exists. Same as before this task.
+- Check: `npx tsc --noEmit -p backend/src/api` printed nothing on the final run (the other three tasks had finished).
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-003-finish-backend-api/architecture]]

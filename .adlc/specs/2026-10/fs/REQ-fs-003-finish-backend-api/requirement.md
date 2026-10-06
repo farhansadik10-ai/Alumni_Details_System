@@ -46,7 +46,7 @@ Layers stay routes → controllers → Managers → Query classes in every part.
 - [ ] **AC7 (m6).** Sign-up or a user update with an email that is already taken answers 409 `{ "error": "This email is already registered" }`.
 - [ ] **AC8.** Sign-up with `email` or `password` missing, empty or not a string answers 400. Login with `email` or `password` missing or not a string answers 400. Wrong email and wrong password both answer 401 with the same message.
 - [ ] **AC9.** A lookup that finds nothing answers 404, not 200 with an empty body (G16): `GET /api/users/:id`, `GET /api/users/email/:email`, `GET /api/alumni/:id`, `GET /api/alumni/email/:email`.
-- [ ] **AC10.** `POST /api/comments` for a post that does not exist answers 404. A `parent_id` that does not exist, or belongs to a different post, answers 400.
+- [ ] **AC10.** `POST /api/comments` reads the post's id from the body key `posts_id`, the same name as the column and the answer; the old key `post_id` is not read (closes G13). A post that does not exist answers 404. A `parent_id` that does not exist, or belongs to a different post, answers 400. `content` that is missing, `null`, empty or only spaces answers 400, the same rule as editing a comment. _(Owner, implement gate, 2026-10-07.)_
 - [ ] **AC11 (m4).** The user, post and alumni updates take one shared input type that allows `null`. The casts `as Partial<PostDTO>` and `as Partial<AlumniDTO>` are gone from the update paths, and DTO fields for nullable columns are typed as nullable (G31).
 - [ ] **AC12.** Every status code and owner check from REQ-fs-002 still holds, apart from the changes named in AC4–AC10.
 
@@ -120,9 +120,14 @@ None open. The owner decided these three at the spec gate (2026-10-06):
 - [x] AC24 — a second alumni profile is refused with 409 (closes G32). Kept.
 - [x] AC21 — the alumni list is newest first. Kept.
 
+## Owner decisions at the implement gate (2026-10-07)
+
+- **Comment body key is `posts_id`.** The owner's own script sent `{ posts_id, content }` and got 400. The key had not been renamed: the code has always read `post_id`, and before this REQ a body with `posts_id` answered 201 while saving a comment attached to no post (G13). The owner's rule: writes and reads use one name, the schema's. AC10 is changed to match. Comments saved that way by earlier test runs may still be in the database with an empty `posts_id`.
+- **A new comment needs content.** Missing, `null`, empty or only spaces is 400. AC10 is changed to match.
+- **Kept as built:** create type-checks the older alumni and post fields (400 on a wrong type); a login password of only spaces answers 401.
+
 ## Out of scope (for now)
 
-- `post_id` in the comment request body versus `posts_id` in the response (G13).
 - A `GET /api/posts/:id` route (G33).
 - A `sort` parameter on any list; paging for the comments of one post.
 - A length limit for `alumni.field` (ADR-08 leaves it to the form's REQ).

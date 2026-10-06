@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-003 |
 | Tier | 0 |
-| Status | pending |
+| Status | implemented (one Approach line open, see Notes) |
 | Repo | alumni-details-system |
 | Depends on | — |
 | Blocks | TASK-004, TASK-005, TASK-006, TASK-007 |
@@ -56,6 +56,14 @@ The DAL offers four small building blocks the later tasks share, exported from `
 - `db.ts` must not be edited and `.env` must not be read. Import `pool` the way the Query files do.
 - A new DAL file that nothing imports is not compiled by `npm run build` (G28): prove this task with the `tsc` command above.
 - Import suffix: follow the neighbouring file in the same folder.
+
+### Implementation notes (task-implementer, 2026-10-06)
+
+- **Not done, on purpose: `buildUpdateSet`'s first parameter is still `Record<string, unknown>`.** The Approach says to change it to `UpdateFields`. Tried it: `tsc -p backend/src/dal` then fails in three files this task may not edit — `AlumniQuery.ts:56` (`Partial<AlumniDTO>`; `created_at: Date` does not fit `UpdateValue`), `PostQuery.ts:50` and `UserQuery.ts:81` (both pass `Record<string, unknown>`). The Approach line, "No existing Query file is edited" and "`tsc` passes" cannot all hold. `UpdateValue` and `UpdateFields` are added and exported; the parameter was put back so the tier stays green.
+- **Who finishes it:** the one-line change (`data: UpdateFields`) has to land together with the caller changes in TASK-005 (`updateUser`), TASK-006 (`updateAlumni`) and TASK-007 (`updatePost`). Those three run in parallel and none of them names `updateSet.ts`, so the orchestrator must give the line to one of them, or to a small step after all three. Until then the helper accepts any value type, as it did before this REQ.
+- `withTransaction`: when `ROLLBACK` itself fails, the first error is still the one thrown, and the client is released with `release(true)` so the pool closes that connection instead of reusing it. Not asked for by the task; it is the only safe answer to a failed rollback.
+- `classifyDbError` also returns `undefined` for a `code` that is not exactly five characters, so a Node system error code such as `ECONNREFUSED` or `22` on some other error object is never read as a database kind.
+- Checks run: `npx tsc --noEmit -p backend/src/dal` exit 0; `npx tsc --noEmit -p backend/src/api` exit 0 (run while TASK-001 and TASK-003 were in progress). `likePattern("50%_a\\b")` read by hand: the regex `/[\\%_]/g` with replacement `"\\$&"` puts one backslash before each of `\`, `%`, `_`, giving `%50\%\_a\\b%`. Nothing was executed, because running would import `db.ts`.
 
 ## Related
 

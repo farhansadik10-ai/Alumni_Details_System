@@ -49,6 +49,17 @@
 - No row logging.
 - The API workspace will not compile after this task; TASK-009 fixes that. Do not edit controllers.
 
+### Implementation notes (2026-10-06)
+
+- **Open problem, not in this task's files: `likePattern` escapes nothing.** `backend/src/dal/query/listHelpers.ts:24` reads `text.replace(/[\%_]/g, "\$&")` on disk. The backslashes TASK-002 meant (`/[\\%_]/g`, `"\\$&"`) are missing, so the regex matches only `%` and `_` and replaces each with itself. Evaluating that one expression in Node on `50%_a\b` gives `50%_a\b` back, unchanged. Effect on `listAlumni`: `q=%` matches every profile and `q=_` matches any one character. No injection (the value is still bound), but AC "the wildcard characters in `q` are escaped" does not hold until that line is fixed. `listAlumni` calls the helper as designed and needs no change once it is.
+- `ALUMNI_FROM` holds the `FROM alumni a LEFT JOIN "User" u ...` text; `ALUMNI_READ` is built from it and the count uses it, so the join is written once. The task named one constant; this is two, with the same single source.
+- The lock statement is `SELECT pg_advisory_xact_lock($1::int, $2::int)`. The casts are added to the task's text so PostgreSQL always picks the two-integer form.
+- `createAlumni` with `user_id` null: the lock function returns null without locking and `user_id = NULL` matches no row, so the insert runs unguarded. Today the controller always sets `user_id` from the token, so this path is not reached. TASK-009 must keep it that way.
+- `updateAlumni` will bind `mentorship_available: null` if it is sent, and the column is `not null`, so the database rejects it. TASK-009 should refuse a non-boolean value for that field before it gets here.
+- `$n` positions, read by hand: no filter → count has no parameters, page uses `$1 $2` = limit, offset. `q` alone → `$1` pattern (used three times), page `$2 $3`. `department`, `graduation_year` or `field` alone → `$1`, page `$2 $3`. `mentoring` alone → no parameter, page `$1 $2`. All five → `$1` q, `$2` department, `$3` graduation_year, `$4` field, mentoring takes none, page `$5 $6`.
+- `filter.q` and the other text filters are added when they are not `undefined`. An empty string is a filter here (`q=""` gives `%%`, which also drops profiles whose name, company and job title are all null). TASK-009 should leave empty values out.
+- Checks run: `npx tsc --noEmit -p backend/src/dal` exit 0, `npx tsc --noEmit -p backend/src/businessLogic` exit 0. No SQL was executed.
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-003-finish-backend-api/architecture]]

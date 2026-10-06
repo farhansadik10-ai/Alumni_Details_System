@@ -54,6 +54,16 @@
 - The legacy frontend imports only `user.types` from shared; `user.types.ts` is not edited.
 - Gotchas: G25, G31. Lesson: [[knowledge/lessons/LESSON-REQ-fs-001-3]].
 
+### Implementation notes (task-implementer, 2026-10-06)
+
+- **Checks run.** `npx tsc --noEmit -p backend/src/dal` exit 0. `npm run build --workspace=@alumni/frontend` exit 0; `git status` shows nothing under `frontend/`. Extra: `tsc --noEmit` on `backend/src/businessLogic` and `backend/src/api` also exit 0, and a strict `tsc --noEmit` over the four shared type files exits 0.
+- **No break in a Query, Manager or controller.** The nullable DTO fields compiled against the files as they stood during this task (TASK-002 and TASK-003 were editing in parallel). The existing calls still fit: `new AlumniDTO(sub, department, ...)`, `new PostDTO(0)`, `new CommentDTO(0, 0, "")`, `new UserDTO(name, email, hash, role, photo_url)`.
+- **Constructors.** Parameter order is unchanged; the two new `AlumniDTO` parameters are last. `graduation_year` is still not a constructor parameter (the controller sets it after `new`); it now starts as `null` instead of `undefined`. The constructors still stamp `new Date()` into the timestamp fields, as before; only the types changed.
+- **Reading taken, please confirm: shared `Post` and `Comment`.** The task names only `comment_count`, `parent_id`, `name`, `photo_url` for these two. The other nullable columns (`user_id`, `caption`, `media_url`, `posts_id`, `content`, the timestamps) were also changed from `?: T` to `T | null`, the same rule the task gives for `Alumni`, because the database sends `null` for them, never "missing". To undo: put `?:` back on those lines in `posts.types.ts` and `comment.types.ts`.
+- **Left alone on purpose.** `CreatePostDTO` and `CreateCommentDTO` in shared still carry `user_id`, though the API takes it from the token (only `CreateAlumniDTO` was named). `UpdatePostDTO` does not allow `null` yet. Timestamps in the shared types are still `Date`, though JSON delivers a string.
+- **`db/schema.md` alignment.** `mentorship_available` is 20 letters and the pasted alumni block has a 15-letter column, so that one row overhangs. The pasted rows were not re-padded, because the task says to change nothing else. Real `\d alumni` output would be wider throughout.
+- **`shared/index.ts` does not exist**, though `shared/package.json` names it as `main` and root `CLAUDE.md` says imports resolve through it. `list.types.ts` is therefore reachable only by path (`@alumni/shared/types/list.types`), like the other type files. Not fixed here: no task names that file.
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-003-finish-backend-api/architecture]]

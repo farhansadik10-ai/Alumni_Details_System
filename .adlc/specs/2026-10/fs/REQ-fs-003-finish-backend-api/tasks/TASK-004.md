@@ -48,14 +48,38 @@ The API has one error middleware, a wrapper that sends rejected promises to it, 
 
 ## Acceptance
 
-- [ ] AC3 (middleware half): `errorMiddleware` is the last `app.use` in `app.ts`
-- [ ] AC4: no `{ message: ... }` body is left in `MiddleWare/`; an unknown `/api` URL and a broken JSON body reach `{ error }` by reading the code
-- [ ] AC5: only the `AppError` branch sends an error's own message
-- [ ] AC6 (helper half): `parseId` refuses `abc`, `1.5`, `0`, `-3`, `12abc`, `""`, `null`
-- [ ] `token.ts` has no top-level read of `process.env`; a missing `JWT_SECRET` reaches the 500 branch, not a 401
-- [ ] `npx tsc --noEmit -p backend/src/api` reports no error in the seven files of this task (errors in controller or route files are expected until tier 2)
+- [x] AC3 (middleware half): `errorMiddleware` is the last `app.use` in `app.ts`
+- [x] AC4: no `{ message: ... }` body is left in `MiddleWare/`; an unknown `/api` URL and a broken JSON body reach `{ error }` by reading the code
+- [x] AC5: only the `AppError` branch sends an error's own message
+- [x] AC6 (helper half): `parseId` refuses `abc`, `1.5`, `0`, `-3`, `12abc`, `""`, `null`
+- [x] `token.ts` has no top-level read of `process.env`; a missing `JWT_SECRET` reaches the 500 branch, not a 401
+- [x] `npx tsc --noEmit -p backend/src/api` reports no error in the seven files of this task (errors in controller or route files are expected until tier 2)
 
 ## Notes
+
+### Implementation notes (2026-10-06)
+
+**How it was checked.** `npx tsc --noEmit -p backend/src/api`: 6 errors, all in `controllers/` (old Manager method names, tier 2's work); none in this task's seven files. Nothing was run against the database and no file that imports the DAL was executed. Two extra checks in the session scratch folder, outside the repo:
+- a type-only file proving `handler(obj, "name")` accepts `(req, res)` methods (sync, async, no-argument) and refuses a non-method field, a method with another parameter type, a three-parameter method and an unknown name;
+- a copy of the `parseId` and paging expressions run in Node: `abc`, `1.5`, `0`, `-3`, `12abc`, `""`, `null`, `undefined`, `" 5"`, `"5\n"`, `1e3`, `0x10`, `[]`, `[7]`, `{}`, `true`, `NaN`, a 20-digit string all refused; `"7"`, `"007"`, `7` give 7.
+
+**Four places where the code differs a little from the Approach text. Each is the stricter reading.**
+1. `checkFields` returns a new object with the same entries, not the same object. That way it needs no cast: each value is also checked to be a string, number, boolean or `null`, so an object or array fails with "<key> has the wrong type" even if a rule would let it through. The first failing key is found in the order of `rules`.
+2. `verifyToken` also answers 401 when the token is valid but its payload is not `{ sub: number, role: string }`. Today's code casts without looking. One effect: a token signed with `role: null` is refused. TASK-008 already signs `role ?? ""` (ADV-003), so no new token has that shape.
+3. `parsePaging`: a `limit` too long to hold exactly (say 30 digits) becomes 50, as the rule says. A `page` above about 1.8e14 is lowered to that number, so `offset` stays an exact whole number; it answers an empty page instead of a database error.
+4. `handler`'s first type parameter is unconstrained and the key type is a mapped type (`ControllerMethodName<C>`), which gives the "keys whose value is `(req, res) => unknown`" limit. Inside, the method is read with one `as ControllerMethod`; the key type already proves it.
+
+**The "other Express error" branch** matches any non-`AppError` value with a whole-number `status` from 400 to 499 (payload too large, a URL that cannot be decoded). It sends that status and the fixed text, never the error's message. It runs before the database test; a PostgreSQL error has no `status`.
+
+**Left alone on purpose.**
+- `isSelf` / `toUserId` keep their own looser reader (they accept `"1.5"` and negative numbers, and return `false` rather than throw). Moving them onto `toWholeNumber` would change REQ-fs-002 owner-check behaviour; not asked for here (LESSON-REQ-fs-002-3 says to write down why a sibling stays).
+- `findWrongType` stays; `checkFields` replaces it once the tier 2 controllers stop calling it.
+- `AuthRoutes.ts` and `UserController.ts` still hold `{ message }` bodies and their own `verifyToken` with a load-time `JWT_SECRET` read. TASK-008 removes them. Nothing in this task's files imports from `UserController`.
+
+**Follow-ups for the owner or a later task.**
+- `console.error(err)` in the database branch prints the whole PostgreSQL error. On a NOT NULL or CHECK failure its `detail` is the full failing row; for `"User"` that includes the password hash (CAND-019). Built as the task says. A narrower log line (code, constraint, table, stack) would keep the hash out of the server log.
+- `jwt.verify` is called without an `algorithms` list, as before. With a string secret the library allows only the HMAC family, so this is not a hole; pinning `["HS256"]` would be tidier.
+- `backend/src/dal/query/listHelpers.ts` `likePattern` is reported broken by CAND-009, 012 and 015. Not this task's file; not touched.
 
 - Do not edit controllers or route files here. `UserController` keeps its own `login` / `verifyToken` until TASK-008 removes them; nothing may import them from this task's files.
 - `req.user` is still set by `authMiddleware` exactly as before.

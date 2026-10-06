@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-003 |
 | Tier | 2 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-004, TASK-007 |
 | Blocks | TASK-012 |
@@ -31,7 +31,7 @@
   - `updatePost` — `parseId`; 404, 403 (author only, ADR-02), 400, write, 404; today's messages; typed through `checkFields`, no cast.
   - `deletePost` — `parseId`; 404; 403 unless author or admin; `postManager.deletePost(id)`; 200 `{ message: "Post deleted successfully" }`.
 - **CommentController** (it holds a `CommentManager` and a `PostManager`):
-  - `createComment` — `post_id` via `parseId(req.body?.post_id, "post_id")`; post missing → `NotFoundError("Post not found")`. `parent_id`, when sent and not `null`: read with `parseId(value, "parent_id")` (the same rule as `post_id`) and must be an existing comment whose `posts_id` equals `post_id`, else `ValidationError("parent_id must be a comment on the same post")`. Author from the token; 201. The body key stays `post_id` (G13 is out of scope).
+  - `createComment` — `post_id` via `parseId(req.body?.post_id, "post_id")`; post missing → `NotFoundError("Post not found")`. `parent_id`, when sent and not `null`: read with `parseId(value, "parent_id")` (the same rule as `post_id`) and must be an existing comment whose `posts_id` equals `post_id`, else `ValidationError("parent_id must be a comment on the same post")`. Author from the token; 201. **Changed at the implement gate (owner, 2026-10-07):** the body key is `posts_id`, not `post_id`, and `content` must be a non-empty string (`Content is required`), the same rule as `updateComment`.
   - `getAllComments` — unchanged answer.
   - `getCommentsByPost` — `parseId(req.params.id)`; post missing → `NotFoundError("Post not found")`; answer the array.
   - `updateComment` — as today (author only, content only), with `parseId` and thrown errors.
@@ -52,6 +52,16 @@
 - Do not add a `GET /api/posts/:id` route.
 - `post_id` and `parent_id` follow one rule: a positive whole number, as a JSON number or a string of digits. `0`, `1.5`, `"abc"` are 400. For `parent_id`, `null` and absent mean "top-level comment".
 - Lesson: [[knowledge/lessons/LESSON-REQ-fs-002-4]] for every id read from a body.
+
+### Implementation notes (2026-10-06)
+
+- `npx tsc --noEmit -p backend/src/api` exits 0 with no output. Nothing was run against the database.
+- **Comment create, `content`.** The task names no rule for it. `comment.content` is nullable in `db/schema.md` and create never checked it, so absent or `null` content still answers 201 (AC12). The one new refusal: a `content` that is not a string or `null` answers 400 `content has the wrong type` (before, a number was stored as text). Requiring text on create is a follow-up for the owner.
+- **Comment create, check order.** Body shape first, with no query: `post_id`, then `parent_id`, then `content`. Then the post read (404), then the parent read (400). So a bad `parent_id` on a missing post answers 400, not 404.
+- **Deletes read their own result.** `deletePost` returning `false` and `deleteComment` returning `0` answer 404. This only happens when the row went between the check and the delete.
+- **Post create.** A `caption` or `media_url` that is not a string or `null` now answers 400 `<key> has the wrong type`. If the insert works but the row cannot be read back, a plain `Error` is thrown (500), per the TASK-007 hand-off.
+- **Field list.** `POST_UPDATE_FIELDS` is now `POST_FIELDS`, because create uses it too. The second list in `PostQuery` stays (G30).
+- `PostRoutes` builds its own `CommentController` for `/:id/comments`; `CommentRoutes` builds another. They hold no state, so two instances are harmless.
 
 ## Related
 
