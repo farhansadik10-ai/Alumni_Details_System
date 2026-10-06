@@ -4,7 +4,7 @@
 |---|---|---|---|
 | B1 | Fix broken queries | Alumni and comment SQL | Done (REQ-fs-001) |
 | D | Design | Approved design in docs/design, design-system contract | Done |
-| B2 | User safety and ownership | Partial updates, no password in responses, sign-up roles, owner checks, user_id from token | Next |
+| B2 | User safety and ownership | Partial updates, no password in responses, sign-up roles, owner checks, user_id from token | Done (REQ-fs-002); manual database check pending |
 | B3 | Class-based controllers and shared errors | Controllers as classes, one error middleware | To do |
 | B3a | Mentorship and field columns | alumni.mentorship_available, alumni.field | To do |
 | B4 | Alumni search API | Search, filters, pagination | To do |
