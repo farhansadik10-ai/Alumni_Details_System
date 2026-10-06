@@ -189,7 +189,7 @@ Every main page after log in has the same three parts:
 2. **Band.** Full-width `--band` block. Inside: a 72×8px accent bar, the page heading, one line of sub text.
 3. **First card overlaps the band** by 56px (`margin-top: -56px`, 52px on phone). On the Profile and My profile pages the band holds the avatar and name instead, and the cards start below it.
 
-Footer: app name on the left. The README also draws an "About" link on the right, but the link is not rendered until the About page exists; the About REQ adds it. No dead links. _(Owner, 2026-10-06; this overrides README sections 1 and 4 until then.)_
+Footer: app name on the left, "About" link on the right. The link is added by the About REQ; it is not rendered before the About page exists. No dead links.
 
 Phone and other narrow screens: the header is 60px with the app name and a menu button. The menu opens full screen with large links, the theme switch as three text buttons (Light, Dark, System), the user block and Log out. The band heading drops to 36px. Cards stack in one column. Screens without a phone picture follow these rules.
 
@@ -199,7 +199,7 @@ Names, companies and numbers in the screen files are sample data.
 
 | File | Screen | Who sees it | Main content |
 |---|---|---|---|
-| `login.html`, `login-dark.html` | Log in | Everyone | Email, password, link to sign up. Plus one line not in the picture: "Forgot your password? Contact the alumni office." with the contact email (owner, 2026-10-06) |
+| `login.html`, `login-dark.html` | Log in | Everyone | Email, password, link to sign up. Plus one line that the picture does not show: "Forgot your password? Contact the alumni office." with the contact email (README section 7) |
 | `signup.html` | Create an account | Everyone | Name, email, password, optional photo link, role choice (Student or Graduate) |
 | `dashboard.html` | Dashboard | Logged in | Greeting, counts, recent posts, a summary of your own profile, new people in the directory |
 | `feed.html` | Feed | Logged in | Write a post (optional image link), posts with author and date, Reply, Edit and Delete, comments |

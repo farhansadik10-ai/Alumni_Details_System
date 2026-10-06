@@ -24,7 +24,7 @@ How to use it when building:
 | Font | Hanken Grotesk (400, 500, 600, 700). Fallback: 'Segoe UI', Helvetica, sans-serif. |
 | Mentoring | Kept. Needs a new `alumni` column, for example `mentorship_available` (boolean). |
 | Field | Kept. Needs a new `alumni` column `field` (text). Also a directory filter. |
-| About page | Planned, built last. The footer already links to it. |
+| About page | Planned, built last. The footer link to it is added by the About REQ; until then the footer has no "About" link. |
 | Sign-up roles | The form shows "Student" and "Graduate". "Graduate" saves the role `alumni`. |
 | Dates | Written as "3 October 2026". |
 | Icons | Simple line icons, 2px stroke, `currentColor`. No emoji. |
@@ -99,7 +99,7 @@ Every main page after log in has the same three parts:
 2. **Band.** Full-width `--band` block. Inside: a 72×8px accent bar, the page heading, one line of sub text.
 3. **First card overlaps the band** by 56px (`margin-top: -56px`, 52px on phone). On the Profile and My profile pages the band holds the avatar and name instead, and the cards start below it.
 
-Footer: app name on the left, "About" link on the right.
+Footer: app name on the left, "About" link on the right. The link is added by the About REQ; it is not shown before the About page exists.
 
 Phone and other narrow screens: header is 60px with the app name and a menu button. The menu opens full screen with large links, the theme switch as three text buttons (Light, Dark, System), the user block and Log out. The band heading drops to 36px. Cards stack in one column.
 
@@ -155,6 +155,7 @@ Farhan asked for the common standard wherever a choice was open. These are fixed
 - Screens without a dark picture (sign-up, dashboard, feed, users, my profile) use the same layout with the dark tokens.
 - Screens without a phone picture follow the phone rules in section 4.
 - Students do not have an alumni profile form. They see only the Account card on My profile.
+- The log-in page shows "Forgot your password? Contact the alumni office." with the contact email until reset by email is built.
 
 ## 8. What the design needs from the backend
 

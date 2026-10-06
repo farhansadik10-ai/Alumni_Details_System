@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] docs-aligned | docs/design/README.md (About link, forgot-password line) and root CLAUDE.md (no UI library) now match ADR-07 and ADR-10
+
 ## [2026-10-06] design-system | remaining questions answered by the owner; anything still open is "decide in the REQ that builds it"
 ## [2026-10-06] adr-updated | ADR-10 footer About link not rendered until the page exists; About content set; log-in page shows "Forgot your password? Contact the alumni office."
 ## [2026-10-06] adr-updated | ADR-09 the app-name config file also holds one contact email for the alumni office

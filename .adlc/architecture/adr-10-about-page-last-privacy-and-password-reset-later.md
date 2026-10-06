@@ -53,7 +53,7 @@ None of the three has a design yet. Each needs one, approved by the owner, befor
 
 Until they exist (owner, 2026-10-06):
 
-- **Footer "About" link:** not rendered until the About page exists. The About REQ adds the link. No dead links. This overrides the footer drawn in the README and the screens until then.
+- **Footer "About" link:** not rendered until the About page exists. The About REQ adds the link. No dead links. The screen pictures still draw the link; the README rule wins.
 - **About page content:** what the system is, who can join, how to contact the alumni office, and the app version. The contact is one email, a constant in the same config file as the app name ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
 - **Forgotten password:** the log-in page shows one line: "Forgot your password? Contact the alumni office." with the contact email.
 

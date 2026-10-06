@@ -70,7 +70,7 @@ The root `.gitignore` ignores `node_modules/` (at any depth, including the neste
 ### Frontend
 - React + Vite + TypeScript, rebuilt from scratch in frontend/src.
 - State: Jotai atoms in src/store/.
-- UI library: Claude may recommend one; I approve it at the architect gate.
+- No UI library; we build our own components on the design tokens. antd is legacy and is removed screen by screen; no new antd imports.
 - Scandinavian design: neutral palette, generous whitespace, clean typography, few accents.
 - White-label: no university logo; the app name is text from one constant.
 - Theme: light, dark, system; toggle in header; choice persisted; follows prefers-color-scheme in system mode.
