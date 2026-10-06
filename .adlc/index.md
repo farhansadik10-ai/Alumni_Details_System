@@ -33,6 +33,8 @@ _(REQ pages by id, with a one-line summary)_
 | [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns\|ADR-08]] | Mentoring and field stay in the design; `alumni` gets two new columns | accepted | 2026-10-06 |
 | [[architecture/adr-09-white-label-app-name-from-one-constant\|ADR-09]] | The app is white-label; its name "University Alumni" is text from one constant | accepted | 2026-10-06 |
 | [[architecture/adr-10-about-page-last-privacy-and-password-reset-later\|ADR-10]] | The About page is built last; the Privacy page and password reset are later work | accepted | 2026-10-06 |
+| [[architecture/adr-11-typed-errors-and-one-error-middleware\|ADR-11]] | Code throws typed errors; one middleware turns them into `{ error }` | accepted | 2026-10-06 |
+| [[architecture/adr-12-list-endpoints-answer-items-total-page-limit\|ADR-12]] | List endpoints answer `{ items, total, page, limit }` | accepted | 2026-10-06 |
 
 ## Concepts
 

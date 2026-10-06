@@ -14,6 +14,8 @@ Catalog of all ADRs (architecture decision records). Updated by `/wrapup` when a
 | [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns\|ADR-08]] | Mentoring and field stay in the design; `alumni` gets two new columns | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-09-white-label-app-name-from-one-constant\|ADR-09]] | The app is white-label; its name "University Alumni" is text from one constant | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-10-about-page-last-privacy-and-password-reset-later\|ADR-10]] | The About page is built last; the Privacy page and password reset are later work | accepted | 2026-10-06 | (none) | (none) |
+| [[architecture/adr-11-typed-errors-and-one-error-middleware\|ADR-11]] | Code throws typed errors; one middleware turns them into `{ error }` | accepted | 2026-10-06 | (none) | (none) |
+| [[architecture/adr-12-list-endpoints-answer-items-total-page-limit\|ADR-12]] | List endpoints answer `{ items, total, page, limit }` | accepted | 2026-10-06 | (none) | (none) |
 
 ADR-01 to ADR-06 are the owner's answers to questions Q2 to Q7 of the retired AI-DLC plan, carried over on 2026-10-05. Q1 (the Ant Design navy theme and Inter font) was dropped with the redesign and has no ADR.
 

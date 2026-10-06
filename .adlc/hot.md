@@ -17,6 +17,14 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-06] architect-gate-cleared | REQ-fs-003-finish-backend-api | 12 tasks in 4 tiers; stress-test 0 critical, 2 major, 7 minor (8 fixed, 1 accepted)
+## [2026-10-06] adr-accepted | ADR-12 list endpoints answer { items, total, page, limit }
+## [2026-10-06] adr-accepted | ADR-11 code throws typed errors; one middleware turns them into { error }
+
+## [2026-10-06] work-path-set | REQ-fs-003-finish-backend-api | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-003-finish-backend-api, off redesign)
+
+## [2026-10-06] spec-gate-cleared | REQ-fs-003-finish-backend-api | 38 criteria in 4 parts (roadmap B3, B3a, B4, B5); owner kept 404 on empty lookups, 409 on a second alumni profile, alumni list newest first
+
 ## [2026-10-06] req-archived | REQ-fs-002-backend-security-data-loss-gaps
 ## [2026-10-06] req-merged | REQ-fs-002-backend-security-data-loss-gaps | merge commit a2d805e0 on redesign
 

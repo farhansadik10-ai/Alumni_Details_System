@@ -1,0 +1,75 @@
+# TASK-007 — Posts and comments data layer: joined reads, counted comments, deletes that take replies
+
+| Field | Value |
+|---|---|
+| REQ | REQ-fs-003 |
+| Tier | 1 |
+| Status | pending |
+| Repo | alumni-details-system |
+| Depends on | TASK-001, TASK-002 |
+| Blocks | TASK-010 |
+
+## Goal
+
+Post reads carry the author and a counted `comment_count`; one post's comments can be listed with their authors; deleting a post or a comment removes everything under it, all or nothing.
+
+## Files to touch
+
+| Path | Action |
+|---|---|
+| `backend/src/dal/query/PostQuery.ts` | edit |
+| `backend/src/dal/query/CommentQuery.ts` | edit |
+| `backend/src/businessLogic/src/PostManager.ts` | edit |
+| `backend/src/businessLogic/src/CommentManager.ts` | edit |
+
+## Approach
+
+- **PostQuery — one read constant.**
+  ```sql
+  SELECT p.id, p.user_id, p.caption, p.media_url, p.created_at, p.updated_at,
+         u.name, u.photo_url,
+         (SELECT COUNT(*)::int FROM comment c WHERE c.posts_id = p.id) AS comment_count
+  FROM posts p LEFT JOIN "User" u ON u.id = p.user_id
+  ```
+  - `listPosts(page: PageRequest): Promise<PageRows<PostDTO>>` — count from `posts`; page read `ORDER BY p.created_at DESC, p.id DESC LIMIT $1 OFFSET $2`. Remove `getAllPosts`.
+  - `findPostById(id): Promise<PostDTO | undefined>` — the read constant `WHERE p.id = $1`.
+  - `createPost` — `INSERT … RETURNING id`, then return `findPostById(id)`.
+  - `updatePost(id, data: UpdateFields<PostUpdateColumn>)` — `UPDATE … RETURNING id`; no row → `undefined`; else return `findPostById(id)`. Nothing to write → `findPostById(id)`.
+  - `deletePost(id: number): Promise<boolean>` — inside `withTransaction(client => …)`, using `client.query` for both statements:
+    ```sql
+    WITH RECURSIVE doomed AS (
+      SELECT id FROM comment WHERE posts_id = $1
+      UNION
+      SELECT c.id FROM comment c JOIN doomed d ON c.parent_id = d.id
+    )
+    DELETE FROM comment WHERE id IN (SELECT id FROM doomed)
+    ```
+    then `DELETE FROM posts WHERE id = $1`; return whether the post row was deleted.
+  - Remove `updateCommentCount` and `getPostsByUserId` (nothing calls them; the stored column is no longer used).
+- **CommentQuery.**
+  - `listCommentsByPost(postId): Promise<CommentDTO[]>` — `SELECT c.*, u.name, u.photo_url FROM comment c LEFT JOIN "User" u ON u.id = c.user_id WHERE c.posts_id = $1 ORDER BY c.created_at ASC, c.id ASC`.
+  - `deleteComment(id: number): Promise<number>` — one statement: the same recursive shape starting from `SELECT id FROM comment WHERE id = $1`; return `rowCount`.
+  - `getAllComments`, `createComment`, `findCommentById`, `updateComment` unchanged.
+- **Managers.** `PostManager`: `listPosts(page)`, `deletePost(id)`; remove `getAllPosts`, `updateCommentCount`, `getPostsByUserId`; `updatePost` takes `Parameters<PostQuery["updatePost"]>[1]` (no new export from `dal/index.ts`; that file is not edited here). `CommentManager`: `listCommentsByPost(postId)`, `deleteComment(id)`.
+
+## Acceptance
+
+- [ ] AC27, AC28 (data half): every post read goes through the one read constant; no statement reads or writes `posts.comment_count`
+- [ ] AC29 (data half): order is oldest first; author columns are named, never `u.*`
+- [ ] AC30, AC31 (data half): the post delete runs both statements on the same client inside `withTransaction`; the comment delete is one statement
+- [ ] The recursive query follows `parent_id` only from parent to child
+- [ ] Every `$n` has a matching value; every name is in `db/schema.md`
+- [ ] `npx tsc --noEmit -p backend/src/dal` and `-p backend/src/businessLogic` pass
+- [ ] A search of `backend/src` (not `node_modules`, not `Test*.ts`) finds no caller of the removed methods outside `backend/src/api/controllers`
+
+## Notes
+
+- `UNION` (not `UNION ALL`) keeps the recursion safe if the data ever held a loop.
+- Do not add `ON DELETE CASCADE` or any schema change (ADR-06).
+- No row logging. `"User"` double-quoted.
+- The API workspace will not compile after this task; TASK-010 fixes that. Do not edit controllers. Do not touch `TestManager.ts` / `TestDal.ts`.
+
+## Related
+
+- Architecture: [[specs/2026-10/fs/REQ-fs-003-finish-backend-api/architecture]]
+- Lessons checked: LESSON-REQ-fs-001-1, LESSON-REQ-fs-001-4, LESSON-REQ-fs-002-1, LESSON-REQ-fs-002-2
