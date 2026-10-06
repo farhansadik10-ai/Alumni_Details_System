@@ -58,6 +58,7 @@ The root `.gitignore` ignores `node_modules/` (at any depth, including the neste
 ### Workflow
 - Use the ADLC pipeline (/spec, /architect, /implement, /review, /wrapup).
 - Never write code before the spec and architecture gates are approved.
+- Roadmap and status live in docs/roadmap.md; update the status column at every wrap-up.
 
 ### Backend
 - npm workspaces; layers stay routes -> controllers -> Managers -> Query classes.
