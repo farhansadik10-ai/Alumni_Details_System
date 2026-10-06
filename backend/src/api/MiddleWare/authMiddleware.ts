@@ -1,15 +1,22 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../controllers/UserController";
+import { UnauthorizedError } from "@alumni/businesslogic";
+import { verifyToken } from "../utils/token";
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+const NO_TOKEN_MESSAGE = "No token provided";
+
+export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "No token provided" });
+  if (!token) {
+    next(new UnauthorizedError(NO_TOKEN_MESSAGE));
+    return;
+  }
 
   try {
     req.user = verifyToken(token);
-    next();
-  } catch {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (err) {
+    next(err);
+    return;
   }
+  next();
 }

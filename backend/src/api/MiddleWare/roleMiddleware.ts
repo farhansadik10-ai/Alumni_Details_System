@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from "express";
+import { ForbiddenError } from "@alumni/businesslogic";
+
+const FORBIDDEN_MESSAGE = "Forbidden";
 
 export function requireRole(...roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden" });
+      next(new ForbiddenError(FORBIDDEN_MESSAGE));
+      return;
     }
     next();
   };
