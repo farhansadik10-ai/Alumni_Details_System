@@ -1,6 +1,12 @@
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import type { ComponentType } from "react";
+import type { Alumni, AlumniFilters } from "@alumni/shared";
+import { AlumniCard } from "../../../components/alumni/AlumniCard/AlumniCard";
+import { AlumniCardSkeleton } from "../../../components/alumni/AlumniCard/AlumniCardSkeleton";
+import { DirectoryFilters } from "../../../components/alumni/DirectoryFilters/DirectoryFilters";
+import type { DirectoryFilterPatch } from "../../../components/alumni/DirectoryFilters/DirectoryFilters";
+import { ProfileBand, ProfileBandAction } from "../../../components/shell/ProfileBand/ProfileBand";
 import { ThemeSwitch } from "../../../components/shell/ThemeSwitch/ThemeSwitch";
 import { Avatar } from "../../../components/ui/Avatar/Avatar";
 import { Button } from "../../../components/ui/Button/Button";
@@ -24,7 +30,20 @@ import { Tag } from "../../../components/ui/Tag/Tag";
 import { Textarea } from "../../../components/ui/Textarea/Textarea";
 import { TextInput } from "../../../components/ui/TextInput/TextInput";
 import { APP_NAME } from "../../../config/app";
+import {
+  MY_PROFILE_HEADING,
+  MY_PROFILE_PUBLIC_LINK,
+  OPEN_TO_MENTORING,
+  OPENS_IN_NEW_TAB,
+  PROFILE_BACK_LINK,
+  PROFILE_HEADING,
+  PROFILE_LINKEDIN_LINK,
+  myProfileSub,
+  profileEmailLink,
+} from "../../../config/text";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
+import { DEFAULT_DIRECTORY_QUERY } from "../../../lib/directoryQuery";
+import type { DirectoryQuery } from "../../../lib/directoryQuery";
 import { AlertIcon } from "../../../icons/AlertIcon";
 import { CheckIcon } from "../../../icons/CheckIcon";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
@@ -34,7 +53,7 @@ import { MenuIcon } from "../../../icons/MenuIcon";
 import { MonitorIcon } from "../../../icons/MonitorIcon";
 import { MoonIcon } from "../../../icons/MoonIcon";
 import { SunIcon } from "../../../icons/SunIcon";
-import { PATHS } from "../../../routes/paths";
+import { PATHS, alumniProfilePath } from "../../../routes/paths";
 import { showToastAtom } from "../../../store/toastAtoms";
 import styles from "./ComponentsPage.module.css";
 
@@ -162,6 +181,78 @@ const SAMPLE_NAME = SAMPLE_USERS[0].name;
 // a picture, so the avatar falls back to initials.
 const WORKING_PHOTO_PATH = "/favicon.svg";
 const BROKEN_PHOTO_PATH = "/dev/no-such-photo.png";
+
+// Sample alumni profiles for the directory and profile sections. Every
+// optional column is null unless a sample sets it.
+const EMPTY_ALUMNI: Alumni = {
+  id: 0,
+  user_id: null,
+  graduation_year: null,
+  department: null,
+  current_company: null,
+  job_title: null,
+  experience: null,
+  bio: null,
+  linkedin_url: null,
+  mentorship_available: false,
+  field: null,
+  updated_at: null,
+  name: null,
+  email: null,
+  photo_url: null,
+};
+
+const FULL_ALUMNI: Alumni = {
+  ...EMPTY_ALUMNI,
+  id: 1,
+  user_id: 1,
+  graduation_year: 2019,
+  department: "Computer Science",
+  current_company: "Nordlys Systems",
+  job_title: "Software Engineer",
+  field: "Software",
+  mentorship_available: true,
+  name: SAMPLE_NAME,
+  email: SAMPLE_USERS[0].email,
+  linkedin_url: "https://www.linkedin.com/in/example",
+};
+
+const SOME_ALUMNI: Alumni = {
+  ...EMPTY_ALUMNI,
+  id: 2,
+  user_id: 2,
+  job_title: "Data Analyst",
+  graduation_year: 2021,
+  name: "Erik Lindqvist",
+};
+
+const LONG_ALUMNI: Alumni = {
+  ...EMPTY_ALUMNI,
+  id: 3,
+  user_id: 3,
+  name: "Amira Haddad-Karlsson Abdel-Rahman Lindqvist-Oyelaran",
+  current_company: "Very Long Company Name International Holdings Group",
+  department: "Electrical and Electronic Engineering",
+  field: "Telecommunications and signal processing",
+};
+
+const NO_NAME_ALUMNI: Alumni = { ...EMPTY_ALUMNI, id: 4 };
+
+// Old links can carry a value that is not among the options (ADV-005).
+const SAMPLE_FILTERS: AlumniFilters = {
+  departments: ["Business Administration", "Computer Science", "Electrical Engineering"],
+  graduation_years: [2017, 2018, 2019, 2020, 2021],
+  fields: ["Finance", "Software", "Telecommunications"],
+};
+
+const QUERY_WITH_OLD_VALUE: DirectoryQuery = {
+  ...DEFAULT_DIRECTORY_QUERY,
+  q: "nadia",
+  department: "Physics",
+  mentoring: true,
+};
+
+const SAMPLE_DIRECTORY_SEARCH = "?q=nadia";
 
 export default function ComponentsPage() {
   useDocumentTitle(PAGE_TITLE);
@@ -582,6 +673,172 @@ export default function ComponentsPage() {
         </div>
       </section>
 
+      <section className={styles.section} aria-labelledby="dev-alumni-cards">
+        <h2 id="dev-alumni-cards" className={styles.sectionTitle}>
+          Alumni cards
+        </h2>
+        <div className={styles.cards}>
+          <div className={styles.block}>
+            <p className={styles.caption}>Every part, open to mentoring</p>
+            <AlumniCard alumni={FULL_ALUMNI} directorySearch={SAMPLE_DIRECTORY_SEARCH} />
+          </div>
+          <div className={styles.block}>
+            <p className={styles.caption}>Some parts: job title only, one tag, no mentoring</p>
+            <AlumniCard alumni={SOME_ALUMNI} directorySearch={SAMPLE_DIRECTORY_SEARCH} />
+          </div>
+          <div className={styles.block}>
+            <p className={styles.caption}>No optional part and no name</p>
+            <AlumniCard alumni={NO_NAME_ALUMNI} directorySearch="" />
+          </div>
+          <div className={styles.block}>
+            <p className={styles.caption}>Long name, company and tags: they wrap</p>
+            <AlumniCard alumni={LONG_ALUMNI} directorySearch="" />
+          </div>
+          <div className={styles.block}>
+            <p className={styles.caption}>With a photo link that loads</p>
+            <AlumniCard
+              alumni={{ ...SOME_ALUMNI, id: 5, photo_url: `${origin}${WORKING_PHOTO_PATH}` }}
+              directorySearch=""
+            />
+          </div>
+          <div className={styles.block}>
+            <p className={styles.caption}>Loading: the page wraps the cards in one group</p>
+            <SkeletonGroup>
+              <AlumniCardSkeleton />
+            </SkeletonGroup>
+          </div>
+        </div>
+        <p className={styles.note}>
+          The links go to the real profile address. The directory keeps its query in the link, so
+          "Back to directory" returns to the same search.
+        </p>
+      </section>
+
+      <section className={styles.section} aria-labelledby="dev-directory-filters">
+        <h2 id="dev-directory-filters" className={styles.sectionTitle}>
+          Directory search and filters
+        </h2>
+        <div className={styles.block}>
+          <p className={styles.caption}>Options loaded; try the controls</p>
+          <FiltersSample />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>
+            Criteria set, one value not among the options (an old link): it is still shown
+          </p>
+          <DirectoryFilters
+            query={QUERY_WITH_OLD_VALUE}
+            searchText={QUERY_WITH_OLD_VALUE.q}
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => showToast("Search")}
+            onFilterChange={() => showToast("Filter changed")}
+            options={SAMPLE_FILTERS}
+            optionsStatus="ready"
+            onRetryOptions={() => undefined}
+            onClear={() => showToast("Cleared")}
+          />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>Options on their way: each filter has only its first option</p>
+          <DirectoryFilters
+            query={DEFAULT_DIRECTORY_QUERY}
+            searchText=""
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => undefined}
+            onFilterChange={() => undefined}
+            options={null}
+            optionsStatus="loading"
+            onRetryOptions={() => undefined}
+            onClear={() => undefined}
+          />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>Options failed to load: a message and Try again</p>
+          <DirectoryFilters
+            query={DEFAULT_DIRECTORY_QUERY}
+            searchText=""
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => undefined}
+            onFilterChange={() => undefined}
+            options={null}
+            optionsStatus="error"
+            onRetryOptions={() => showToast("Trying again")}
+            onClear={() => undefined}
+          />
+        </div>
+        <p className={styles.note}>
+          Below 768px the filters sit in a panel behind the Filters button, which counts the filters
+          that are set. Make the window narrow to see it.
+        </p>
+      </section>
+
+      <section className={styles.section} aria-labelledby="dev-profile-band">
+        <h2 id="dev-profile-band" className={styles.sectionTitle}>
+          Profile band
+        </h2>
+        <p className={styles.note}>
+          Each band below has its own heading level 1, as on the real pages, where there is one.
+        </p>
+        <div className={styles.block}>
+          <p className={styles.caption}>An alumni profile with every part</p>
+          <ProfileBand
+            back={{ to: PATHS.directory, label: PROFILE_BACK_LINK }}
+            avatar={{ name: FULL_ALUMNI.name }}
+            tag={<Tag variant="mentoring">{OPEN_TO_MENTORING}</Tag>}
+            heading={SAMPLE_NAME}
+            sub="Software Engineer at Nordlys Systems"
+            tags={
+              <>
+                <Tag>Computer Science</Tag>
+                <Tag>Class of 2019</Tag>
+                <Tag>Software</Tag>
+              </>
+            }
+            actions={
+              <>
+                <ProfileBandAction variant="primary" href={`mailto:${SAMPLE_USERS[0].email}`}>
+                  {profileEmailLink("Nadia")}
+                </ProfileBandAction>
+                <ProfileBandAction variant="outline" href={FULL_ALUMNI.linkedin_url ?? ""} newTab>
+                  {PROFILE_LINKEDIN_LINK}
+                  <span className="visuallyHidden"> {OPENS_IN_NEW_TAB}</span>
+                </ProfileBandAction>
+              </>
+            }
+          />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>Loading: the heading stays, the rest is still</p>
+          <ProfileBand
+            back={{ to: PATHS.directory, label: PROFILE_BACK_LINK }}
+            avatar={{ name: null }}
+            heading={PROFILE_HEADING}
+            loading
+          />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>My profile: role tag, name and email, a link to the public profile</p>
+          <ProfileBand
+            avatar={{ name: SAMPLE_NAME, photoUrl: `${origin}${WORKING_PHOTO_PATH}` }}
+            tag={<RoleTag role="alumni" />}
+            heading={MY_PROFILE_HEADING}
+            sub={myProfileSub(SAMPLE_NAME, SAMPLE_USERS[0].email)}
+            actions={
+              <ProfileBandAction variant="outline" to={alumniProfilePath(FULL_ALUMNI.id)}>
+                {MY_PROFILE_PUBLIC_LINK}
+              </ProfileBandAction>
+            }
+          />
+        </div>
+        <div className={styles.block}>
+          <p className={styles.caption}>No optional part, a long name and a broken photo link</p>
+          <ProfileBand
+            avatar={{ name: LONG_ALUMNI.name, photoUrl: `${origin}${BROKEN_PHOTO_PATH}` }}
+            heading={LONG_ALUMNI.name ?? PROFILE_HEADING}
+          />
+        </div>
+      </section>
+
       <section className={styles.section} aria-labelledby="dev-table">
         <h2 id="dev-table" className={styles.sectionTitle}>
           Table
@@ -663,6 +920,32 @@ export default function ComponentsPage() {
         Its 4 comments will be deleted too. This cannot be undone.
       </ConfirmDialog>
     </main>
+  );
+}
+
+// DirectoryFilters with its own query in state, so every control works here.
+// On the real page the address holds the query (pattern 24).
+function FiltersSample() {
+  const [query, setQuery] = useState<DirectoryQuery>(DEFAULT_DIRECTORY_QUERY);
+  const [searchText, setSearchText] = useState("");
+
+  return (
+    <DirectoryFilters
+      query={query}
+      searchText={searchText}
+      onSearchTextChange={setSearchText}
+      onSearchNow={() => setQuery((current) => ({ ...current, q: searchText.trim(), page: 1 }))}
+      onFilterChange={(patch: DirectoryFilterPatch) =>
+        setQuery((current) => ({ ...current, ...patch, page: 1 }))
+      }
+      options={SAMPLE_FILTERS}
+      optionsStatus="ready"
+      onRetryOptions={() => undefined}
+      onClear={() => {
+        setQuery(DEFAULT_DIRECTORY_QUERY);
+        setSearchText("");
+      }}
+    />
   );
 }
 

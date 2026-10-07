@@ -36,6 +36,12 @@ Two decision records hold the longer reasoning: `.adlc/architecture/adr-13-front
 20. [Icons as small components](#20-icons-as-small-components)
 21. [Browser storage that never throws](#21-browser-storage-that-never-throws)
 22. [A components page for development only](#22-a-components-page-for-development-only)
+23. [A list loaded into an atom; the latest request wins](#23-a-list-loaded-into-an-atom-the-latest-request-wins)
+24. [Search, filters and page kept in the address](#24-search-filters-and-page-kept-in-the-address)
+25. [A form that loads first, then creates or edits](#25-a-form-that-loads-first-then-creates-or-edits)
+26. [The person band](#26-the-person-band)
+27. [The profile address and the "came from the directory" state](#27-the-profile-address-and-the-came-from-the-directory-state)
+28. [One rule, one function in lib](#28-one-rule-one-function-in-lib)
 
 ---
 
@@ -189,7 +195,7 @@ Atoms are grouped by topic, one file per topic. State that belongs to one screen
 
 - The store: `frontend/src/store/appStore.ts`
 - Given to React in `frontend/src/main.tsx`
-- Topics: `frontend/src/store/sessionAtoms.ts`, `frontend/src/store/sessionActions.ts`, `frontend/src/store/profileAtoms.ts`, `frontend/src/store/themeAtoms.ts`, `frontend/src/store/toastAtoms.ts`
+- Topics: `frontend/src/store/sessionAtoms.ts`, `frontend/src/store/sessionActions.ts`, `frontend/src/store/profileAtoms.ts`, `frontend/src/store/themeAtoms.ts`, `frontend/src/store/toastAtoms.ts`, and from part 2 `frontend/src/store/alumniAtoms.ts`, `frontend/src/store/alumniActions.ts`, `frontend/src/store/latestRequest.ts`
 - Used from outside React in `frontend/src/store/wireApi.ts` and `frontend/src/store/themeAtoms.ts`
 
 **Why we chose it.** The project rule is "state in Jotai atoms". Jotai's default store is hidden inside React, so the API client could not tell it "this user is logged out". With our own store, one line does it.
@@ -243,7 +249,7 @@ Each service file is a thin list of calls: one function per endpoint, relative `
 
 - The client: `frontend/src/services/apiClient.ts`
 - The hand-over, called once before the first render: `frontend/src/store/wireApi.ts`
-- Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`
+- Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`, `frontend/src/services/alumniService.ts` (part 2; the three loaders that can be cancelled take a `signal`, see pattern 23)
 - The dev proxy that sends `/api` to the backend: `frontend/vite.config.ts`
 
 **Why we chose it.** If the client imported the store, and the store imports the services, the two would import each other. Handing the functions in keeps the arrow pointing one way (pattern 1) and lets the client be tried with a fake token and a fake handler.
@@ -270,7 +276,8 @@ The server's own error text is never shown. Each screen picks its words from `ki
 
 **Where it lives.**
 
-- `frontend/src/services/apiError.ts` (`ApiFailure`, `toApiFailure`)
+- `frontend/src/services/apiError.ts` (`ApiFailure`, `toApiFailure`, and `isCancelled`: a call this app cancelled is not a failure and shows nothing, pattern 23)
+- From part 2, two shared word rules: `frontend/src/lib/loadFailure.ts` (a failed load) and `frontend/src/components/profile/saveFailureText.ts` (a failed save; each card passes its own words)
 - Turned into results in `frontend/src/store/sessionActions.ts`
 - Words chosen in `frontend/src/pages/LoginPage/LoginPage.tsx` and `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 
@@ -343,7 +350,7 @@ We did not check the session inside each page (easy to forget on a new page), an
 
 **Why we chose it.** Renaming `/profile` is one edit, and a typo in an address is a compile error instead of a dead link. We did not generate addresses from the folder names; the list is short and reading it is useful.
 
-A link to one alumni profile needs the id filled in (`/directory/:id`). Nothing builds that link yet. Part 2 adds a small helper next to `PATHS` for it.
+A link to one alumni profile needs the id filled in (`/directory/:id`). `alumniProfilePath(id)`, next to `PATHS`, builds it (pattern 27).
 
 ---
 
@@ -386,14 +393,15 @@ Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel
 - `frontend/src/components/shell/PageLayout/PageLayout.tsx` (holds both `PageLayout` and `PageNote`) and `frontend/src/components/shell/PageLayout/PageLayout.module.css`
 - `frontend/src/components/shell/Band/Band.tsx`, `frontend/src/components/shell/Header/Header.tsx`, `frontend/src/components/shell/Footer/Footer.tsx`, `frontend/src/components/shell/SkipLink/SkipLink.tsx`, `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx`
 - `frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx`
-- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx` (being built, with Log out)
+- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`, `frontend/src/pages/DashboardPage/DashboardPage.tsx` (being built)
+- A page that replaces the band with its own: `PageLayout`'s `band` slot, used with `ProfileBand` (pattern 26)
 - `frontend/src/components/auth/AuthLayout/AuthLayout.tsx`
 
 **Why we chose it.** The plan gave `BeingBuilt` its own stylesheet. While building, three pages turned out to need the same card (a statement, a line, a link). So the card became `PageNote` inside `PageLayout`, and `BeingBuilt` has nothing of its own to style. One frame also means the tab title, the single `<h1>` and the band overlap are right on every page without each page thinking about them.
 
 We did not make one shared page file for all six unbuilt routes (the build could then not show one file per page).
 
-**To build a real page in parts 2 to 4:** replace the thin page file. Keep `PageLayout` as the outer element and put your cards inside it. Delete `BeingBuilt` when the last unbuilt page is gone. When My profile is built, give Log out a new home on wide screens: today it is only on that being-built page and in the phone menu.
+**To build a real page in parts 2 to 4:** replace the thin page file. Keep `PageLayout` as the outer element and put your cards inside it. Delete `BeingBuilt` when the last unbuilt page is gone. Log out lives in the Account card of My profile (`frontend/src/components/profile/AccountCard/AccountCard.tsx`) and in the phone menu.
 
 ---
 
@@ -426,7 +434,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (108 cases; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (282 cases after part 2; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -552,7 +560,137 @@ It exists only in development, at `/dev/components`. In `App.tsx` its import sit
 
 **Why we chose it.** There is no test runner and no Storybook. A plain page costs no package and shows the real components with the real tokens.
 
-**To add a component in parts 2 to 4:** add a section for it to this page, in every state it has.
+**To add a component in parts 2 to 4:** add a section for it to this page, in every state it has. Part 2 added the alumni card and its loading card, the directory search and filters, and the profile band.
+
+---
+
+## 23. A list loaded into an atom; the latest request wins
+
+**What it is.** Data a page shows from the API lives in an atom, with a status: `idle`, `loading`, `ready` or `error` (a profile also has `notFound`, and My profile has `none` for "no profile yet"). A write-only loader atom (pattern 7) fills it. The page reads the atom and starts the loader in an effect; it never calls a service.
+
+Each loader goes through its own `createLatestRequest()`. Starting a call asks for a ticket: the call before it is aborted (axios takes the `signal`), and an answer that still arrives for an old ticket is dropped. A cancelled call changes nothing and shows no error, because `isCancelled` is checked before the failure is stored.
+
+The state also says whose it is. The directory state keeps the address it was loaded for (`queryKey`) and the profile state keeps its `id`. A page that finds another key in the atom treats it as loading, so the results of the last search or the last person never show for a frame. While loading, the atom holds no items.
+
+When a session starts or ends, `resetAlumniAtom` cancels all four loaders and empties the atoms, so one user's data is never shown to the next.
+
+**Where it lives.**
+
+- The helper: `frontend/src/store/latestRequest.ts`
+- The atoms and loaders: `frontend/src/store/alumniAtoms.ts` (`directoryAtom`, `filtersAtom`, `viewedAlumniAtom`, `myAlumniAtom`)
+- The reset: `frontend/src/store/sessionActions.ts`
+- `isCancelled`: `frontend/src/services/apiError.ts`
+- Readers: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`
+
+**Why we chose it.** A search box fires several calls in a row, and the network does not answer in order. Without a ticket, a slow answer for "ab" can arrive after the answer for "abc" and replace it. React's StrictMode also starts every effect twice in development, which starts two calls. The ticket makes both harmless, and the abort saves the server the work.
+
+We did not add a data-fetching library (it would be a new package and a second place for state), and we did not keep the list in the page's `useState` (it would be lost when the user opens a profile and comes back). We did not rely on the abort alone: `getMyAlumni` takes no signal, so for it only the ticket protects.
+
+---
+
+## 24. Search, filters and page kept in the address
+
+**What it is.** The directory's search text, its three filters, the mentoring checkbox and the page number are in the address (`/directory?q=ab&department=Computer+Science&page=2`). The address is the truth. The page reads it with `readDirectoryQuery`, which turns every bad value into its default, so the page never sees a bad query. It writes it with `writeDirectoryQuery`, which leaves out defaults and page 1. The list loads in an effect keyed on that written text.
+
+How writes are made:
+
+- A filter, the checkbox or a page change adds a history entry, and a filter change goes back to page 1.
+- Typing waits for a 300 ms pause, then replaces the current entry, so Back does not step through every pause. Enter or the Search button sends it at once.
+- The typed text is the component's own state. The box takes the address's value only when the address changed by itself (Back, a pasted link) and differs from what the user last sent. Every write starts from the address as it is now (a ref), so a timer never writes an old copy.
+- A page past the end (the list answered and the page is above the last one) replaces the address with the last page.
+- After the user changes page, focus goes to the count line, which is a polite live region that is always on the page.
+
+On a phone the filters sit in a panel behind a "Filters" button. The panel is `display: none` while closed, so Tab skips it. There is no JavaScript media query.
+
+**Where it lives.**
+
+- The rules: `frontend/src/lib/directoryQuery.ts` (`readDirectoryQuery`, `writeDirectoryQuery`, `toListParams`, `activeFilterCount`, `hasCriteria`, `lastPage`), with cases in `scripts/frontend-lib-check.ts`
+- The page: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`
+- The controls: `frontend/src/components/alumni/DirectoryFilters/DirectoryFilters.tsx` (controlled; it holds only the panel's open state)
+
+**Why we chose it.** A search kept in the address can be shared as a link, survives a reload, and Back works as people expect. Because the reader cleans every value, an edited or old link cannot break the page.
+
+We did not keep the filters in an atom (a reload or a shared link would lose them). We did not push a history entry for every pause in typing (Back would replay the typing); this narrows the spec's "every new filter state is an entry" for the search text only, and is listed as a deviation in the REQ-fs-005 architecture.
+
+---
+
+## 25. A form that loads first, then creates or edits
+
+**What it is.** The Alumni profile card on My profile is one form for two jobs. It is not drawn until the user's profile has answered: `ready` (a profile exists, the form edits it) or `none` (a 404, the form creates one). While it loads there is a skeleton, and a failed load shows an error with "Try again" and no form, so an empty form can never overwrite a saved profile.
+
+The rules of the form are in `lib/`: `alumniToForm` (a profile into text values), `validateAlumniForm(values, thisYear)` (one message per field, in screen order), `firstInvalidField`, and `alumniFormToBody` (trimmed, an empty field becomes `null`, all nine fields always sent so that clearing works, `user_id` never sent).
+
+`saveAlumniProfileAtom` creates when the state is `none` and edits when it is `ready`. It returns `{ ok: true }` or `{ ok: false, failure }`. On a 409 while creating (a profile appeared in the meantime) it first reloads quietly, without `loading`, so the next render is already the edit form with the message still shown.
+
+The form element stays mounted across the first create and the 409 reload. The card remembers which profile it was filled from; when the store holds another one, the values are reset in place during render. The page keys the card on the session's user id, so another user always gets a fresh card. The Account card follows the same skeleton, with its own error message, so one card's failure never touches the other.
+
+**Where it lives.**
+
+- The rules: `frontend/src/lib/alumniForm.ts`, the validators in `frontend/src/lib/validation.ts`
+- The actions: `frontend/src/store/alumniActions.ts` (`saveAlumniProfileAtom`, `saveAccountAtom`); the header update after "Save account" goes through `setProfileUserAtom` in `frontend/src/store/profileAtoms.ts`
+- The cards: `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.tsx`, `frontend/src/components/profile/AccountCard/AccountCard.tsx`
+- The page: `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
+
+**Why we chose it.** One form means one set of fields, one layout and one validation for both jobs. Waiting for the load means the form never guesses. Keeping the element mounted means keyboard focus and the failure message survive the switch from create to edit.
+
+We did not build two forms (create and edit) or a separate "create profile" page. We did not remount the form with a `key` on the profile (focus was lost and the 409 message vanished). We did not add a form library (pattern 16).
+
+---
+
+## 26. The person band
+
+**What it is.** A profile page has a bigger band than other pages: a back link, a large avatar, a tag, the name as the one `<h1>`, a sub line, a row of tags and links drawn as buttons. `ProfileBand` draws it, and `PageLayout`'s `band` slot puts it where the ordinary band would be, so the content column still overlaps it.
+
+The band is rendered in every status of the page at the same place. While the data loads, the avatar and the sub line are still blocks and the rest is left out, but the `<h1>` is the same element, so keyboard focus on it is not lost when the data arrives. `ProfileBandAction` is a link drawn as a button in the band's colors; with `newTab` it opens a new tab with `rel="noopener noreferrer"`, and the caller adds the hidden "(opens in a new tab)".
+
+**Where it lives.**
+
+- `frontend/src/components/shell/ProfileBand/ProfileBand.tsx` and `frontend/src/components/shell/ProfileBand/ProfileBand.module.css` (it takes the band look from `frontend/src/components/shell/Band/Band.module.css` with `composes`)
+- The slot: `frontend/src/components/shell/PageLayout/PageLayout.tsx`
+- The large avatar: size `xl` in `frontend/src/components/ui/Avatar/Avatar.tsx` (`--avatar-xl` in `frontend/src/styles/tokens.css`: 120, 96 on a phone)
+- Users: `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
+
+**Why we chose it.** Two pages draw the same band. One component keeps them the same, and `composes` keeps it the same as the ordinary band.
+
+We did not give `Band` more and more optional parts (most pages need none of them), and we did not swap the band for a skeleton while loading (the heading would be replaced and focus lost).
+
+---
+
+## 27. The profile address and the "came from the directory" state
+
+**What it is.** A link to one profile is built with `alumniProfilePath(id)`, never by gluing text. The directory card's link also hands the profile page the directory's query string as router state (`directoryReturnState`). "Back to directory" reads it with `readDirectorySearch` and returns to the same search, filters and page. Router state survives a reload and can hold anything, so the reader accepts only text that is empty or starts with `?`, has no `#` and no line break, and is at most 500 characters; anything else gives the plain directory.
+
+The profile page reads `:id` with `readProfileId`: digits only, from 1 to the largest id the server accepts. Anything else shows the not-found state with no request.
+
+**Where it lives.**
+
+- `frontend/src/routes/paths.ts` (`alumniProfilePath`, next to `PATHS`)
+- `frontend/src/lib/directoryReturn.ts` (`directoryReturnState`, `readDirectorySearch`)
+- `frontend/src/lib/profileId.ts` (`readProfileId`)
+- The link carries state through `state` on `frontend/src/components/ui/Link/Link.tsx`
+- Used by `frontend/src/components/alumni/AlumniCard/AlumniCard.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
+
+**Why we chose it.** Router state keeps the profile's own address clean (`/directory/7`), and the back link still knows the way. Treating it as untrusted follows the part 1 lesson on `state.from` (`frontend/src/lib/returnAddress.ts`).
+
+We did not put the directory query into the profile's address (it would make every profile link long and different), and we did not use `navigate(-1)` for "Back" (a profile opened from a pasted link has no directory behind it).
+
+---
+
+## 28. One rule, one function in lib
+
+**What it is.** A rule used in two places is written once, as a pure function in `lib/`, with cases in the library check. Part 2 found three copies of small rules while building and moved each into one function:
+
+- "trimmed text, or null when empty": `presentText` in `frontend/src/lib/alumniDisplay.ts` (with `displayName`, `jobLine`, `classLabel`, `orNotGiven`, `firstName`)
+- "which words for a failed load": `loadFailureText` in `frontend/src/lib/loadFailure.ts`. It declares its own failure shape, so `lib/` does not import `services/`.
+- "is this a profile id": `readProfileId` in `frontend/src/lib/profileId.ts`
+
+The validators are shared the same way: sign-up and the two My profile cards use the same `validateName` and `validatePhotoLink` from `frontend/src/lib/validation.ts`. Validator messages stay there as exported constants (pattern 16); page words are in `frontend/src/config/text.ts`, grouped by page.
+
+**Where it lives.** `frontend/src/lib/` and `scripts/frontend-lib-check.ts`. The one shared rule that is not in `lib/` is `frontend/src/components/profile/saveFailureText.ts`, because it takes its failure type from the store.
+
+**Why we chose it.** Two copies of a rule drift apart, and only one gets the fix. A function in `lib/` can be checked from the command line, which a rule inside a component cannot.
+
+We did not make a general "utils" file (a file named for no rule grows without limit), and we did not move the words into the functions: the caller still chooses what to say (pattern 9).
 
 ---
 
@@ -567,7 +705,7 @@ For parts 2 to 4 (directory and profiles, My profile, feed, dashboard, users):
 5. **Say what you did not choose.** That sentence is what stops the next person from trying it again.
 6. **Plain words, short sentences.** The reader is the owner and whoever builds the next part.
 
-Likely new sections, so nobody is surprised: loading a list into an atom with its three states; filters and the page number kept in the address; an edit form with save and cancel; the owner check (only you or an admin may edit); dates written as "3 October 2026".
+Likely new sections, so nobody is surprised: the owner check (only you or an admin may edit); dates written as "3 October 2026". Part 2 wrote sections 23 to 28.
 
 ## Checks to run
 
@@ -585,9 +723,13 @@ After the build, two looks at the output:
 - `ls frontend/dist/assets` shows one `.js` file for each page, plus a few shared files.
 - `grep -rlF "Compare each section with" frontend/dist` prints nothing: the components page is not in the build.
 
-When you add a validator or another pure function, add its cases to `scripts/frontend-lib-check.ts`. Write the expected answer from the spec, not from the code.
+When you add a validator or another pure function, add its cases to `scripts/frontend-lib-check.ts`. Write the expected answer from the spec, not from the code. Prove once that a new case can fail: run a copy of the script with one wrong expectation and see `FAIL` and exit 1. Make the copy outside the repo (rewrite its `../frontend/src/` imports to full paths), so nothing has to be deleted from the repo after.
 
-What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault.
+The build type-checks `frontend/src` only. The library check runs through `tsx`, which strips types without checking them, so a type error in `scripts/` is not caught.
+
+Screens are checked in a browser against a mock API: a throwaway script outside the repo, and a throwaway Vite config that points the `/api` proxy at it. Before you start, find out what listens on port 3000; it may be the real backend on a real database. Never point anything at it for a review.
+
+What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault; part 2's is in the REQ-fs-005 folder.
 
 ## Files added in review round 1
 
@@ -598,5 +740,6 @@ Seven files were added after the first draft of this document. All paths are und
 Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-notes.md` in the REQ-fs-004 folder.
 
 - The API client has no general timeout. Only log out has one (5 seconds); other calls wait for the server.
-- The checks on the store (401 handling, start-up check) were run from a scratch file and are not in `scripts/`.
+- The checks on the store (401 handling, start-up check, and in part 2 the latest-request and save actions) were run from scratch files and are not in `scripts/`.
 - ESLint is not installed, so nothing lints the code.
+- Part 2: the "Try again" buttons of the two My profile cards' load errors disappear when pressed, and focus falls to the page. `ProfileBand` takes no heading ref, so the profile page reaches its `<h1>` through a wrapper element.
