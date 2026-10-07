@@ -17,6 +17,12 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] architect-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 14 tasks in 5 stages, no ADR; stress test found 0 critical, 3 major, 5 minor, all fixed in the plan; 7 small deviations accepted by the owner
+
+## [2026-10-08] work-path-set | REQ-fs-005-frontend-directory-and-profiles | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-005-frontend-directory-and-profiles, off redesign); the only uncommitted files were this REQ's own vault records
+
+## [2026-10-08] spec-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | roadmap F6 and F7 (request said F6 to F8; F8 is the feed, left out); 52 criteria, 25 standard choices listed in the spec
+
 ## [2026-10-07] req-archived | REQ-fs-004-frontend-foundation-shell-auth
 
 ## [2026-10-07] req-merged | REQ-fs-004-frontend-foundation-shell-auth | merge commit 3f636a36 on redesign
