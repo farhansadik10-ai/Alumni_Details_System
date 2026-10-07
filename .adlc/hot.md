@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] req-archived | REQ-fs-004-frontend-foundation-shell-auth
+
+## [2026-10-07] req-merged | REQ-fs-004-frontend-foundation-shell-auth | merge commit 3f636a36 on redesign
+
 ## [2026-10-07] ship-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | roadmap F1 to F5 marked done; root CLAUDE.md frontend lines and the patterns doc updated; frontend/README.md, the stale comments in shared/types/user.types.ts and conventions.md Comments left for the owner
 
 ## [2026-10-07] req-ready-to-merge | REQ-fs-004-frontend-foundation-shell-auth | new frontend part 1 of 4 (roadmap F1 to F5): foundation, tokens and theme, base components, app shell, log in and sign-up; legacy Ant Design app deleted; run in a browser against a mock API only, not yet against the real backend
