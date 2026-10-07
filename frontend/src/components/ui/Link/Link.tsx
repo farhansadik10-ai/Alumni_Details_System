@@ -12,6 +12,9 @@ type CommonProps = {
 // An address inside the app. The router changes the page without a reload.
 type InAppLinkProps = CommonProps & {
   to: To;
+  // Handed to the next page through the router (for example the directory
+  // address a profile should return to). Router state is untrusted on read.
+  state?: unknown;
   href?: never;
 };
 
@@ -28,7 +31,7 @@ export function Link(props: LinkProps) {
 
   if (props.to !== undefined) {
     return (
-      <RouterLink className={className} to={props.to}>
+      <RouterLink className={className} to={props.to} state={props.state}>
         {props.children}
       </RouterLink>
     );

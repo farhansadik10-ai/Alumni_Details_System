@@ -3,7 +3,8 @@ import { initialsOf } from "../../../lib/initials";
 import { isWebLink } from "../../../lib/validation";
 import styles from "./Avatar.module.css";
 
-export type AvatarSize = "sm" | "md" | "lg";
+// "xl" is the profile band (120px, 96px on a phone).
+export type AvatarSize = "sm" | "md" | "lg" | "xl";
 
 export type AvatarProps = {
   name: string | null;

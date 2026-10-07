@@ -179,4 +179,17 @@
      panel get, as drawn in login.html and signup.html (520px and 460px). */
   --auth-headline-max: 520px;
   --auth-sub-max: 460px;
+  /* REQ-fs-005 TASK-006, Avatar "xl": the avatar of the profile band, as drawn
+     in profile.html (120px). Smaller on a phone, below. */
+  --avatar-xl: 120px;
+}
+
+/* The phone values of the tokens added above. They cannot go in section 4:
+   a :root rule later in the file wins over the same token in an earlier
+   media block, so the phone value must come after the wide one. */
+@media (max-width: 767.98px) {
+  :root {
+    /* REQ-fs-005 TASK-006: the avatar of my-profile.html (96px). */
+    --avatar-xl: 96px;
+  }
 }
