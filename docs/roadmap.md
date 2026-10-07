@@ -5,10 +5,10 @@
 | B1 | Fix broken queries | Alumni and comment SQL | Done (REQ-fs-001) |
 | D | Design | Approved design in docs/design, design-system contract | Done |
 | B2 | User safety and ownership | Partial updates, no password in responses, sign-up roles, owner checks, user_id from token | Done (REQ-fs-002) |
-| B3 | Class-based controllers and shared errors | Controllers as classes, one error middleware | To do |
-| B3a | Mentorship and field columns | alumni.mentorship_available, alumni.field | To do |
-| B4 | Alumni search API | Search, filters, pagination | To do |
-| B5 | Feed data | Author on posts, comments by post, comment count, delete rules | To do |
+| B3 | Class-based controllers and shared errors | Controllers as classes, one error middleware | Done (REQ-fs-003) |
+| B3a | Mentorship and field columns | alumni.mentorship_available, alumni.field | Done (REQ-fs-003) |
+| B4 | Alumni search API | Search, filters, pagination | Done (REQ-fs-003) |
+| B5 | Feed data | Author on posts, comments by post, comment count, delete rules | Done (REQ-fs-003) |
 | F1 | Foundation | Frontend base, routing, API client | To do |
 | F2 | Tokens and theme | CSS variables, light, dark, system | To do |
 | F3 | Base components | Button, input, tag, card, table, dialog, messages | To do |
