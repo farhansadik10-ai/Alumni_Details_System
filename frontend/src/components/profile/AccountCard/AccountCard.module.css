@@ -1,0 +1,48 @@
+/* The Account card of my-profile.html. Tokens only. The card's frame is Card. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* H2 as drawn: 24px, bold, snug. */
+.heading {
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* A read-only row: the label as a field label, the role tag after it. */
+.role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.roleLabel {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* As wide as its words, not the card. */
+.save {
+  display: flex;
+}
+
+/* Log out sits under a thin line, apart from the save. */
+.logOut {
+  display: flex;
+  padding-top: var(--space-5);
+  border-top: var(--border-line) solid var(--line);
+}
