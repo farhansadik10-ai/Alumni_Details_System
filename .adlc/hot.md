@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] verify-gate-cleared | REQ-fs-003-finish-backend-api | findings: C0/M0/m4 open after round 3 (12 fixed; M3 decided: record, no code change); owner reports both scripts pass on the final code
+## [2026-10-07] verify-round | REQ-fs-003-finish-backend-api | round 3: n1, n2, n4, m6 fixed and re-checked
+## [2026-10-07] verify-round | REQ-fs-003-finish-backend-api | round 2: M1, M2, M4, m2, m3, m5 fixed and re-checked; 4 new minors
+
 ## [2026-10-07] verified | REQ-fs-003-finish-backend-api | owner ran against the real database, round 2: own script 91 of 91 passed (14 admin checks); scripts/api-check.mjs with the admin account 0 failed
 
 ## [2026-10-07] implement-gate-cleared | REQ-fs-003-finish-backend-api | 12 tasks done, build passes; owner ran his own script and scripts/api-check.mjs against the real database, both pass after round 2; owner decided: comment body key is posts_id, a new comment needs content

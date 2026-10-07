@@ -173,3 +173,138 @@
 **Claim:** To test that `%` and `_` are plain characters, store two rows that differ only at that character and search with the literal; a count of 2 means wildcard.
 **Saw it in:** `scripts/api-check.mjs:643`
 **Context:** `likePattern` was broken for three tasks and only reading found it; job titles `100% <run>` and `100x <run>` make the bug show as a number.
+
+## CAND-036 [review-arch]
+**Claim:** When a read joins extra columns, make create and update re-read through the same joined query so one resource has one response shape.
+**Saw it in:** `backend/src/dal/query/AlumniQuery.ts:100` (posts did it right at `PostQuery.ts:30`)
+**Context:** Alumni and comment writes return bare rows while reads include name/photo; shared types promise the joined shape.
+
+## CAND-037 [review-arch]
+**Claim:** Put "does this already exist" rules in the Manager that throws a typed error; a Query must not signal a business refusal by returning `undefined`.
+**Saw it in:** `backend/src/api/controllers/AlumniController.ts:79`
+**Context:** Duplicate-profile rule lives in AlumniQuery and the controller maps undefined to 409.
+
+## CAND-038 [review-arch]
+**Claim:** When an API changes shape, update every type in `@alumni/shared` for that area in the same REQ, including ones the diff does not otherwise touch.
+**Saw it in:** `shared/types/user.types.ts:1`
+**Context:** `User` still has password and non-null name while Alumni, Post and Comment were updated.
+
+## CAND-039 [review-arch]
+**Claim:** An ADR that lists error branches must be re-read against the middleware at review; extra framework branches slip in.
+**Saw it in:** `backend/src/api/MiddleWare/errorMiddleware.ts:336`
+**Context:** `readRequestFault` is a fourth answer path not in ADR-11.
+
+## CAND-040 [review-arch]
+**Claim:** Export named input and filter types from the lowest layer; do not derive them with `Parameters<Query["m"]>[n]` in higher layers.
+**Saw it in:** `backend/src/businessLogic/src/AlumniManager.ts:30`
+**Context:** The same derived type is repeated in the Manager and the controller.
+
+## CAND-041 [review-qual]
+**Claim:** In a recursive-delete check, build a chain at least three deep and delete from the top; deleting the leaf first hides a one-level bug.
+**Saw it in:** `scripts/api-check.mjs:956`
+**Context:** J11 removes r2 before J12 deletes c1, so the recursion is only proven for two levels.
+
+## CAND-042 [review-qual]
+**Claim:** A lock added for a race needs a check that fires two requests at once; a sequential check proves nothing about the lock.
+**Saw it in:** `scripts/api-check.mjs:556`
+**Context:** E07 sends the second create after the first finished; the advisory lock in `AlumniQuery.createAlumni` is never raced.
+
+## CAND-043 [review-qual]
+**Claim:** When a helper is added to a util file, search the controllers for local copies of the same small function before closing the task.
+**Saw it in:** `backend/src/api/controllers/AlumniController.ts:65` and `PostController.ts:29`
+**Context:** `textOrNull` and a digits-only parse exist twice, though `requestHelpers.ts` already holds the parser.
+
+## CAND-044 [review-qual]
+**Claim:** Export the Query-layer input types from the DAL index so Managers import them; `Parameters<X["y"]>[n]` is a sign a type was left unexported.
+**Saw it in:** `backend/src/businessLogic/src/AlumniManager.ts:34`
+**Context:** Three Managers rebuild filter and update types, each in a different style.
+
+## CAND-045 [review-qual]
+**Claim:** After a type tightens on the server (null allowed, field ignored), update the request-side shared types in the same change, not only the response types.
+**Saw it in:** `shared/types/posts.types.ts:18`
+**Context:** `UpdatePostDTO` still forbids null and `CreatePostDTO` still requires `user_id`; both are wrong for the new controllers.
+
+## CAND-046 [review-qual]
+**Claim:** When an ADR defines a rule that conventions.md lists as "not written down", edit conventions.md in the same REQ.
+**Saw it in:** `.adlc/context/conventions.md:37,55,60`
+**Context:** ADR-11 and ADR-12 settle error handling, class controllers, response format and pagination; the file still says "not built yet".
+
+## CAND-047 [review-correct]
+**Claim:** A check that accepts "400 or 500" for a refused value cannot catch a broken error classifier; pin the one status the design promises.
+**Saw it in:** `scripts/api-check.mjs:397`
+**Context:** A07 passes if the database error falls through to 500, the very case the 22/23 mapping exists to prevent.
+
+## CAND-048 [review-correct]
+**Claim:** When a filter value is trimmed in JavaScript and compared to a column trimmed in SQL, use the same trim on both sides (`btrim` only strips spaces, `String.trim` strips all white space).
+**Saw it in:** `backend/src/api/utils/requestHelpers.ts:1773`, `backend/src/dal/query/AlumniQuery.ts:2757`
+**Context:** A department with a trailing tab shows in `/filters` but selecting it matches nothing.
+
+## CAND-049 [review-correct]
+**Claim:** A spec "out of scope" line about not adding checks needs a matching look at the diff; a shared helper (`checkFields`) quietly widens strictness on every route that uses it.
+**Saw it in:** `backend/src/api/controllers/PostController.ts:983`
+**Context:** `POST /api/posts` now answers 400 for a non-string caption, which AC12 and the out-of-scope list did not name.
+
+## CAND-060 [review-reflect]
+**Claim:** Register fixed paths (`/filters`, `/me`) above `/:id` in a router; Express matches in order and would read the word as an id.
+**Saw it in:** `backend/src/api/routes/AlumniRoutes.ts:1409`
+**Context:** Only a code comment guards the order; a gotcha makes the next added route see it.
+
+## CAND-061 [review-reflect]
+**Claim:** Never read `posts.comment_count` directly; the stored column is never written and stays 0, the real count is a subquery on read.
+**Saw it in:** `backend/src/dal/query/PostQuery.ts:2919` (`POST_READ`)
+**Context:** G11 is closed in effect, but the column and `PostDTO.comment_count = 0` still look maintained.
+
+## CAND-062 [review-reflect]
+**Claim:** Write the HTTP check script from the spec and `db/schema.md`, not from the controller; a script copied from the code agrees with the code's bug.
+**Saw it in:** `.adlc/specs/2026-10/fs/REQ-fs-003-finish-backend-api/requirement.md` (owner decision, `posts_id`)
+**Context:** `api-check.mjs` passed 89/89 while the owner's own script, sending the schema's key, failed 4.
+
+## CAND-063 [review-reflect]
+**Claim:** The per-user lock stops new duplicate alumni profiles only; rows made before it remain, and `/me` returns the lowest `id`.
+**Saw it in:** `backend/src/dal/query/AlumniQuery.ts:2698` (`findAlumniByUserId`)
+**Context:** No UNIQUE on `alumni.user_id`; a screen must not assume one row per user in old data.
+
+## CAND-064 [review-reflect]
+**Claim:** Edit only the `.ts` in `shared/types/`; the tracked `.js`/`.d.ts` twins are stale and `list.types.ts` has none.
+**Saw it in:** `shared/types/alumni.types.d.ts` (no `mentorship_available`)
+**Context:** Root `CLAUDE.md` says compiled output is checked in; this REQ changed only the sources.
+
+## CAND-065 [review-reflect]
+**Claim:** List order direction differs per endpoint: alumni and posts newest first, users by `id` ascending; do not assume one direction in the UI.
+**Saw it in:** `backend/src/dal/query/UserQuery.ts:3251` (`ORDER BY id`)
+**Context:** ADR-12 says "a fixed order", not which one.
+
+## CAND-066 [review-reflect]
+**Claim:** A single `WITH RECURSIVE ... DELETE` is all-or-nothing without a transaction; use `withTransaction` only when a second statement is needed.
+**Saw it in:** `backend/src/dal/query/CommentQuery.ts:2885`
+**Context:** Concept page candidate; ADR-06 says "transaction" for both deletes (REFL-004).
+
+## CAND-067 [review-reflect]
+**Claim:** A user whose `role` is NULL still gets a token, with role `""`; it matches no role check but passes `authMiddleware`.
+**Saw it in:** `backend/src/api/controllers/AuthController.ts:761`
+**Context:** Only a code comment says so; `"User".role` is nullable and sign-up now always sets it.
+
+## CAND-068 [review-reflect]
+**Claim:** Decide in an ADR who may see other people's email: any logged-in user gets every alumni's `email` from the list and `/email/:email`.
+**Saw it in:** `backend/src/dal/query/AlumniQuery.ts:2602` (`ALUMNI_READ`), `AlumniRoutes.ts` (`authMiddleware` only)
+**Context:** ADR-gap; the design shows names and tags, and no accepted ADR covers email exposure.
+
+## CAND-069 [implement-task]
+**Claim:** Before deleting a `checkFields` rule that "can never fail", check what else the rule does: `checkFields` passes on only the keys that have a rule.
+**Saw it in:** `backend/src/api/utils/requestHelpers.ts` (`checkFields`, the `for (const key in rules)` loop)
+**Context:** Review finding m5 called the `email` / `password` entries in `USER_UPDATE_RULES` dead; removing them would silently drop email and password changes.
+
+## CAND-085 [review-arch]
+**Claim:** When a write is made to answer the read shape, change every read of that resource in the same step, including the list-all and find-by-id ones; a missed read keeps the drift.
+**Saw it in:** `backend/src/dal/query/CommentQuery.ts:37`
+**Context:** Round 2 joined create and update to `COMMENT_READ`, but `getAllComments` and `findCommentById` stayed bare.
+
+## CAND-086 [review-arch]
+**Claim:** A shared request type is only done when it is checked against the controller's required fields, not just its field names (optional in the type but refused in the controller is drift).
+**Saw it in:** `shared/types/user.types.ts:18` vs `UserController.ts:628`
+**Context:** `CreateUserDTO.role?` is optional; the controller returns 400 without a valid role.
+
+## CAND-080 [review-qual]
+**Claim:** A helper added beside a near-identical one to loosen a single rule should share the common steps; copy-and-change recreates the duplicate the same change set just removed.
+**Saw it in:** `backend/src/api/utils/requestHelpers.ts` (`queryFilterValue` beside `queryText`)
+**Context:** Round 2 of REQ-fs-003 merged four duplicate helpers and added a fifth that repeats `queryText`.
