@@ -70,8 +70,9 @@ function followOtherTabs(event: StorageEvent): void {
   applyTheme(choice);
 }
 
-// The listeners, added once, when this module is first loaded. Every page has
-// a ThemeSwitch, which imports this file, so no start-up call is needed.
+// The listeners, added once, when this module is first loaded. main.tsx
+// imports this file before the first render, so no start-up call is needed
+// (not every page has a ThemeSwitch).
 function startThemeSync(): () => void {
   applyTheme(appStore.get(storedChoiceAtom));
 

@@ -196,7 +196,7 @@ We did not choose Redux or a React context per topic. Atoms are small, and a com
 
 Two details that matter when you add atoms:
 
-- An atom has no clock. `sessionAtom` says who the token is for; it does not say whether the token has run out. Code that needs the time calls `isExpired(session, Date.now())` itself.
+- An atom has no clock. `sessionAtom` says who the token is for; it does not say whether the token has run out. Code that needs the time calls `isLiveSession(session, Date.now())` (in `lib/token.ts`, with `isAdmin`) itself.
 - Storage is written by the atom that owns the value (`tokenAtom`, `themeChoiceAtom`). A change that comes from another tab is taken into memory without writing storage again, so two tabs cannot keep answering each other.
 
 ---
@@ -211,7 +211,7 @@ Three rules for actions:
 2. **They do not navigate.** They change the session; the route guards see the change and move the user (pattern 11).
 3. **A change of several atoms happens in one step.** After an `await`, each `set` would tell React on its own, and a guard could see a half-changed session. So the token, the profile and the notice change together inside one small helper atom (`startSessionAtom`, `clearSessionAtom`). The token is set last.
 
-The actions also do the trimming: email, name and photo link are trimmed; the password never is; the email keeps its letter case. An empty name or photo link is sent as `null`.
+Trimming happens twice, on purpose. The pages trim the email, name and photo link before they call an action (and SignUpPage leaves an empty photo link out); the actions trim them again, so a caller that skips a page still sends clean values. The password is never trimmed; the email keeps its letter case. The actions send an empty name or photo link as `null`.
 
 **Where it lives.**
 
@@ -233,7 +233,7 @@ We did not choose custom hooks that hold the logic (they die with the component)
 - `getToken`: how to read the current token.
 - `onUnauthorized`: what to do when the server refuses that token.
 
-The client calls `onUnauthorized` only when all of these are true: the answer is 401; the request was not marked `skipAuthHandling`; the request really carried a token; and that token is still the current one. Log in, sign-up and log out are marked `skipAuthHandling`, because a 401 there means something else (a wrong password, for example).
+The client calls `onUnauthorized` only when all of these are true: the answer is 401; the request was not marked `skipAuthHandling`; the request really carried a token; and that token is still the current one. Log in, sign-up and log out are marked `skipAuthHandling`, because a 401 there means something else (a wrong password, for example). Log in and sign-up are also marked `withoutToken`, so an old token is not sent with them; log out still sends it.
 
 Each service file is a thin list of calls: one function per endpoint, relative `/api` paths, types from `@alumni/shared`.
 
@@ -248,7 +248,7 @@ Each service file is a thin list of calls: one function per endpoint, relative `
 
 We did not choose a base URL from an env variable (paths stay relative; Vite in development and Apache in production forward them), and we did not let each service add the token itself.
 
-There is no timeout on the client yet. See "Open points" at the end.
+The only timeout is on log out (5 seconds), so a hung server cannot keep the user logged in. See "Open points" at the end.
 
 **To add an endpoint in parts 2 to 4:** add a function to a service file (or a new `somethingService.ts`), call it from an action or a loading atom in `frontend/src/store/`, and read the atom in the page.
 
@@ -465,7 +465,7 @@ The table elements keep explicit roles (`role="table"`, `row`, `cell`), because 
 **Where it lives.**
 
 - `frontend/src/components/ui/Table/Table.tsx` and `frontend/src/components/ui/Table/Table.module.css`
-- Goes with it: `frontend/src/components/ui/Pagination/Pagination.tsx` (its `pageRange` function is pure and exported), `frontend/src/components/ui/EmptyState/EmptyState.tsx`, `frontend/src/components/ui/ErrorState/ErrorState.tsx`, `frontend/src/components/ui/Skeleton/Skeleton.tsx`
+- Goes with it: `frontend/src/components/ui/Pagination/Pagination.tsx` (its `pageRange` function is pure and lives in `frontend/src/lib/pageRange.ts`; the return-address guard `readReturnAddress` lives in `lib/returnAddress.ts`; both are in the library check), `frontend/src/components/ui/EmptyState/EmptyState.tsx`, `frontend/src/components/ui/ErrorState/ErrorState.tsx`, `frontend/src/components/ui/Skeleton/Skeleton.tsx`
 
 **Why we chose it.** One component and one set of data give both layouts, and the switch is pure CSS. A page does not need to know how wide the screen is.
 
@@ -569,7 +569,7 @@ Likely new sections, so nobody is surprised: loading a list into an atom with it
 
 ## Checks to run
 
-Run all four from the repo root before you say a piece of work is done. All must exit 0.
+Run all four from the repo root before you say a piece of work is done. All must exit 0. `npm run check:frontend` runs the style check and the library check in one go.
 
 | Command | What it proves |
 |---|---|
@@ -591,7 +591,7 @@ What these checks cannot prove (how a screen looks, a real log in, a screen read
 
 Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-notes.md` in the REQ-fs-004 folder.
 
-- The API client has no timeout. Log out waits for the server's answer before it clears the session.
+- The API client has no general timeout. Only log out has one (5 seconds); other calls wait for the server.
 - `PhoneMenu.tsx` and `Dialog.tsx` share about 40 lines that a hook could hold once.
 - "Something went wrong. Try again." is written as a constant in both form pages.
 - The checks on the store (401 handling, start-up check) were run from a scratch file and are not in `scripts/`.

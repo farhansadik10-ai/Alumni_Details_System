@@ -12,9 +12,13 @@
 //   c  no import of antd, @ant-design or @fontsource-variable/inter
 //   d  no import of axios or services/ from components, pages, routes, hooks, icons
 //   e  the app name and the contact email are written only in config/app.ts
-//   f  no onClick on a <div> or a <span>
+//   f  no onClick and no role="button" on a <div> or a <span>
 //   g  no dangerouslySetInnerHTML
 //   h  no box-shadow, no gradient, no "outline: none" in a stylesheet
+//   i  an address of routes/paths.ts, or a text starting with "ua.", written as
+//      a string only in routes/paths.ts and config/storageKeys.ts
+//   j  every max-width media query line in a stylesheet equals the phone
+//      layout of config/layout.ts
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -28,9 +32,11 @@ const BASE_FILE = "styles/base.css";
 const APP_CONFIG_FILE = "config/app.ts";
 const CONFIG_CONSTANTS = ["APP_NAME", "CONTACT_EMAIL"];
 
-// The one size literal a component stylesheet may hold: CSS variables cannot be
-// used in a media query. Always written this way (architecture.md, "Tokens and styles").
-const BREAKPOINT_LINE = "@media (max-width: 767.98px)";
+const PATHS_FILE = "routes/paths.ts";
+const STORAGE_KEYS_FILE = "config/storageKeys.ts";
+const LAYOUT_FILE = "config/layout.ts";
+// A text starting with this is a storage key (config/storageKeys.ts).
+const STORAGE_KEY_PREFIX = "ua.";
 
 const TEXT_EXTENSIONS = new Set([
   ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".css", ".html", ".svg", ".json", ".md",
@@ -48,9 +54,11 @@ const RULES = {
   c: "import of antd, @ant-design or @fontsource-variable/inter",
   d: "import of axios or services/ from a UI folder",
   e: "app name or contact email outside config/app.ts",
-  f: "onClick on a <div> or <span>",
+  f: "onClick or role=\"button\" on a <div> or <span>",
   g: "dangerouslySetInnerHTML",
   h: "box-shadow, gradient or outline removed in a stylesheet",
+  i: "address or storage key written as a string outside routes/paths.ts and config/storageKeys.ts",
+  j: "max-width media query that differs from config/layout.ts",
 };
 
 // The CSS named colors (CSS Color Module Level 4). "transparent", "currentColor"
@@ -199,6 +207,46 @@ function readConfigValues() {
   return { values };
 }
 
+// The phone layout query of config/layout.ts, as the line a stylesheet writes.
+// It is also the one size literal a component stylesheet may hold: CSS
+// variables cannot be used in a media query (architecture.md, "Tokens and styles").
+function readBreakpointLine() {
+  let text;
+  try {
+    text = readFileSync(path.join(SRC_DIR, LAYOUT_FILE), "utf8");
+  } catch {
+    return { error: `cannot read frontend/src/${LAYOUT_FILE}` };
+  }
+  const match = text.match(/export\s+const\s+PHONE_LAYOUT_QUERY\s*=\s*(["'`])(.+?)\1/);
+  if (!match || !match[2].trim().startsWith("(")) {
+    return { error: `cannot find the text value of PHONE_LAYOUT_QUERY in frontend/src/${LAYOUT_FILE}` };
+  }
+  return { line: `@media ${match[2].trim()}` };
+}
+
+// The address values of the PATHS object of routes/paths.ts. The bare "/" (the
+// home address) is left out: it is also the path separator ("a/b".split("/")),
+// so a rule on it would flag code that is not an address.
+function readPathValues() {
+  let text;
+  try {
+    text = readFileSync(path.join(SRC_DIR, PATHS_FILE), "utf8");
+  } catch {
+    return { error: `cannot read frontend/src/${PATHS_FILE}` };
+  }
+  const body = text.match(/export\s+const\s+PATHS\s*=\s*\{([\s\S]*?)\}\s*as\s+const/);
+  if (!body) {
+    return { error: `cannot find the PATHS object in frontend/src/${PATHS_FILE}` };
+  }
+  const values = [...stripScriptComments(body[1]).matchAll(/:\s*(["'`])([^"'`]+)\1/g)]
+    .map((match) => match[2])
+    .filter((value) => value.length > 1);
+  if (values.length === 0) {
+    return { error: `found no address in the PATHS object of frontend/src/${PATHS_FILE}` };
+  }
+  return { values };
+}
+
 // ----- rule a ---------------------------------------------------------------
 
 function checkColorLiterals(rel, lines) {
@@ -258,10 +306,10 @@ function checkScriptNamedColors(rel, lines) {
 
 // ----- rule b ---------------------------------------------------------------
 
-function checkSizeLiterals(rel, lines) {
+function checkSizeLiterals(rel, lines, breakpointLine) {
   lines.forEach((line, index) => {
     const trimmed = line.trim().replace(/\s*\{$/, "");
-    if (trimmed === BREAKPOINT_LINE) return;
+    if (trimmed === breakpointLine) return;
     const match = line.match(SIZE_LITERAL);
     if (match) report("b", rel, index + 1, `size literal ${match[0]} (use a token)`);
   });
@@ -303,7 +351,8 @@ function checkConfigValues(rel, rawLines, configValues) {
 
 // Returns the text of the opening tag that starts at `start`, up to its ">".
 // Text inside {...} and inside strings is replaced by spaces, so only real
-// attribute names are left.
+// attribute names are left. The result is as long as the text it was made
+// from, so a position in it is a position in the file (counted from `start`).
 function openingTagAttributes(text, start) {
   let depth = 0;
   let quote = null;
@@ -311,8 +360,10 @@ function openingTagAttributes(text, start) {
   for (let i = start; i < text.length; i += 1) {
     const ch = text[i];
     if (quote) {
-      if (ch === "\\") i += 1;
-      else if (ch === quote) quote = null;
+      if (ch === "\\") {
+        i += 1;
+        out += " ";
+      } else if (ch === quote) quote = null;
       out += ch === "\n" ? "\n" : " ";
       continue;
     }
@@ -332,10 +383,18 @@ function openingTagAttributes(text, start) {
 function checkClickableBoxes(rel, text) {
   for (const match of text.matchAll(CLICKABLE_TAG)) {
     const attributes = openingTagAttributes(text, match.index + match[0].length);
+    const tagStart = match.index + match[0].length;
     const handler = attributes.search(/(?<![\w-])onClick(?![\w-])/);
-    if (handler === -1) continue;
-    const line = lineOf(text, match.index + match[0].length + handler);
-    report("f", rel, line, `onClick on a <${match[1]}> (use a real <button> or <a>)`);
+    if (handler !== -1) {
+      const line = lineOf(text, tagStart + handler);
+      report("f", rel, line, `onClick on a <${match[1]}> (use a real <button> or <a>)`);
+    }
+    // The strings are blanked in `attributes`, so the value is read from the file.
+    const role = attributes.search(/(?<![\w-])role\s*=/);
+    if (role !== -1 && /^role\s*=\s*\{?\s*["'`]button["'`]/.test(text.slice(tagStart + role))) {
+      const line = lineOf(text, tagStart + role);
+      report("f", rel, line, `role="button" on a <${match[1]}> (use a real <button>)`);
+    }
   }
 }
 
@@ -351,6 +410,35 @@ function checkBannedStyles(rel, lines) {
   lines.forEach((line, index) => {
     for (const { pattern, what } of BANNED_STYLE) {
       if (pattern.test(line)) report("h", rel, index + 1, what);
+    }
+  });
+}
+
+// ----- rule i ---------------------------------------------------------------
+
+// A string that is exactly an address of PATHS, or starts with "ua.". Only
+// quoted text that starts with "/" or "ua." is looked at, so an apostrophe in
+// JSX text cannot pair up with a quote far away and make a false literal.
+function checkAddressLiterals(rel, lines, pathValues) {
+  lines.forEach((line, index) => {
+    for (const match of line.matchAll(/(["'`])((?:\/|ua\.)[^"'`$\\]*)\1/g)) {
+      const value = match[2];
+      if (pathValues.includes(value)) {
+        report("i", rel, index + 1, `the address "${value}" (use PATHS from routes/paths)`);
+      } else if (value.startsWith(STORAGE_KEY_PREFIX)) {
+        report("i", rel, index + 1, `the storage key "${value}" (use config/storageKeys)`);
+      }
+    }
+  });
+}
+
+// ----- rule j ---------------------------------------------------------------
+
+function checkBreakpointLines(rel, lines, breakpointLine) {
+  lines.forEach((line, index) => {
+    const trimmed = line.trim().replace(/\s*\{$/, "");
+    if (/^@media\b.*max-width/.test(trimmed) && trimmed !== breakpointLine) {
+      report("j", rel, index + 1, `"${trimmed}" is not "${breakpointLine}" (config/layout.ts)`);
     }
   });
 }
@@ -372,6 +460,17 @@ function main() {
     process.exit(1);
   }
 
+  const layout = readBreakpointLine();
+  if (layout.error) {
+    console.error(`frontend-style-check: ${layout.error}. Rules b and j cannot run, so the check fails.`);
+    process.exit(1);
+  }
+  const addresses = readPathValues();
+  if (addresses.error) {
+    console.error(`frontend-style-check: ${addresses.error}. Rule i cannot run, so the check fails.`);
+    process.exit(1);
+  }
+
   let checked = 0;
   for (const file of files) {
     const ext = path.extname(file).toLowerCase();
@@ -390,7 +489,13 @@ function main() {
       if (isCss) checkCssNamedColors(rel, lines);
       if (isScript) checkScriptNamedColors(rel, lines);
     }
-    if (rel.endsWith(".module.css") || rel === BASE_FILE) checkSizeLiterals(rel, lines);
+    if (rel.endsWith(".module.css") || rel === BASE_FILE) {
+      checkSizeLiterals(rel, lines, layout.line);
+    }
+    if (isCss) checkBreakpointLines(rel, lines, layout.line);
+    if (isScript && rel !== PATHS_FILE && rel !== STORAGE_KEYS_FILE) {
+      checkAddressLiterals(rel, lines, addresses.values);
+    }
     if (isCss || isScript) checkImports(rel, text);
     if (rel !== APP_CONFIG_FILE) checkConfigValues(rel, raw.split("\n"), config.values);
     if (ext === ".tsx" || ext === ".jsx") checkClickableBoxes(rel, text);
