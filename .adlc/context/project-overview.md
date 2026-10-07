@@ -6,7 +6,7 @@ The plain-English what-and-why of this project. Read by every Claude session so 
 
 The Alumni Details System is an npm workspaces monorepo: an Express API over PostgreSQL (users, alumni profiles, posts, comments) and a React frontend.
 
-The current goal (owner, 2026-10-05): rebuild the frontend from scratch with a Scandinavian design and a light / dark / system theme, on top of the existing backend, database, Apache, HTTPS and deployment setup. The Ant Design frontend now in `frontend/src` is legacy and will be replaced. All work goes through the ADLC pipeline; the earlier AI-DLC "bolt" plan is retired.
+The current goal (owner, 2026-10-05): rebuild the frontend from scratch with a Scandinavian design and a light / dark / system theme, on top of the existing backend, database, Apache, HTTPS and deployment setup. The Ant Design frontend was replaced in REQ-fs-004 (part 1 of 4). All work goes through the ADLC pipeline; the earlier AI-DLC "bolt" plan is retired.
 
 The design was approved by the owner on 2026-10-06. Its name is "Oak, ink band" ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]). The pictures and rules are in `docs/design/`; the vault copy of the rules is [[context/design-system]].
 
@@ -40,7 +40,7 @@ _(Who the real-world audience is — which institution, how many users — is no
 
 | Layer | Tech |
 |---|---|
-| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). No UI library: we build our own components on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]). The current `frontend/src` uses Ant Design (`antd`), which is legacy and is removed screen by screen; no new `antd` imports. |
+| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). No UI library: we build our own components on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]). The Ant Design app was deleted in REQ-fs-004; foundation, shell, log in and sign-up are built ([[knowledge/components/frontend-app]]). |
 | Backend | Node.js + Express, TypeScript, run with `tsx watch` in dev; three workspaces: `@alumni/api`, `@alumni/businesslogic`, `@alumni/dal` |
 | Shared | `@alumni/shared` — cross-cutting TypeScript types |
 | Database | PostgreSQL through a shared `pg` `Pool` |
@@ -88,4 +88,4 @@ _(nothing else written down — fill in)_
 | Started | 2026-10-05 |
 | Repo | C:/Users/Lenovo/Alumni_Details_System |
 
-_"Started" is the date this vault was created, not the date the project began. As of 2026-10-07 the backend is finished for the redesign (REQ-fs-001 to REQ-fs-003, roadmap B1 to B5). Building the new frontend has not started: no REQ exists for it yet._
+_"Started" is the date this vault was created, not the date the project began. As of 2026-10-07 the backend is finished for the redesign (REQ-fs-001 to REQ-fs-003, roadmap B1 to B5). Frontend part 1 of 4 (REQ-fs-004, roadmap F1 to F5: foundation, theme, base components, app shell, log in and sign-up) is built and waiting to merge; directory, profiles, feed, dashboard and users are next (F6 to F9)._

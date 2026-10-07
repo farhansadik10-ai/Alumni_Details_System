@@ -46,7 +46,7 @@ What the direction fixes:
 - Every main page has a header, a full-width ink band with the page heading, and a first card that overlaps the band.
 - Font: Hanken Grotesk.
 - Themes: light, dark and system. Default is system. The choice is saved in the browser. The token set is switched with a `data-theme` attribute on the root element, and `color-scheme` is set too.
-- **UI library: none.** We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports.
+- **UI library: none.** We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports. **Update 2026-10-07:** removed whole, not screen by screen, in REQ-fs-004 (owner's choice at its spec gate).
 
 The rules are in `docs/design/README.md`; the vault copy is [[context/design-system]]. The pictures are in `docs/design/screens/`.
 
@@ -62,7 +62,7 @@ Contrast was checked by the owner (2026-10-06): every text pair passes WCAG AA i
 | Hanken Grotesk (400, 500, 600, 700) must be loaded | new work |
 | Every component in [[context/design-system]] is built in the repo; nothing comes from a UI library | new work |
 | A review finding if a new file imports `antd` | new work |
-| `antd` stays installed until the last legacy screen is replaced, then it is removed | follow-up |
+| ~~`antd` stays installed until the last legacy screen is replaced, then it is removed~~ — done in REQ-fs-004 (2026-10-07): the whole legacy app and `antd` are gone | follow-up, done |
 | `--accent` is never text and never the only border on a light surface | trade-off |
 | No shadows and no gradients, so depth comes only from borders and the band | trade-off |
 | Screens without a dark or phone picture are built from the rules, not from a picture | trade-off |

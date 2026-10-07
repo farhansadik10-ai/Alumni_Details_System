@@ -351,3 +351,86 @@
 **Claim:** A mock API added only through Vite `configureServer` does not answer under `vite preview`; also set `configurePreviewServer`.
 **Saw it in:** scratchpad `vite.mock.config.mjs` (not in repo)
 **Context:** the first preview run showed false "Something went wrong" errors.
+
+## Candidate verdicts
+
+Written at wrap-up, 2026-10-07. The file holds two candidates numbered CAND-047, 048 and 049 each (one from the architecture or correctness reviewer, one from the reflector); the source tag tells them apart. Dedup basis: `origin/redesign` as of 11 hours ago, 15 lessons, identical to this branch's base; no duplicate found.
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 | promote | LESSON-REQ-fs-004-6 (merged with 004, 044, 038) |
+| CAND-002 | demote-to-gotcha | ^g43 |
+| CAND-003 | discard | one-off; recorded in the frontend-app component page and TASK-001 notes |
+| CAND-004 | promote | LESSON-REQ-fs-004-6 |
+| CAND-005 | demote-to-gotcha | ^g44 |
+| CAND-006 | demote-to-gotcha | ^g44 |
+| CAND-007 | demote-to-gotcha | ^g44 |
+| CAND-008 | discard | duplicate of LESSON-REQ-fs-003-4 (a check must be able to fail) |
+| CAND-009 | demote-to-gotcha | ^g48 |
+| CAND-010 | promote | LESSON-REQ-fs-004-3 |
+| CAND-011 | demote-to-gotcha | ^g47 |
+| CAND-012 | demote-to-gotcha | ^g47 |
+| CAND-013 | discard | an open follow-up (finding m17), not a lesson yet; noted in the concept page |
+| CAND-014 | demote-to-gotcha | ^g48 |
+| CAND-015 | demote-to-gotcha | ^g43 |
+| CAND-016 | demote-to-gotcha | ^g43 |
+| CAND-017 | demote-to-gotcha | ^g48 |
+| CAND-018 | discard | component detail; in TASK-005 notes and the Button code |
+| CAND-019 | demote-to-gotcha | ^g46 |
+| CAND-020 | discard | tooling trick; covered by ^g50 |
+| CAND-021 | promote | LESSON-REQ-fs-004-4 (also ^g50) |
+| CAND-022 | demote-to-gotcha | ^g46 |
+| CAND-023 | demote-to-gotcha | ^g46 |
+| CAND-024 | demote-to-gotcha | ^g50 |
+| CAND-025 | discard | component detail; in TASK-006 notes (Student tag outline, owner item D4) |
+| CAND-026 | demote-to-gotcha | ^g45 |
+| CAND-027 | promote | LESSON-REQ-fs-004-4 |
+| CAND-028 | demote-to-gotcha | ^g50 |
+| CAND-029 | demote-to-gotcha | ^g45 |
+| CAND-030 | promote | LESSON-REQ-fs-004-5 |
+| CAND-031 | demote-to-gotcha | ^g48 |
+| CAND-032 | demote-to-gotcha | ^g49 |
+| CAND-033 | demote-to-gotcha | ^g49 |
+| CAND-034 | promote | LESSON-REQ-fs-004-4 |
+| CAND-035 | demote-to-gotcha | ^g49 |
+| CAND-036 | demote-to-gotcha | ^g50 |
+| CAND-037 | demote-to-gotcha | ^g50 |
+| CAND-038 | promote | LESSON-REQ-fs-004-6 |
+| CAND-039 | discard | demo-page detail; in TASK-010 notes |
+| CAND-040 | promote | LESSON-REQ-fs-004-5 |
+| CAND-041 | discard | form detail; in TASK-009 notes and `useFormError.ts` |
+| CAND-042 | discard | form detail; in TASK-009 notes |
+| CAND-043 | demote-to-gotcha | ^g50 |
+| CAND-044 | promote | LESSON-REQ-fs-004-6 |
+| CAND-045 | discard | trivial; the comment was fixed in round 1 (t2) |
+| CAND-046 | discard | already a step in `manual-checklist.md` (49 to 51) |
+| CAND-047 [review-arch] | promote | LESSON-REQ-fs-004-2 |
+| CAND-048 [review-arch] | discard | fixed in round 1 (m10, style-check rule j) |
+| CAND-QUAL-001 | discard | fourth sighting of LESSON-REQ-fs-002-3; recorded there |
+| CAND-QUAL-002 | promote | LESSON-REQ-fs-004-2 |
+| CAND-QUAL-003 | discard | done in round 1 (`check:frontend`, m8) |
+| CAND-QUAL-004 | promote | LESSON-REQ-fs-004-2 |
+| CAND-QUAL-005 | discard | done in round 1 (style-check rule i, m8) |
+| CAND-049 [review-corr] | discard | fixed in round 1 (m1) |
+| CAND-050 [review-corr] | promote | LESSON-REQ-fs-004-3 |
+| CAND-051 [review-corr] | promote | LESSON-REQ-fs-004-3 |
+| CAND-047 [review-reflect] | promote | LESSON-REQ-fs-004-7 |
+| CAND-048 [review-reflect] | discard | fourth sighting of LESSON-REQ-fs-002-3; recorded there |
+| CAND-049 [review-reflect] | discard | a script that checks every path in the patterns doc is a possible follow-up, not a lesson yet |
+| CAND-UI-1 | promote | LESSON-REQ-fs-004-4 |
+| CAND-UI-2 | discard | owner item m13 (D1) is still undecided; revisit when decided |
+| CAND-UI-3 | discard | fixed in round 1 (m11); its widths are a step in `manual-checklist.md` |
+| CAND-IMPL-A1 | demote-to-gotcha | ^g49 |
+| CAND-IMPL-B1 | discard | tool detail inside one check script |
+| CAND-IMPL-B2 | discard | explained in a code comment in `PhoneMenu.tsx` |
+| (arch round 2) update the architecture folder list | discard | done at wrap-up (below) |
+| (arch round 2) per-call request flag | promote | LESSON-REQ-fs-004-3 |
+| (reflector round 2) grep the docs for the old claim | discard | fourth sighting of LESSON-REQ-fs-002-3; recorded there |
+| (quality round 2) a comment that names a rule by letter | discard | trivial; fixed (n3) |
+| (quality round 2) type predicate narrows the false branch | discard | finding n4 is open; revisit if it bites |
+| CAND-R2A | promote | LESSON-REQ-fs-004-1 |
+| CAND-R2B | discard | finding n2 is open; revisit if it bites |
+| CAND-R2-UI1 | promote | LESSON-REQ-fs-004-1 |
+| CAND-R2-UI2 | promote | LESSON-REQ-fs-004-5 |
+
+Totals: 7 lessons promoted from 24 candidates (many merged), 17 candidates became 8 gotchas (G43 to G50), the rest discarded with a reason.

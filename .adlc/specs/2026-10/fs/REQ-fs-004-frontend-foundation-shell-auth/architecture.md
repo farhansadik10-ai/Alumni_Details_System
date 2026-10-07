@@ -353,3 +353,19 @@ One wording change to the spec follows from ADV-002: AC42 now says an expired to
 - Gotchas: [[knowledge/gotchas#^g38|G38]], [[knowledge/gotchas#^g41|G41]], [[knowledge/gotchas#^g42|G42]], [[knowledge/gotchas#^g34|G34]]
 - ADRs: ADR-13 and ADR-14 (accepted 2026-10-07); ADR-01, ADR-04, ADR-07, ADR-09, ADR-10, ADR-11
 - Design: `docs/design/README.md`, `docs/design/screens/`
+
+## Added during review (recorded at wrap-up, 2026-10-07)
+
+The folder layout above is the plan. Review round 1 added seven files, all placed by the layer rules (finding ARCH-004):
+
+| File | Why |
+|---|---|
+| `hooks/useModalDialog.ts` | the native-dialog logic that `ui/Dialog` and `shell/PhoneMenu` had each copied |
+| `hooks/useFormError.ts` | the error message, its focus effect and the double-submit guard of both auth pages |
+| `config/layout.ts` | the phone-layout query, written once for TypeScript (style-check rule j pins the CSS copies to it) |
+| `config/text.ts` | the one `LOADING_TEXT` |
+| `lib/returnAddress.ts` | the open-redirect guard, moved out of `PublicOnly` so the library check reaches it |
+| `lib/pageRange.ts` | the page-number logic, moved out of `Pagination` for the same reason |
+| `components/shell/navLabels.ts` | the "Main" and "My profile" labels shared by Header and PhoneMenu |
+
+Also changed by the fixes: `lib/token.ts` gained `isLiveSession` and `isAdmin`; `services/apiClient.ts` gained the `withoutToken` flag; `routes/paths.ts` gained `AFTER_LOG_IN_STATE`; the root `package.json` gained the script `check:frontend` (the one edit outside `frontend/`, `scripts/` and `docs/`, approved with "fix all"). Everything else is as planned.

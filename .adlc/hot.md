@@ -17,6 +17,24 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] ship-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | roadmap F1 to F5 marked done; root CLAUDE.md frontend lines and the patterns doc updated; frontend/README.md, the stale comments in shared/types/user.types.ts and conventions.md Comments left for the owner
+
+## [2026-10-07] req-ready-to-merge | REQ-fs-004-frontend-foundation-shell-auth | new frontend part 1 of 4 (roadmap F1 to F5): foundation, tokens and theme, base components, app shell, log in and sign-up; legacy Ant Design app deleted; run in a browser against a mock API only, not yet against the real backend
+## [2026-10-07] lesson | L-REQ-fs-004-7 — when a REQ deletes a module, close every mention of it in the same REQ
+## [2026-10-07] lesson | L-REQ-fs-004-6 — a check that reads only tracked files, or only the output, can pass for the wrong reason
+## [2026-10-07] lesson | L-REQ-fs-004-5 — before any browser check, find out what listens on the API port
+## [2026-10-07] lesson | L-REQ-fs-004-4 — check keyboard focus with a real Tab key, on every background, at the ends of a list
+## [2026-10-07] lesson | L-REQ-fs-004-3 — separate flags for "a 401 is not a session end" and "send no token"; a time limit on a call whose failure is the only exit
+## [2026-10-07] lesson | L-REQ-fs-004-2 — a rule several guards must agree on lives in one function in lib/
+## [2026-10-07] lesson | L-REQ-fs-004-1 — router state is not one-shot: it survives a reload
+## [2026-10-07] lesson-recurred | L-REQ-fs-002-3 — small copies left beside new shared code, fourth sighting (dialog logic, form constants, session test)
+## [2026-10-07] gotcha | G43 to G50 — index.html placeholders and the twice-written theme rule; style-check traps; native dialog; table and fieldset; API client; store; shell; headless Chrome
+## [2026-10-07] gotcha-status | G34, G38 updated: the legacy frontend is deleted (REQ-fs-004)
+## [2026-10-07] adr-updated | ADR-07 antd removed whole in REQ-fs-004; ADR-13 and ADR-14 already accepted at the design gate
+## [2026-10-07] concept | frontend-session-flow — first captured
+## [2026-10-07] component | frontend-app — rewritten for REQ-fs-004
+## [2026-10-07] design-system | component paths, token file, token names, phone breakpoint 768px, font, z-index, theme key filled in from what REQ-fs-004 built; one exception recorded (sizes snapped to the README scale)
+
 ## [2026-10-07] verify-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | findings: C0/M0/m12 open after round 2 (16 fixed in round 1: both majors); 8 left for the owner (m2, m5, m13, m15, m16, m17, m18, t3), 7 small new ones carried to wrap-up (n1 to n5, t5, t6)
 ## [2026-10-07] verify-round | REQ-fs-004-frontend-foundation-shell-auth | round 2: all five reviewers re-ran on sonnet; the 16 fixes hold; 7 new small findings
 ## [2026-10-07] verified | REQ-fs-004-frontend-foundation-shell-auth | build, style check (10 rules) and library check (108 of 108) pass; UI seen in headless Chrome on a mock API (dev and production build); nothing sent to port 3000; real backend, real screen reader and Firefox/Safari left to the owner's checklist

@@ -20,7 +20,7 @@ _From the owner, 2026-10-05._
 - **Files:**
   - Backend: PascalCase with a role suffix — `*Query.ts`, `*DTO.ts`, `*Manager.ts`, `*Controller.ts`, `*Routes.ts`.
   - Shared types: `shared/types/<name>.types.ts`.
-  - Frontend file naming is not decided; the frontend is being rebuilt. For `/architect` to propose.
+  - Frontend (decided in REQ-fs-004, [[architecture/adr-13-frontend-structure-css-modules-on-tokens|ADR-13]]): components and their folders are PascalCase (`components/ui/Button/Button.tsx` beside `Button.module.css`); every other file is camelCase; no barrel `index.ts` files.
 - **Variables:** _(not written down in the source docs)_
 - **Constants:** the app name is text from one constant (white-label). Design values are tokens, not literals — see "Frontend".
 - **Types/interfaces:** shared request/response types come from `@alumni/shared`.
@@ -63,11 +63,11 @@ _From the owner, 2026-10-05, except where marked._
 
 ## Frontend
 
-_From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/src`; the Ant Design (`antd`) code there now is legacy and is not a pattern to follow._
+_From the owner, 2026-10-05. The frontend was rebuilt from scratch in `frontend/src` (REQ-fs-004, part 1 of 4); the Ant Design (`antd`) code is gone. The structure and the patterns are in `docs/frontend-patterns.md`._
 
 - React + Vite + TypeScript.
 - State: Jotai atoms in `src/store/`.
-- No UI library; we build our own components on the design tokens. `antd` is legacy and is removed screen by screen; no new `antd` imports ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]).
+- No UI library; we build our own components on the design tokens. `antd` was removed in REQ-fs-004; do not add a UI library ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]).
 - Scandinavian design: neutral palette, generous whitespace, clean typography, few accents.
 - White-label: no university logo; the app name is text from one constant.
 - Theme: light, dark, system; toggle in the header; the choice is persisted; system mode follows `prefers-color-scheme`.
@@ -85,7 +85,7 @@ _From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/s
 
 - **Frameworks:** none. There is no test runner configured anywhere in the repo.
 - **Not tests:** `backend/src/businessLogic/src/TestManager.ts` and `backend/src/dal/TestDal.ts` are commented-out manual scratch scripts. Don't run them or treat them as a suite.
-- **What stands in for tests:** `npm run build` must exit 0 (the frontend build runs `tsc -b`, so type errors fail it), plus a manual test checklist the owner runs.
+- **What stands in for tests:** `npm run build` must exit 0 (the frontend build runs `tsc -b`, so type errors fail it), plus `npm run check:frontend` (the frontend style check and the library check, both in `scripts/`), plus a manual test checklist the owner runs.
 - **Coverage expectations:** _(none written down)_
 - **Mock policy:** _(none written down)_
 

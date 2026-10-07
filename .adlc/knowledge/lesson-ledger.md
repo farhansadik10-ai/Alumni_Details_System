@@ -27,3 +27,10 @@ One row per lesson file. Title is the H1 without its `^L…` anchor. Superseded 
 | LESSON-REQ-fs-003-5 | Never log a whole database error: its detail can hold the failing row | api, errors, logging, password, privacy | critical (must never repeat) | REQ-fs-003 |
 | LESSON-REQ-fs-003-6 | When an endpoint changes, change its shared request and response types in the same change | shared-types, api, contract, controllers | guideline (a rule to follow) | REQ-fs-003 |
 | LESSON-REQ-fs-003-7 | Plan a tighter helper signature in the same task as its callers | planning, tasks, types, dal | guideline (a rule to follow) | REQ-fs-003 |
+| LESSON-REQ-fs-004-1 | Router state is not one-shot: it survives a reload, so clear it after you use it | routing, react-router, focus, state | guideline (a rule to follow) | REQ-fs-004 |
+| LESSON-REQ-fs-004-2 | A rule that several guards must agree on lives in one function in `lib/`, where the check script can reach it | guards, session, lib, checks | guideline (a rule to follow) | REQ-fs-004 |
+| LESSON-REQ-fs-004-3 | Give a call separate flags for "a 401 here is not a session end" and "send no token", and a time limit when its failure path is the only way out | api-client, auth, axios, session | trap (cost real time before) | REQ-fs-004 |
+| LESSON-REQ-fs-004-4 | Check keyboard focus with a real Tab key, on every background it can sit on, and at the ends of a list | accessibility, focus, ui, checks | trap (cost real time before) | REQ-fs-004 |
+| LESSON-REQ-fs-004-5 | Before any browser check, find out what listens on the API port; check against a mock with no proxy | browser-checks, proxy, database, safety | critical (must never repeat) | REQ-fs-004 |
+| LESSON-REQ-fs-004-6 | A check that reads only tracked files, or only the output, can pass for the wrong reason: prove it finds something | checks, git, verification, build | guideline (a rule to follow) | REQ-fs-004 |
+| LESSON-REQ-fs-004-7 | When a REQ deletes a module, close every mention of it in the same REQ | vault, legacy, cleanup, docs | guideline (a rule to follow) | REQ-fs-004 |
