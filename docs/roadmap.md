@@ -22,3 +22,4 @@
 | F11 | About page | | To do |
 | Last | Pull request to main | | To do |
 | Later | Automated tests, password reset by email, Privacy page, deployment | | Later |
+| Later | Before the demo: remove the test rows from the database | Users whose email starts with b2test, apitest or apicheck, and their alumni profiles | Later |

@@ -17,6 +17,9 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] req-archived | REQ-fs-003-finish-backend-api
+## [2026-10-07] req-merged | REQ-fs-003-finish-backend-api | merge commit ce5cb8ff on redesign
+
 ## [2026-10-07] ship-gate-cleared | REQ-fs-003-finish-backend-api | roadmap B3, B3a, B4, B5 marked done; root CLAUDE.md auth and api lines updated; G42 (who may see an alumni email) left open by the owner
 
 ## [2026-10-07] req-ready-to-merge | REQ-fs-003-finish-backend-api | class controllers and one error middleware, two alumni columns, search and paged lists, stats, feed data with authors and counted comments, deletes that take replies; run against the real database by the owner
