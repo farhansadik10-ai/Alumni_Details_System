@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 0 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-014 |
@@ -38,6 +38,15 @@ The Vite template README, the stale "legacy frontend" comments and the empty Com
 ## Notes
 
 Rules for every task of this REQ: see TASK-001 (this task is the only one allowed to edit comments under `shared/`).
+
+Implementation notes (2026-10-08):
+- README folder map names `components/alumni/` and `components/profile/`. They do not exist yet; TASK-007, TASK-010 and TASK-011 create them. The "every folder named exists" check holds only once those tasks land; recheck at review.
+- No `.env` file was opened. The README says only that Vite sends `/api` to `http://localhost:3000` (from `vite.config.ts`).
+- The compiled copies (`shared/types/user.types.js`, `.d.ts`) carry no comments at all, so no comment copy there is stale. They are older in other ways (no `PublicUser` etc.), as G38 says; left untouched.
+- The new comments avoid the words "legacy frontend" (AC46 says they must no longer say it) and say "the old app that imported it is gone".
+- `shared/index.ts` had a third stale mention (L-REQ-fs-004-7); fixed with the same wording.
+- The Comments rule follows today's code: comments cite ACs and ADRs (e.g. `App.tsx`, `config/app.ts`). There are no TODOs in `frontend/src` or `shared/` today, so the `TODO(REQ-xxx)` / `TODO(G##)` form is a proposal from the task, not an observed habit.
+- `npm run build` exited 0.
 
 ## Related
 

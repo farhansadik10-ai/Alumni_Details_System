@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 0 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-005 |
@@ -31,14 +31,21 @@ Every endpoint these pages use is one thin function in `services/`, a cancelled 
 
 ## Acceptance
 
-- [ ] No page or component imports `services/` (rule d)
-- [ ] `isCancelled` is true for an aborted call and false for a 500
-- [ ] `alumniProfilePath(7)` is `/directory/7`
-- [ ] `npm run build` exits 0, `node scripts/frontend-style-check.mjs` exits 0
+- [x] No page or component imports `services/` (rule d)
+- [x] `isCancelled` is true for an aborted call and false for a 500
+- [x] `alumniProfilePath(7)` is `/directory/7`
+- [x] `npm run build` exits 0, `node scripts/frontend-style-check.mjs` exits 0
 
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. `GET /api/alumni/filters` and `/me` must stay above `/:id` on the server (G36): the service only calls them, it does not change that. A one-line check of `isCancelled` may go into the library check only if it needs no network; otherwise cover it in the browser review.
+
+**Done 2026-10-08 (task-implementer).**
+- `alumniService.ts` exports `AlumniListParams` (`q`, `department`, `graduation_year`, `field`, `mentoring?: "true"`, `page`; no `limit`), the shape TASK-003's `toListParams` must return. It sits in services/ because only store/ passes it on; lib/ can return a structurally equal object without importing services.
+- Only `listAlumni`, `getAlumniFilters` and `getAlumni` take a `signal`, as the task lists; `getMyAlumni`, `createAlumni`, `updateAlumni` and `updateUser` do not.
+- As `getUser` does, each function returns `response.data` without a shape check (G47); a 200 that is not the API's shape is left to the store.
+- `isCancelled` was checked with a throwaway script in the session scratchpad (no network: an already-aborted signal, and a per-call adapter throwing a 500 `AxiosError`): aborted is true (and `toApiFailure` would say "network", which is the bug it prevents), 500 is false, a plain `Error` is false. `alumniProfilePath(7)` printed `/directory/7`. Not added to the library check: that script imports only from lib/ and is not in this task's files.
+- `paths.ts` now imports `generatePath` from react-router-dom; `PATHS` is unchanged and rule i still passes.
 
 ## Related
 

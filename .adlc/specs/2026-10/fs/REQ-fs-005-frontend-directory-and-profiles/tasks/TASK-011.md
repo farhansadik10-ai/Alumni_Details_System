@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 2 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-001, TASK-002, TASK-005, TASK-010 |
 | Blocks | TASK-012 |
@@ -43,6 +43,18 @@ An alumnus or admin can create their alumni profile the first time and edit it a
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. G37: duplicates are not handled. Admin has the same card (POST allowed for the alumni and admin roles).
+
+Implementation notes (TASK-011, 2026-10-08):
+
+- **For TASK-012: how to render it.** `<AlumniProfileCard key={session.userId} />`, only for the alumni and admin roles. Key it on the session user id and on nothing else (not on the profile, not on its status): another user gets a fresh card (ADV-001), and the same user keeps one mounted card (ADV-002). The card takes no props and calls `loadMyAlumniAtom` itself on mount. Pass `primary={false}` to `AccountCard` next to it: "Save profile" is the view's one primary button.
+- **One card, one form element.** All state (values, field errors, `useFormError`, the `gone` flag, busy) lives in `AlumniProfileCard`; there is no inner keyed form. `none` and `ready` render the same `<form>` at the same place, so the first create (none to ready) and the 409 reload do not remount it.
+- **Values follow the store.** The card remembers the `Alumni` object it was filled from (`filledFrom`). When `myAlumniAtom.alumni` is a different object (a load, a save, the quiet reload after a 409), values and field errors are reset during render, so no frame shows the old values. A failed save leaves the store alone, so typed values stay (AC30).
+- **409.** The store reloads quietly before it returns, so the form already shows the existing profile when the conflict message is set; the message stays until the next submit, Discard, or reload.
+- **403 / 404 on edit.** `saveFailureReason(failure) === "gone"` adds a secondary "Try again" under the message; it clears the message and calls `loadMyAlumniAtom` (not quiet: skeleton, then the reloaded form, or the load error with no form).
+- **ADV-008.** No `maxLength` on any field, so old long values show in full and `validateAlumniForm` gives each its own message on Save.
+- **Load error text.** `loadFailureText` is a local copy of the two-line rule `AlumniProfilePage` also has (CAND-016 already asks for one shared helper; making it would touch a file no task names).
+- **Design.** Department is a text input as the task says; the picture draws a select. The short fields sit in an auto-fit grid (min 256px, from `--space-8 * 4`), so the card itself decides one or two columns.
+- **Not checked in a browser.** AC24, AC25, AC29 to AC31 and ADV-002 need the mock API (TASK-014). `npm run build` (with `tsc -b`), `node scripts/frontend-style-check.mjs` and `npm run check:frontend` pass.
 
 ## Related
 

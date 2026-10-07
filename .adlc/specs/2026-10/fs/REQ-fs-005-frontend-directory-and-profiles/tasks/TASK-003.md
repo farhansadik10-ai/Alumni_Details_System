@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 1 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-001, TASK-002 |
 | Blocks | TASK-007, TASK-009 |
@@ -31,13 +31,23 @@ Reading and writing the directory address, the lines a card shows and the "came 
 
 ## Acceptance
 
-- [ ] AC5, AC7 (rules), AC17 (state), AC2 and AC15 (lines) hold in the cases
-- [ ] `npx tsx scripts/frontend-lib-check.ts` exits 0
-- [ ] `npm run build` exits 0
+- [x] AC5, AC7 (rules), AC17 (state), AC2 and AC15 (lines) hold in the cases
+- [x] `npx tsx scripts/frontend-lib-check.ts` exits 0
+- [x] `npm run build` exits 0
 
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. No page logic here; these files import no React and touch no `window`.
+
+Implementation notes (2026-10-08):
+
+- `DirectoryListParams` in `directoryQuery.ts` repeats `AlumniListParams` (lib does not import services). TypeScript checks the match where the store passes it to `listAlumni` (TASK-005).
+- `writeDirectoryQuery` pads the year to four digits, so a year like 0 (read from `0000`) still round-trips.
+- `firstName` returns `null` when there is no name; the profile page decides what the email link says then.
+- `readDirectorySearch` reads `state.directorySearch` (the whole router state goes in), the same way `readReturnAddress` does.
+- `lastPage` also returns 1 for a page size of 0 or a value that is not a number.
+- Proof the check can fail: a scratch copy with two wrong expectations (`page=007` gives 7, `lastPage(13, 12)` gives 1) printed both FAIL lines and exited 1. The copy was deleted after.
+- Results: library check 262 passed, 0 failed. Build passed. Style check found nothing.
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 3 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-005, TASK-007 |
 | Blocks | TASK-014 |
@@ -44,6 +44,19 @@
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. React StrictMode starts the load effect twice in dev; `latestRequest` makes that harmless (G48). Keep page-only state (typed text, panel open, timer) in the component; the list is an atom.
+
+Implementation notes (TASK-008, 2026-10-08):
+
+- **One Clear button (AC11).** `DirectoryFilters` always draws its quiet "Clear search and filters" when criteria are set, and it has no prop to hide it (TASK-007's file, not edited). So the empty state with criteria has no button; the search card's Clear is the one next step, right above the empty state, and outside the phone panel so it is visible on a phone. If the owner wants the bigger button in the empty state, add a `showClear` prop to `DirectoryFilters` and pass `false` while the result is empty (a file this task does not own).
+- **Address writes (ADV-003).** `liveQuery` (a ref synced in a layout effect, and set at once on every write) is what each write starts from, so a timer never writes an old copy. `setSearchParams` is also kept in a ref. Filter, checkbox and page changes stop a waiting timer and send its trimmed text with them. `lastCommitted` is a ref, not state: a state value set next to `setSearchParams` could render before the new location and undo the user's text. The box follows the address only when `query.q` differs from it, so "John " keeps its space.
+- **A page click with typed text waiting** sends both the new text and the clicked page (the rule says "commit together"); if that page does not exist for the new search, the past-the-end rule moves to the last page.
+- **Showing state (ADV-007).** The list is `loading` whenever `directoryAtom.queryKey` is not this address's key, and also while a past-the-end answer waits for its replace, so an empty page never flashes.
+- **Focus.** Pagination is drawn only when the list is ready, so after a click it is gone while the page loads; the page's effect on `query.page` then focuses the count line (`preventScroll`, then `scrollIntoView` to the top). The flag is set only from `onChange`, and only when the address really changed. Two more moves the task does not name, because the clicked button disappears: "Try again" focuses the count line; Clear focuses the search box (found with `querySelector("input")` in a wrapper, as `DirectoryFilters` takes no ref).
+- **Filter options** load on mount only when `filtersAtom` is not already `ready` (no flicker and no extra call when coming back from a profile). A log out resets the atom, so the next user loads them again.
+- The canonical key is `writeDirectoryQuery(query).toString()`; the load effect rebuilds the query from the key, so it depends on the key only. `toListParams` returns `DirectoryListParams`, passed to `loadDirectoryAtom` with no cast.
+- The card grid is `auto-fill` with `minmax(min(calc(var(--space-8) * 5), 100%), 1fr)`: 320px as drawn, from tokens, as `DirectoryFilters` and `AlumniProfileCard` already do. One column at 360px and at 200% zoom.
+- The error retry uses the `secondary` variant: the Search button is the page's primary.
+- Proof: `npm run build`, `node scripts/frontend-style-check.mjs` (0 findings) and `npx tsx scripts/frontend-lib-check.ts` (262 passed) pass. Not checked in a browser: the mock-API checks of AC3, AC5 to AC10, AC12 and the real Tab-key focus (AC8, AC42) are TASK-014's browser review. ESLint is not installed in the repo, so lint was not run.
 
 ## Related
 

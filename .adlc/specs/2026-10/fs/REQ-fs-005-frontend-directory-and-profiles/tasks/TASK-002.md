@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 0 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-003, TASK-010, TASK-011 |
@@ -29,14 +29,26 @@ The rules of the two My profile forms are pure functions with cases in the libra
 
 ## Acceptance
 
-- [ ] AC25, AC26 (rules) hold in the cases above
-- [ ] `npx tsx scripts/frontend-lib-check.ts` exits 0, and was seen to exit 1 for a wrong expectation
-- [ ] `validateName` / `validatePhotoLink` still give the part 1 messages for the part 1 cases
-- [ ] `npm run build` exits 0
+- [x] AC25, AC26 (rules) hold in the cases above
+- [x] `npx tsx scripts/frontend-lib-check.ts` exits 0, and was seen to exit 1 for a wrong expectation
+- [x] `validateName` / `validatePhotoLink` still give the part 1 messages for the part 1 cases
+- [x] `npm run build` exits 0
 
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. G34: these limits are the database column sizes (100 for department, company, job title, experience and the name); `field` follows 100. Messages stay in this file as exported constants, as in part 1 (pattern 16).
+
+### Implementation notes (2026-10-08)
+
+- Messages. The spec gives no wording, so: "Use N characters or fewer." (`tooLongMessage(max)`, names the limit as ADV-008 asked), "Enter a year with four digits, like 2019." (`GRADUATION_YEAR_FORMAT_MESSAGE`), "Enter a year from 1950 to <thisYear+6>." (`graduationYearRangeMessage`). The two with a number are small functions, because the number is a hole in the sentence. The link message is part 1's text, now `WEB_LINK_INVALID_MESSAGE`; `PHOTO_LINK_INVALID_MESSAGE` stays exported and equals it.
+- Order of link checks: not a web link first, then length. So a 501-character `ftp://` link says "starts with https://".
+- One private `validateOptionalWebLink` serves both `validatePhotoLink` and `validateLinkedInLink` (L-REQ-fs-004-2). `validateName` reuses `validateOptionalText` for its 100 limit.
+- Lengths are counted with `Array.from` (characters, not UTF-16 units), after trimming. The year accepts ASCII digits only.
+- `validateAlumniForm` adds errors in screen order (AC23 order), and `firstInvalidField` uses the same `FIELD_ORDER` list. `mentoring` never has an error but is in the order list.
+- `alumniFormToBody` returns `Required<CreateAlumniDTO>` (all nine keys). The year becomes `null` if the text is not a whole number; the page validates first, so this is only a guard.
+- Library check: 166 passed, 0 failed, exit 0. Failing run: changed the expectation of "year: 1950 passes" from `null` to the range message; the script printed `FAIL  year: 1950 passes` (got null, want "Enter a year from 1950 to 2032."), "165 passed, 1 failed", exit 1. Changed back; 166 passed, exit 0.
+- `npm run build` exit 0; `node scripts/frontend-style-check.mjs` PASS, no findings.
+- Note: the build type-checks `frontend/src` only, not `scripts/`. The library check runs through tsx, which strips types without checking them.
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 0 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-003, TASK-007, TASK-009, TASK-010, TASK-011 |
@@ -37,6 +37,15 @@ Every word the three pages show, read out or announce is a named constant in `co
 ## Notes
 
 Rules for every task of this REQ: never read or print any `.env` file; never run `psql` or anything that changes the database; never run `git push`; touch nothing under `backend/`, `shared/` (except TASK-013's comments), `db/`; delete no file the table does not list; add no package; stop and write why if the task cannot be done inside these rules. Plain English, short sentences, no emoji.
+
+Implementation notes (TASK-001, 2026-10-08):
+
+- Shared groups added besides the page groups: `RETRY_LABEL` and a "failure words" pair (`FAILURE_NO_ANSWER_TEXT`, `FAILURE_SERVER_TEXT`). Each page has its own error heading and uses this pair as the text, so the directory, profile and My profile load errors do not repeat the same two sentences.
+- Functions: `directoryFiltersButton(n)`, `directoryViewProfileName(name)` (accessible name starts with the visible "View profile"), `directoryCount(n)`, `profileEmailLink(firstName)`, `myProfileSub(name, email)`.
+- The form's company label is "Current company" (from `my-profile.html`); the profile Details row is "Company" (from `profile.html` and AC15). AC23 lists "Company"; the picture was followed.
+- The phone sub line in `phone-directory.html` is shorter; only the `directory.html` sub line is kept (AC1).
+- The "can no longer save" retry is `RETRY_LABEL` ("Try again"), as AC30 says.
+- `npm run build` and `node scripts/frontend-style-check.mjs` pass.
 
 ## Related
 

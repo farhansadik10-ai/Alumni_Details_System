@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] implement-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 15 tasks done (14 planned plus a cleanup task); build, style check and library check (282 cases) pass; browser review on a mock API only (the real backend on port 3000 was never called); 5 findings go to review
+
 ## [2026-10-08] architect-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 14 tasks in 5 stages, no ADR; stress test found 0 critical, 3 major, 5 minor, all fixed in the plan; 7 small deviations accepted by the owner
 
 ## [2026-10-08] work-path-set | REQ-fs-005-frontend-directory-and-profiles | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-005-frontend-directory-and-profiles, off redesign); the only uncommitted files were this REQ's own vault records

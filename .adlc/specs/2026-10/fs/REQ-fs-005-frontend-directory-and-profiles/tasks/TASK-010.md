@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 2 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-001, TASK-002, TASK-005 |
 | Blocks | TASK-011, TASK-012 |
@@ -37,6 +37,20 @@ The Account card works for every role: edit the name and photo link, see the ema
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. The email is disabled and never sent.
+
+Implementation notes (TASK-010, 2026-10-08):
+
+- **`saveFailureText` for TASK-011.** `components/profile/saveFailureText.ts` exports:
+  - `saveFailureReason(failure: ApiFailure): "noAnswer" | "server" | "gone" | "conflict" | "general"`: network → noAnswer; status 500 and up → server; 403/404 → gone; 409 → conflict; else general.
+  - `saveFailureText(failure, words: SaveFailureWords): string`, where `SaveFailureWords = { noAnswer; server; gone; conflict?; general }`. With no `conflict` word, a 409 gets `general`.
+  - TASK-011 passes `SAVE_FAILED_NO_ANSWER`, `SAVE_FAILED_SERVER`, `SAVE_FAILED_GONE`, `SAVE_FAILED_CONFLICT` and `GENERAL_ERROR_MESSAGE`. It shows the "Try again" button when `saveFailureReason(failure) === "gone"`, so the rule is not written twice.
+- **The `primary` prop (for TASK-012).** `AccountCard` takes `primary?: boolean` (default `true`). The task asked for a primary "Save account". But the design has "Save account" as a secondary button next to the alumni card's primary "Save profile", and design-system.md says "One primary (accent) button per view". So TASK-012 passes `primary={false}` when the Alumni profile card is shown. A student's page keeps the default.
+- **Account card words.** The card uses `SAVE_FAILED_GONE` for 403/404. It says "This profile…". That is close enough for a deleted account, but the gate may want a word for the account card. The card has no retry button for "gone"; the task did not ask for one.
+- **Structure.** `AccountCard` handles the status (skeleton, `ErrorState` with retry, or the form). The form is an inner `AccountForm` with `key={user.id}`, so it starts from the loaded user and never keeps another user's values. After a save the profile atom changes but the id does not, so the form stays mounted and takes the saved values from the answer.
+- **Load error words.** `profileAtom` keeps no failure, so the error state always says `FAILURE_NO_ANSWER_TEXT`.
+- **No `maxLength` on the name.** A pasted 101-character name (or old stored data) shows the validator message (AC26), instead of being cut off without a word.
+- **Not checked in a browser.** The ACs that need the mock (AC21, AC27, AC28, AC30 double click) are for the browser review in TASK-014. The code path: the `sending` ref plus `Button busy` stops a second submit.
+- `npm run build` (with `tsc -b`) and `node scripts/frontend-style-check.mjs` pass.
 
 ## Related
 

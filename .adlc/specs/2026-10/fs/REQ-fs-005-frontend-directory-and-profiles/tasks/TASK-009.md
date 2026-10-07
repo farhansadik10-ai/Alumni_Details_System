@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-005 |
 | Tier | 2 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-001, TASK-003, TASK-005, TASK-006 |
 | Blocks | TASK-014 |
@@ -34,11 +34,24 @@
 - [ ] AC17: from a filtered directory, the back link returns to the same filters; in a new tab it returns to the plain directory
 - [ ] AC18: `/directory/abc` and `/directory/99999` (404) show not-found; no request for `abc`; 500 shows the error state; retry works
 - [ ] AC20: a 300-character word in the bio does not widen the page at 360px
-- [ ] No hard-coded text; `npm run build` and style check exit 0
+- [x] No hard-coded text; `npm run build` and style check exit 0
 
 ## Notes
 
 Rules for every task of this REQ: see TASK-001. G42: the email shows as drawn. There is no "Recent posts" block (non-goal).
+
+Implementation notes (TASK-009, 2026-10-08):
+
+- Status comes from `viewedAlumniAtom` only when its `id` equals the page's id; `idle`, `loading` or another id all count as loading, so a previous profile never shows for a frame.
+- `readProfileId` (local to the page): digits only, 1 to 2147483647 (the server's `parseId` cap). `0`, `abc`, `1.5`, `-3`, a 23-digit string and Arabic-Indic digits all give not-found with no request. Checked by a copy of the rule in the scratchpad (17 cases pass).
+- No first name: the email action reads "Email" (`PROFILE_EMAIL_LABEL`). No new words were added to `config/text.ts`.
+- LinkedIn: trimmed, then a link only if `isWebLink` (http/https); new tab, `rel="noopener noreferrer"`, hidden " (opens in a new tab)".
+- The email is also a `mailto:` link in the Details row, as drawn. The Details rows are eight: department, year, field, company, job title, experience, email, mentoring.
+- Loading: the same two-column layout with two still cards inside one `SkeletonGroup` (one "Loading"), so nothing jumps when the data arrives. The task said "one skeleton Card"; two cards match the ready layout.
+- The not-found link goes to the same address as "Back to directory" (the saved filters, or the plain directory).
+- The bio keeps typed line breaks (`white-space: pre-line`); the bio, the Details values and the tags use `overflow-wrap: anywhere`; the grid uses `minmax(0, ...)` so a 300-character word cannot widen the page (AC20). Checked by reading; the browser check at 360px is TASK-014's.
+- Follow-ups (not done, outside this task's files): move `readProfileId` and the failure-to-text rule into `lib/` with library-check cases (CAND-015, CAND-016). Pressing "Try again" unmounts the button, so focus falls to the page body.
+- `npm run build` and `node scripts/frontend-style-check.mjs` pass.
 
 ## Related
 
