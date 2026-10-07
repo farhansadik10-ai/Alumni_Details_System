@@ -18,6 +18,9 @@ const POST_NOT_FOUND = "Post not found";
 const COMMENT_NOT_FOUND = "Comment not found";
 const CONTENT_REQUIRED = "Content is required";
 const PARENT_NOT_ON_POST = "parent_id must be a comment on the same post";
+const NOT_COMMENT_EDITOR = "Not authorized to edit this comment";
+const NOT_COMMENT_DELETER = "Not authorized to delete this comment";
+const COMMENT_DELETED = "Comment deleted successfully";
 
 export class CommentController {
   private readonly commentManager = new CommentManager();
@@ -83,7 +86,7 @@ export class CommentController {
 
     // Author only: an admin may delete a comment but not rewrite it.
     if (!isSelf(req, existing.user_id)) {
-      throw new ForbiddenError("Not authorized to edit this comment");
+      throw new ForbiddenError(NOT_COMMENT_EDITOR);
     }
 
     const content: unknown = req.body?.content;
@@ -110,12 +113,12 @@ export class CommentController {
     if (!existing) throw new NotFoundError(COMMENT_NOT_FOUND);
 
     if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
-      throw new ForbiddenError("Not authorized to delete this comment");
+      throw new ForbiddenError(NOT_COMMENT_DELETER);
     }
 
     // The comment and every reply under it go in one statement (ADR-06).
     const deletedCount = await this.commentManager.deleteComment(id);
     if (deletedCount === 0) throw new NotFoundError(COMMENT_NOT_FOUND);
-    res.status(200).json({ message: "Comment deleted successfully" });
+    res.status(200).json({ message: COMMENT_DELETED });
   }
 }

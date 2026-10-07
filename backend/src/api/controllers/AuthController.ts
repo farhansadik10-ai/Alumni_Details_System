@@ -5,9 +5,9 @@ import {
   ValidationError,
 } from "@alumni/businesslogic";
 import bcrypt from "bcrypt";
+import { CREDENTIALS_REQUIRED_MESSAGE } from "../utils/requestHelpers";
 import { signToken } from "../utils/token";
 
-const CREDENTIALS_REQUIRED_MESSAGE = "Email and password are required";
 // One message for an unknown email and for a wrong password, so the answer
 // does not tell a caller which emails are registered.
 const BAD_CREDENTIALS_MESSAGE = "Invalid email or password";

@@ -3,6 +3,8 @@ import { ValidationError } from "@alumni/businesslogic";
 import type { UpdateFields, UpdateValue } from "@alumni/dal";
 
 export const ADMIN_ROLE = "admin";
+export const ALUMNI_ROLE = "alumni";
+export const STUDENT_ROLE = "student";
 export const DEFAULT_PAGE_SIZE = 12;
 export const MAX_PAGE_SIZE = 50;
 /** The largest value a PostgreSQL `integer` column can hold. */
@@ -12,6 +14,13 @@ const FIRST_PAGE = 1;
 /** The highest page whose offset is still a whole number JavaScript holds exactly. */
 const MAX_PAGE = Math.floor(Number.MAX_SAFE_INTEGER / MAX_PAGE_SIZE);
 const DIGITS_ONLY = /^\d+$/;
+/** The space character (U+0020), the only one SQL `btrim(x)` strips. */
+const SPACE = " ";
+
+// Messages more than one controller answers with: one copy, so the wording
+// cannot drift between them.
+export const CREDENTIALS_REQUIRED_MESSAGE = "Email and password are required";
+export const NO_FIELDS_MESSAGE = "No fields to update";
 
 /**
  * The allowed fields a request actually sent.
@@ -77,19 +86,13 @@ export function isIntegerOrNull(value: unknown): boolean {
   return value === null || Number.isInteger(value);
 }
 
-/**
- * The first key in `fields` whose value fails `check`, or `undefined` when
- * every value passes. Lets a controller answer 400 "<key> has the wrong type".
- */
-export function findWrongType(
-  fields: Readonly<Record<string, unknown>>,
-  check: (value: unknown) => boolean
-): string | undefined {
-  return Object.keys(fields).find((key) => !check(fields[key]));
-}
-
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
+}
+
+/** A checked field as the text a DTO takes; absent or `null` is `null`. */
+export function textOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
 }
 
 /**
@@ -98,7 +101,7 @@ export function isBoolean(value: unknown): value is boolean {
  * `"-3"`, `"12abc"`, arrays and objects never reach `Number(...)`, which
  * would read several of them as 0.
  */
-function toWholeNumber(value: unknown): number | undefined {
+export function toWholeNumber(value: unknown): number | undefined {
   if (typeof value === "string") {
     if (!DIGITS_ONLY.test(value)) return undefined;
   } else if (typeof value !== "number") {
@@ -161,21 +164,66 @@ function readCount(
 }
 
 /**
- * One text value from the query string, trimmed. Absent or blank gives
- * `undefined`. A repeated key (`?q=a&q=b`) or a nested one (`?q[x]=a`) arrives
- * as an array or an object and is refused.
+ * One value from the query string, with its outer characters removed by
+ * `strip`. Absent, or empty after `strip`, gives `undefined` ("not sent").
+ * A repeated key (`?q=a&q=b`) or a nested one (`?q[x]=a`) arrives as an array
+ * or an object and is refused.
  */
-export function queryText(
+function readSingleValue(
   query: Readonly<Record<string, unknown>>,
-  key: string
+  key: string,
+  strip: (sent: string) => string
 ): string | undefined {
   const sent = query[key];
   if (sent === undefined) return undefined;
   if (typeof sent !== "string") {
     throw new ValidationError(key + " must be a single value");
   }
-  const text = sent.trim();
+  const text = strip(sent);
   return text === "" ? undefined : text;
+}
+
+/**
+ * `text` without its leading and trailing space characters (U+0020), which is
+ * what SQL `btrim(x)` strips. Two index walks, so the work grows in step with
+ * the length of the text, however many spaces it holds.
+ */
+function stripOuterSpaces(text: string): string {
+  let start = 0;
+  let end = text.length;
+  while (start < end && text[start] === SPACE) start += 1;
+  while (end > start && text[end - 1] === SPACE) end -= 1;
+  return text.slice(start, end);
+}
+
+/**
+ * One text value from the query string, trimmed. Absent or blank gives
+ * `undefined`. A repeated or nested key is refused (see `readSingleValue`).
+ */
+export function queryText(
+  query: Readonly<Record<string, unknown>>,
+  key: string
+): string | undefined {
+  return readSingleValue(query, key, (sent) => sent.trim());
+}
+
+/**
+ * One filter value that is compared in SQL against `btrim(column)`, such as
+ * the alumni `department` and `field` filters. Absent or blank gives
+ * `undefined`; an array or an object is refused, as in `queryText`.
+ *
+ * It differs from `queryText` in what it strips: only leading and trailing
+ * space characters, because that is all `btrim` strips. `queryText` uses
+ * JavaScript `trim()`, which also removes tabs and line breaks. A value stored
+ * as "Eng<tab>" is offered by GET /api/alumni/filters with its tab, and
+ * `trim()` would turn it into "Eng", which matches no row. Here the value the
+ * filter list gave comes back unchanged.
+ */
+export function queryFilterValue(
+  query: Readonly<Record<string, unknown>>,
+  key: string
+): string | undefined {
+  return readSingleValue(query, key, stripOuterSpaces);
 }
 
 function isUpdateValue(value: unknown): value is UpdateValue {

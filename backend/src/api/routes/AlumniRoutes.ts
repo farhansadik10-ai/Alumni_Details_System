@@ -3,6 +3,7 @@ import { AlumniController } from "../controllers/AlumniController";
 import { authMiddleware } from "../MiddleWare/authMiddleware";
 import { requireRole } from "../MiddleWare/roleMiddleware";
 import { handler } from "../utils/asyncHandler";
+import { ADMIN_ROLE, ALUMNI_ROLE } from "../utils/requestHelpers";
 
 const router = Router();
 const alumniController = new AlumniController();
@@ -10,7 +11,7 @@ const alumniController = new AlumniController();
 router.post(
   "/",
   authMiddleware,
-  requireRole("alumni", "admin"),
+  requireRole(ALUMNI_ROLE, ADMIN_ROLE),
   handler(alumniController, "createAlumni"),
 );
 router.get("/", authMiddleware, handler(alumniController, "getAllAlumni"));

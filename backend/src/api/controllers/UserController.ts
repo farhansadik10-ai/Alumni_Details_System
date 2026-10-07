@@ -17,12 +17,16 @@ import {
   parsePaging,
   queryText,
   checkFields,
+  ALUMNI_ROLE,
+  STUDENT_ROLE,
+  CREDENTIALS_REQUIRED_MESSAGE,
+  NO_FIELDS_MESSAGE,
 } from "../utils/requestHelpers";
 
 const PASSWORD_SALT_ROUNDS = 10;
 
 // The roles a person may pick at sign-up. Admin is never one of them (ADR-01).
-const SIGNUP_ROLES: readonly unknown[] = ["student", "alumni"];
+const SIGNUP_ROLES: readonly unknown[] = [STUDENT_ROLE, ALUMNI_ROLE];
 
 // The only fields PUT /api/users/:id may change. `role` and `id` are not here.
 const USER_UPDATE_FIELDS = ["name", "email", "password", "photo_url"] as const;
@@ -30,6 +34,10 @@ const USER_UPDATE_FIELDS = ["name", "email", "password", "photo_url"] as const;
 const REQUIRED_USER_FIELDS = ["email", "password"] as const;
 // One rule per updatable field. `name` and `photo_url` are nullable in the
 // database: when sent, a string or null.
+// `email` and `password` must stay listed: `checkFields` passes on only the
+// keys that have a rule, so without them an email or password change would be
+// dropped. Their rules never fail in `updateUser`, because the loop over
+// REQUIRED_USER_FIELDS refuses a bad value first, with its own message.
 const USER_UPDATE_RULES = {
   email: isNonEmptyString,
   password: isNonEmptyString,
@@ -38,11 +46,9 @@ const USER_UPDATE_RULES = {
 };
 
 const SIGNUP_ROLE_MESSAGE = "Role must be student or alumni";
-const CREDENTIALS_REQUIRED_MESSAGE = "Email and password are required";
 const USER_NOT_FOUND_MESSAGE = "User not found";
 const UPDATE_FORBIDDEN_MESSAGE = "Not authorized to update this user";
 const LOGOUT_FORBIDDEN_MESSAGE = "Not authorized to log out this user";
-const NO_FIELDS_MESSAGE = "No fields to update";
 const USER_DELETED_MESSAGE = "User deleted successfully";
 
 export class UserController {

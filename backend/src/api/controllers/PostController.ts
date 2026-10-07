@@ -11,9 +11,11 @@ import {
   isAdmin,
   isSelf,
   isStringOrNull,
+  NO_FIELDS_MESSAGE,
   parseId,
   parsePaging,
   pickSent,
+  textOrNull,
 } from "../utils/requestHelpers";
 
 // The only body keys a create or an edit may set. user_id, id and anything else are dropped.
@@ -24,11 +26,10 @@ const POST_FIELD_RULES = {
 };
 
 const POST_NOT_FOUND = "Post not found";
-
-/** A checked field as the text the DTO takes; absent or `null` is `null`. */
-function textOrNull(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
+const POST_NOT_READ_BACK = "Created post could not be read back";
+const NOT_POST_EDITOR = "Not authorized to edit this post";
+const NOT_POST_DELETER = "Not authorized to delete this post";
+const POST_DELETED = "Post deleted successfully";
 
 export class PostController {
   private readonly postManager = new PostManager();
@@ -45,7 +46,7 @@ export class PostController {
     const newPost = await this.postManager.createNewPost(post);
     if (!newPost) {
       // The insert went through but the row could not be read back.
-      throw new Error("Created post could not be read back");
+      throw new Error(POST_NOT_READ_BACK);
     }
     res.status(201).json(newPost);
   }
@@ -71,12 +72,12 @@ export class PostController {
 
     // Author only. An admin may delete any post but edit only their own (ADR-02).
     if (!isSelf(req, existing.user_id)) {
-      throw new ForbiddenError("Not authorized to edit this post");
+      throw new ForbiddenError(NOT_POST_EDITOR);
     }
 
     const sent = pickSent(req.body, POST_FIELDS);
     if (Object.keys(sent).length === 0) {
-      throw new ValidationError("No fields to update");
+      throw new ValidationError(NO_FIELDS_MESSAGE);
     }
     const fields = checkFields(sent, POST_FIELD_RULES);
 
@@ -92,12 +93,12 @@ export class PostController {
 
     // Author or admin (ADR-02).
     if (!isSelf(req, existing.user_id) && !isAdmin(req)) {
-      throw new ForbiddenError("Not authorized to delete this post");
+      throw new ForbiddenError(NOT_POST_DELETER);
     }
 
     // The post and its comments and replies go together, or not at all (ADR-06).
     const deleted = await this.postManager.deletePost(id);
     if (!deleted) throw new NotFoundError(POST_NOT_FOUND);
-    res.status(200).json({ message: "Post deleted successfully" });
+    res.status(200).json({ message: POST_DELETED });
   }
 }

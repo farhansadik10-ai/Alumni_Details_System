@@ -15,10 +15,14 @@ import {
   isSelf,
   isStringOrNull,
   MAX_DB_INTEGER,
+  NO_FIELDS_MESSAGE,
   parseId,
   parsePaging,
   pickSent,
+  queryFilterValue,
   queryText,
+  textOrNull,
+  toWholeNumber,
 } from "../utils/requestHelpers";
 
 // The only fields POST /api/alumni and PUT /api/alumni/:id read from the body.
@@ -55,16 +59,10 @@ const FIELD_RULES: Record<AlumniField, (value: unknown) => boolean> = {
 const PROFILE_NOT_FOUND = "Alumni profile not found";
 const PROFILE_EXISTS = "You already have an alumni profile";
 const NOT_PROFILE_OWNER = "Not authorized to update this profile";
-const NO_FIELDS = "No fields to update";
 const BAD_GRADUATION_YEAR = "graduation_year must be a whole number";
 const BAD_MENTORING = "mentoring must be true";
 
 const MENTORING_ON = "true";
-const DIGITS_ONLY = /^\d+$/;
-
-function textOrNull(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
 
 function numberOrNull(value: unknown): number | null {
   return typeof value === "number" ? value : null;
@@ -77,8 +75,8 @@ function readGraduationYear(
   const sent = queryText(query, "graduation_year");
   if (sent === undefined) return undefined;
 
-  const year = DIGITS_ONLY.test(sent) ? Number(sent) : NaN;
-  if (!Number.isInteger(year) || year > MAX_DB_INTEGER) {
+  const year = toWholeNumber(sent);
+  if (year === undefined || year > MAX_DB_INTEGER) {
     throw new ValidationError(BAD_GRADUATION_YEAR);
   }
   return year;
@@ -137,13 +135,15 @@ export class AlumniController {
     const q = queryText(req.query, "q");
     if (q !== undefined) filter.q = q;
 
-    const department = queryText(req.query, "department");
+    // department and field are matched against btrim(column), so they are
+    // stripped of spaces only (see queryFilterValue).
+    const department = queryFilterValue(req.query, "department");
     if (department !== undefined) filter.department = department;
 
     const graduationYear = readGraduationYear(req.query);
     if (graduationYear !== undefined) filter.graduation_year = graduationYear;
 
-    const field = queryText(req.query, "field");
+    const field = queryFilterValue(req.query, "field");
     if (field !== undefined) filter.field = field;
 
     const mentoring = readMentoring(req.query);
@@ -206,7 +206,7 @@ export class AlumniController {
 
     const sent = pickSent(req.body, UPDATABLE_FIELDS);
     if (Object.keys(sent).length === 0) {
-      throw new ValidationError(NO_FIELDS);
+      throw new ValidationError(NO_FIELDS_MESSAGE);
     }
 
     const fields = checkFields(sent, FIELD_RULES);
