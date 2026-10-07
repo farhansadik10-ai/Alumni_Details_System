@@ -308,3 +308,72 @@
 **Claim:** A helper added beside a near-identical one to loosen a single rule should share the common steps; copy-and-change recreates the duplicate the same change set just removed.
 **Saw it in:** `backend/src/api/utils/requestHelpers.ts` (`queryFilterValue` beside `queryText`)
 **Context:** Round 2 of REQ-fs-003 merged four duplicate helpers and added a fifth that repeats `queryText`.
+
+## Candidate verdicts
+
+Decided at wrap-up, 2026-10-07. 62 candidates: 7 lessons, 8 new gotchas (G35–G42), the rest folded into existing pages or discarded.
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 | discard | one-off; the root tsconfig targets ESNext and nothing plans to lower it |
+| CAND-002 | promote | LESSON-REQ-fs-003-7 |
+| CAND-003 | discard | captured in the dal-query-classes component page (transaction rule) |
+| CAND-004 | discard | captured in the partial-update concept page |
+| CAND-005 | demote-to-gotcha | ^g38 |
+| CAND-006 | discard | fixed in review round 2: shared dates are strings |
+| CAND-007 | discard | one-off; the hand edit is marked in db/schema.md itself |
+| CAND-008 | demote-to-gotcha | ^g41 |
+| CAND-009 | promote | LESSON-REQ-fs-003-2 |
+| CAND-010 | discard | captured in the dal-query-classes component page (row or undefined after a re-read) |
+| CAND-011 | discard | merged into the G11 update (do not select the stored comment_count) |
+| CAND-012 | promote | LESSON-REQ-fs-003-2 (same sighting as CAND-009) |
+| CAND-013 | demote-to-gotcha | ^g37 |
+| CAND-014 | discard | captured in the paged-list-query concept page |
+| CAND-015 | promote | LESSON-REQ-fs-003-2 (third sighting of CAND-009) |
+| CAND-016 | discard | captured in the api component page (where each rule lives) |
+| CAND-017 | discard | captured in the dal-query-classes component page |
+| CAND-018 | discard | captured in the ADR-11 update (the extra branch and its order) |
+| CAND-019 | promote | LESSON-REQ-fs-003-5 |
+| CAND-020 | demote-to-gotcha | ^g40 |
+| CAND-021 | discard | small; covered by the paged-list-query traps |
+| CAND-022 | discard | captured in the paged-list-query concept page |
+| CAND-023 | discard | captured in the paged-list-query concept page (cap at the column's range) |
+| CAND-024 | demote-to-gotcha | ^g35 |
+| CAND-025 | discard | captured in the paged-list-query concept page |
+| CAND-026 | demote-to-gotcha | ^g35 |
+| CAND-027 | discard | captured in the api component page (login does not trim) |
+| CAND-028 | demote-to-gotcha | ^g41 |
+| CAND-029 | discard | no longer true: the owner made content required on create |
+| CAND-030 | demote-to-gotcha | ^g35 |
+| CAND-031 | discard | captured in the dal-query-classes component page |
+| CAND-032 | promote | LESSON-REQ-fs-003-2 |
+| CAND-033 | discard | fixed: parseId caps at 2147483647; rule is in the paged-list-query page |
+| CAND-034 | promote | LESSON-REQ-fs-003-4 |
+| CAND-035 | promote | LESSON-REQ-fs-003-2 |
+| CAND-036 | promote | LESSON-REQ-fs-003-3 |
+| CAND-037 | discard | owner decided M3: leave the code; recorded in the api component page |
+| CAND-038 | promote | LESSON-REQ-fs-003-6 |
+| CAND-039 | discard | done: ADR-11 wording updated |
+| CAND-040 | discard | owner accepted the Parameters<> types (M3); noted in the dal component page |
+| CAND-041 | promote | LESSON-REQ-fs-003-4 |
+| CAND-042 | promote | LESSON-REQ-fs-003-4 |
+| CAND-043 | discard | recurrence of LESSON-REQ-fs-002-3; a 'saw it again' line was added there |
+| CAND-044 | discard | duplicate of CAND-040 |
+| CAND-045 | promote | LESSON-REQ-fs-003-6 |
+| CAND-046 | promote | LESSON-REQ-fs-003-6 |
+| CAND-047 | promote | LESSON-REQ-fs-003-4 |
+| CAND-048 | discard | captured in the paged-list-query concept page (trim the same way on both sides) |
+| CAND-049 | demote-to-gotcha | ^g35 |
+| CAND-060 | demote-to-gotcha | ^g36 |
+| CAND-061 | discard | merged into the G11 update |
+| CAND-062 | promote | LESSON-REQ-fs-003-1 |
+| CAND-063 | demote-to-gotcha | ^g37 |
+| CAND-064 | demote-to-gotcha | ^g38 |
+| CAND-065 | demote-to-gotcha | ^g39 |
+| CAND-066 | discard | captured in the dal-query-classes component page and the ADR-06 update |
+| CAND-067 | demote-to-gotcha | ^g42 |
+| CAND-068 | demote-to-gotcha | ^g42 (not decided; raised to the owner at the wrap-up gate) |
+| CAND-069 | demote-to-gotcha | ^g35 |
+| CAND-080 | discard | recurrence of LESSON-REQ-fs-002-3; a 'saw it again' line was added there |
+| CAND-085 | promote | LESSON-REQ-fs-003-3 |
+| CAND-086 | promote | LESSON-REQ-fs-003-6 |

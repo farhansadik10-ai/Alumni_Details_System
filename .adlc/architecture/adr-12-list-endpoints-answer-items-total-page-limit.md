@@ -62,3 +62,7 @@ No screen reads these three lists yet, so the change costs nothing now and would
 - Gotchas: [[knowledge/gotchas#^g26|G26]]
 - Lessons: (none)
 - ADRs: [[architecture/adr-05-post-list-returns-author-name-and-photo|ADR-05]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]
+
+## Update 2026-10-07 (REQ-fs-003)
+
+Built for `GET /api/alumni`, `/api/users`, `/api/posts`; the pattern is written down in [[knowledge/concepts/paged-list-query]]. "A fixed order" does not mean one direction: [[knowledge/gotchas#^g39|G39]].

@@ -65,3 +65,7 @@ A user creates only their own alumni profile, one per user; there is no user pic
 - Gotchas: [[knowledge/gotchas#^g01|G01]], [[knowledge/gotchas#^g19|G19]]
 - Lessons: (none)
 - ADRs: (none)
+
+## Update 2026-10-07 (REQ-fs-003)
+
+The backend now enforces one profile per user: `AlumniQuery.createAlumni` takes a per-user database lock, checks, then inserts, and a second `POST /api/alumni` answers 409. `user_id` comes from the token. Both open questions stay open: no UNIQUE constraint was added (profiles duplicated before this date remain, [[knowledge/gotchas#^g37|G37]]), and an admin still creates a profile only for themself.

@@ -18,6 +18,7 @@ _(REQ pages by id, with a one-line summary)_
 |---|---|---|---|
 | REQ-fs-001 | Fix AlumniQuery and CommentQuery against db/schema.md | merged | `specs/_archive/2026-10/fs/REQ-fs-001-fix-alumni-comment-queries` |
 | REQ-fs-002 | Close the security and data-loss gaps in the backend | merged | `specs/_archive/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
+| REQ-fs-003 | Finish the backend API: class controllers, shared errors, alumni search, feed data | ready to merge | `specs/2026-10/fs/REQ-fs-003-finish-backend-api` |
 
 ## ADRs
 
@@ -44,6 +45,7 @@ Patterns, rules that must always hold, domain models.
 |---|---|
 | [[knowledge/concepts/user-join-read-shape]] | Reads that need the person join `"User"` with named columns, never `password` |
 | [[knowledge/concepts/partial-update-sent-fields]] | An update writes only the fields that were sent; `null` clears; column names never come from the request |
+| [[knowledge/concepts/paged-list-query]] | A paged list answers `{ items, total, page, limit }`; one WHERE shared by a count and a page query |
 
 ## Components
 

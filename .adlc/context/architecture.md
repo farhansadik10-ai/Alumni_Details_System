@@ -42,7 +42,7 @@ shared (@alumni/shared) — TypeScript types used across workspaces
 |---|---|---|
 | `backend/src/dal` (`@alumni/dal`) | Data access. `query/*Query.ts` classes (`UserQuery`, `AlumniQuery`, `PostQuery`, `CommentQuery`) hold raw parameterized SQL and return/accept `dto/*DTO.ts` classes that mirror DB rows (all implement `BaseDTO`). Re-exported from `dal/index.ts`. | TypeScript, `pg` |
 | `backend/src/businessLogic` (`@alumni/businesslogic`) | One Manager class per domain (`UserManager`, `AlumniManager`, `PostManager`, `CommentManager`), each wrapping its `*Query` class. No SQL — a thin pass-through/validation layer. Re-exported from `businessLogic/index.ts`. | TypeScript |
-| `backend/src/api` (`@alumni/api`) | Express app. `routes/*Routes.ts` wire URL paths to `controllers/*Controller.ts`, which call the Managers. `app.ts` mounts `/api/auth`, `/api/users`, `/api/alumni`, `/api/posts`, `/api/comments`, and `/api/health`. | Express |
+| `backend/src/api` (`@alumni/api`) | Express app. `routes/*Routes.ts` wire URL paths to `controllers/*Controller.ts`, which call the Managers. `app.ts` mounts `/api/auth`, `/api/users`, `/api/alumni`, `/api/posts`, `/api/comments`, `/api/stats` and `/api/health`, then a 404 handler and the error middleware. | Express |
 | `backend/src/server.ts` | Process entrypoint: loads env, calls `app.listen`. | Node, `tsx` |
 | `shared` (`@alumni/shared`) | Cross-cutting types in `shared/types/*.types.ts`, consumed by workspace name. Compiled `.js`/`.d.ts` output is checked in beside the sources, but the package `main` is `index.ts`, so most imports resolve to source. | TypeScript |
 | `frontend` (`@alumni/frontend`) | React app, **being rebuilt from scratch** in `frontend/src`. What is there now is the legacy Ant Design (`antd`) app; the redesign replaces it. The new structure is decided at the architect gate, not here. No UI library: components are built in the repo on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]). | React, Vite, TypeScript, jotai |
@@ -72,8 +72,8 @@ What follows from it:
 - The alumni column is `graduation_year` (integer). The backend used `graduation_yr` until REQ-fs-001 (2026-10-05) renamed it ([[knowledge/gotchas#^g12|G12]], fixed).
 - The comment → post column is `posts_id`, not `post_id` ([[knowledge/gotchas#^g13|G13]]).
 - Length limits for forms: `name`, `email`, `department`, `current_company`, `job_title` and `experience` are varchar(100).
-- **No foreign key has `ON DELETE CASCADE`.** Deleting a row that other rows point to fails ([[knowledge/gotchas#^g08|G08]]); the decided handling is [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]].
-- `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database.
+- **No foreign key has `ON DELETE CASCADE`.** The backend deletes a post's comments and a comment's replies itself, and refuses to delete a user who has content with a 409 ([[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]], built in REQ-fs-003).
+- `alumni.user_id` has no UNIQUE constraint, so "one profile per user" ([[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]]) is not enforced by the database. The backend refuses a second profile with a 409 since REQ-fs-003; older duplicates remain ([[knowledge/gotchas#^g37|G37]]).
 - The `"User".email` UNIQUE constraint is case-sensitive, so the same email in different letter case can register twice.
 - No schema change without the owner's approval.
 - **In the database since 2026-10-06:** `alumni` has `mentorship_available` (boolean, NOT NULL, default `false`) and `field` (text, nullable) ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]). The owner added them with one `ALTER TABLE`; `db/schema.md` lists them, typed in by hand from that statement.
@@ -89,8 +89,9 @@ What follows from it:
 - Backend flow is strictly **Route → Controller → Manager → Query → DB**. New backend features follow it and never skip a layer.
 - The three backend workspaces form a one-way chain: `api` depends on `businessLogic`, which depends on `dal`.
 - SQL lives only in `dal/query/*Query.ts`, always parameterized, and uses the real names above. Managers contain no SQL.
-- Controllers are classes; routes bind instance methods. _(Target rule from the owner, 2026-10-05. Today's controllers are exported functions.)_
-- One shared error middleware maps errors to HTTP responses; no per-method `try`/`catch` for that. _(Target rule from the owner, 2026-10-05. Today every controller function has its own `try`/`catch` and there is no error middleware.)_
+- Controllers are classes; routes bind instance methods through `handler(instance, "method")`. _(Owner's rule, 2026-10-05; built in REQ-fs-003.)_
+- One shared error middleware maps errors to HTTP responses; no per-method `try`/`catch` for that. Code refuses by throwing a typed error ([[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]]). _(Owner's rule, 2026-10-05; built in REQ-fs-003.)_
+- Paged lists answer `{ items, total, page, limit }` ([[architecture/adr-12-list-endpoints-answer-items-total-page-limit|ADR-12]]).
 - Every non-public route uses `authMiddleware`, plus `requireRole` and an owner check where needed. The owner checks were added in REQ-fs-002 and live in the controllers; who may do what is listed in [[knowledge/components/api-controllers-and-routes]].
 - No endpoint returns the `password` column. Since REQ-fs-002 only the login read selects it ([[knowledge/gotchas#^g17|G17]], [[knowledge/lessons/LESSON-REQ-fs-002-2]]).
 - An update writes only the fields that were sent ([[knowledge/concepts/partial-update-sent-fields]]).
@@ -100,9 +101,9 @@ What follows from it:
 
 > **STATUS: needs verification** — synthesized from `CLAUDE.md` on 2026-10-05. Review and edit; remove this banner when confirmed.
 
-- **Auth:** there is no `AuthController` or `AuthManager`. Login and JWT logic (`login`, `verifyToken`) live in `UserController.ts`. `api/MiddleWare/authMiddleware.ts` verifies the bearer token and sets `req.user = { sub, role }`. `api/MiddleWare/roleMiddleware.ts` exports `requireRole(...roles)`, which checks `req.user.role`. Route files compose the two per route (see `AlumniRoutes.ts`); auth is not applied globally. The token lasts 1 hour.
+- **Auth:** login is `AuthController.login`; the token code (`signToken`, `verifyToken`) is in `api/utils/token.ts`. There is no `AuthManager`. `api/MiddleWare/authMiddleware.ts` verifies the bearer token and sets `req.user = { sub, role }`. `api/MiddleWare/roleMiddleware.ts` exports `requireRole(...roles)`, which checks `req.user.role`. Route files compose the two per route (see `AlumniRoutes.ts`); auth is not applied globally. The token lasts 1 hour.
 - **Config:** one root-level `.env`, read with `dotenv` using relative paths from `backend/src/server.ts`, `backend/src/dal/config/db.ts` and `backend/src/api/app.ts`. `db.ts` throws at import time if `DB_PASSWORD` is missing or empty.
-- **Error handling:** see the two target rules under "Layering rules". Until they are built, each controller catches its own errors and returns `{ error: <message> }`. Checks added in REQ-fs-002 answer 400 / 403 / 404 with their own messages; anything the database rejects still comes back as its raw message ([[knowledge/gotchas#^g34|G34]]), and the middlewares answer `{ message }` instead ([[knowledge/gotchas#^g29|G29]]).
+- **Error handling:** `api/MiddleWare/errorMiddleware.ts`, registered last in `app.ts`, answers every error as `{ error }`: a typed error with its own status and message, a database refusal with a fixed text (400 or 409), anything else 500 `Internal server error`. No database text reaches a client or, in full, the log ([[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]]).
 - **Logging, observability:** _(not described in the source docs — fill in)_
 
 ## Related ADRs
@@ -117,5 +118,7 @@ What follows from it:
 - [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]] — Mentoring and field stay in the design; `alumni` gets two new columns
 - [[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]] — The app is white-label; its name "University Alumni" is text from one constant
 - [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]] — The About page is built last; the Privacy page and password reset are later work
+- [[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]] — Code throws typed errors; one middleware turns them into `{ error }`
+- [[architecture/adr-12-list-endpoints-answer-items-total-page-limit|ADR-12]] — List endpoints answer `{ items, total, page, limit }`
 
-Known backend problems are in [[knowledge/gotchas]] (G01–G34; each entry's Status row says whether it is still open).
+Known backend problems are in [[knowledge/gotchas]] (G01–G42; each entry's Status row says whether it is still open).

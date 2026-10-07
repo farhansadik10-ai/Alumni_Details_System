@@ -61,3 +61,7 @@ The question was whether the endpoint should join the user table.
 - Gotchas: [[knowledge/gotchas#^g05|G05]], [[knowledge/gotchas#^g17|G17]]
 - Lessons: (none)
 - ADRs: [[architecture/adr-04-profile-photo-is-a-url-field|ADR-04]]
+
+## Update 2026-10-07 (REQ-fs-003)
+
+Built. Both open questions are closed: the author fields are named `name` and `photo_url`, and comments return them too. The method is now `PostQuery.listPosts`, and every post and comment read and write answers the joined shape. `comment_count` in a post answer is counted when read.

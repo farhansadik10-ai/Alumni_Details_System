@@ -59,7 +59,7 @@ It is the only option that meets the owner's "no per-method try/catch" rule and 
 | Every error body is `{ "error": "<message>" }`; the `message` key is gone | new work |
 | New refusals are written as `throw new SomethingError("...")`, never `res.status(...).json(...)` | new work |
 | Every route's handler goes through `handler(controller, "method")` | new work |
-| Only `dal/errors.ts` may read PostgreSQL error codes | trade-off |
+| Only `dal/errors.ts` decides what a PostgreSQL error code means. The middleware's log helper also reads `code`, `constraint`, `table` and `column`, to log a short summary; nothing it reads reaches a client | trade-off |
 | A database failure nobody mapped answers a generic 400, 409 or 500; the detail is only in the server log | trade-off |
 | Owner checks stay in controllers for now; they can move to Managers later without changing this model | follow-up |
 
@@ -74,3 +74,12 @@ It is the only option that meets the owner's "no per-method try/catch" rule and 
 - Gotchas: [[knowledge/gotchas#^g16|G16]], [[knowledge/gotchas#^g29|G29]], [[knowledge/gotchas#^g34|G34]]
 - Lessons: (none)
 - ADRs: [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]
+
+## Update 2026-10-07 (REQ-fs-003)
+
+Wording brought in line with the code after the REQ-fs-003 review (findings m8):
+
+- The middleware has one more branch than the Decision lists: a request Express itself refused before any route ran (a body that is not JSON, a body too large) answers its own 4xx status with a fixed text.
+- The token and role middlewares do not `throw`; they pass the typed error to `next(err)`. Controllers and Managers throw.
+- The database branch logs a short summary, never the error object ([[knowledge/lessons/LESSON-REQ-fs-003-5]]).
+- The status numbers 400 and 409 are written in both `businessLogic/src/errors.ts` and the middleware. Accepted.
