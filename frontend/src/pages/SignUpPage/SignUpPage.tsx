@@ -1,5 +1,5 @@
 import { useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SignUpUserDTO } from "@alumni/shared";
@@ -12,7 +12,11 @@ import { RadioCards } from "../../components/ui/RadioCards/RadioCards";
 import type { RadioCardOption } from "../../components/ui/RadioCards/RadioCards";
 import { TextInput } from "../../components/ui/TextInput/TextInput";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { useFormError } from "../../hooks/useFormError";
 import {
+  GENERAL_ERROR_MESSAGE,
+  MAX_EMAIL_LENGTH,
+  MIN_PASSWORD_LENGTH,
   validateEmail,
   validateName,
   validateNewPassword,
@@ -31,7 +35,7 @@ const SUB_TEXT =
 const NAME_LABEL = "Full name";
 const EMAIL_LABEL = "Email";
 const PASSWORD_LABEL = "Password";
-const PASSWORD_HELP = "At least 8 characters.";
+const PASSWORD_HELP = `At least ${MIN_PASSWORD_LENGTH} characters.`;
 const ROLE_LEGEND = "I am a";
 const PHOTO_LABEL = "Photo link";
 const OPTIONAL_NOTE = "(optional)";
@@ -43,15 +47,13 @@ const HAVE_ACCOUNT_TEXT = "Already have an account? ";
 const LOG_IN_LINK_TEXT = "Log in";
 
 const EMAIL_TAKEN_MESSAGE = "This email is already registered.";
-const GENERAL_ERROR_MESSAGE = "Something went wrong. Try again.";
 const ACCOUNT_CREATED_TOAST = "Account created";
 
 // What the server answers when the email is already registered.
 const EMAIL_TAKEN_STATUS = 409;
 
-// The same length as the "User" columns (varchar(100)).
+// The same length as the "User" name column (varchar(100)).
 const MAX_NAME_LENGTH = 100;
-const MAX_EMAIL_LENGTH = 100;
 
 type SignUpRole = SignUpUserDTO["role"];
 
@@ -84,26 +86,15 @@ export default function SignUpPage() {
   const [photo, setPhoto] = useState("");
 
   const [errors, setErrors] = useState<FieldErrors>(NO_ERRORS);
-  // A new object for every failed request, so focus moves to the message each time.
-  const [formError, setFormError] = useState<{ text: string } | null>(null);
+  const { formError, setFormError, formErrorRef, sending } = useFormError();
   const [busy, setBusy] = useState(false);
 
-  // Set in the same tick as the submit, so a second submit cannot slip in
-  // before the busy state is drawn.
-  const sending = useRef(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
-  const formErrorRef = useRef<HTMLDivElement>(null);
 
   const fieldRefs = { name: nameRef, email: emailRef, password: passwordRef, photo: photoRef };
-
-  useEffect(() => {
-    if (formError !== null) {
-      formErrorRef.current?.focus();
-    }
-  }, [formError]);
 
   function clearError(field: FieldName) {
     setErrors((current) => (current[field] === null ? current : { ...current, [field]: null }));

@@ -1,7 +1,9 @@
 import { useSetAtom } from "jotai";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { APP_NAME } from "../../../config/app";
+import { PHONE_LAYOUT_QUERY } from "../../../config/layout";
+import { useModalDialog } from "../../../hooks/useModalDialog";
 import { CloseIcon } from "../../../icons/CloseIcon";
 import { PATHS } from "../../../routes/paths";
 import type { Profile } from "../../../store/profileAtoms";
@@ -9,6 +11,7 @@ import { logOutAtom } from "../../../store/sessionActions";
 import { Avatar } from "../../ui/Avatar/Avatar";
 import { Button } from "../../ui/Button/Button";
 import { Skeleton, SkeletonGroup, SkeletonStack } from "../../ui/Skeleton/Skeleton";
+import { MAIN_NAV_LABEL, MY_PROFILE_LABEL } from "../navLabels";
 import { ThemeSwitch } from "../ThemeSwitch/ThemeSwitch";
 import styles from "./PhoneMenu.module.css";
 
@@ -27,10 +30,6 @@ export type PhoneMenuProps = {
   links: readonly PhoneMenuLink[];
   profile: Profile;
 };
-
-// The phone layout, written as in every stylesheet (architecture.md,
-// "Tokens and styles"). The menu closes when the window stops matching it.
-const PHONE_LAYOUT_QUERY = "(max-width: 767.98px)";
 
 /** Who is logged in: avatar, name, email. Nothing when the profile call failed. */
 function Person({ profile }: { profile: Profile }) {
@@ -71,70 +70,18 @@ function Person({ profile }: { profile: Profile }) {
  * It has its own look; it does not share the card of ui/Dialog.
  */
 export function PhoneMenu({ open, onClose, links, profile }: PhoneMenuProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useModalDialog({ open, onClose });
   const titleId = useId();
   const { pathname } = useLocation();
   const logOut = useSetAtom(logOutAtom);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // The listeners below are added once, so they read the newest props here.
+  // The effects below read the newest props here (the route-change effect must
+  // not run again when they change).
   const latest = useRef({ open, onClose });
   useEffect(() => {
     latest.current = { open, onClose };
   });
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) {
-      return;
-    }
-    // showModal() throws on a dialog that is already open.
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) {
-      return;
-    }
-
-    // Escape. The caller owns `open`, so the browser's own close is held back.
-    function handleCancel(event: Event) {
-      event.preventDefault();
-      latest.current.onClose();
-    }
-
-    // The browser closed it anyway (a second Escape in a row is not held
-    // back). Not our own close(): by then `open` is already false.
-    function handleClose() {
-      if (latest.current.open) {
-        latest.current.onClose();
-      }
-    }
-
-    dialog.addEventListener("cancel", handleCancel);
-    dialog.addEventListener("close", handleClose);
-    return () => {
-      dialog.removeEventListener("cancel", handleCancel);
-      dialog.removeEventListener("close", handleClose);
-    };
-  }, []);
-
-  // Removed from the page while open (after Log out): close first, while the
-  // element is still in the page. A layout effect, because a plain effect
-  // cleans up after the element is gone.
-  useLayoutEffect(() => {
-    const dialog = dialogRef.current;
-    return () => {
-      if (dialog !== null && dialog.open) {
-        dialog.close();
-      }
-    };
-  }, []);
 
   // The page changed (a link here, or the browser's Back button).
   useEffect(() => {
@@ -148,6 +95,7 @@ export function PhoneMenu({ open, onClose, links, profile }: PhoneMenuProps) {
     if (!open) {
       return;
     }
+    // The menu closes when the window stops matching the phone layout.
     const phoneLayout = window.matchMedia(PHONE_LAYOUT_QUERY);
     function handleChange() {
       if (!phoneLayout.matches) {
@@ -183,8 +131,8 @@ export function PhoneMenu({ open, onClose, links, profile }: PhoneMenuProps) {
         </button>
       </div>
 
-      <nav className={styles.links} aria-label="Main">
-        {[...links, { to: PATHS.myProfile, label: "My profile" }].map(({ to, label }) => (
+      <nav className={styles.links} aria-label={MAIN_NAV_LABEL}>
+        {[...links, { to: PATHS.myProfile, label: MY_PROFILE_LABEL }].map(({ to, label }) => (
           // Also closes when the link leads to the page that is already open.
           <NavLink key={to} className={styles.link} to={to} onClick={onClose}>
             {label}

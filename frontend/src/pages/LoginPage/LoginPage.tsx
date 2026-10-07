@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { AuthLayout } from "../../components/auth/AuthLayout/AuthLayout";
@@ -12,8 +12,14 @@ import { TextInput } from "../../components/ui/TextInput/TextInput";
 import { CONTACT_EMAIL } from "../../config/app";
 import { REMEMBERED_EMAIL_STORAGE_KEY } from "../../config/storageKeys";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { useFormError } from "../../hooks/useFormError";
 import { readStored } from "../../lib/browserStorage";
-import { validateEmail, validateLoginPassword } from "../../lib/validation";
+import {
+  GENERAL_ERROR_MESSAGE,
+  MAX_EMAIL_LENGTH,
+  validateEmail,
+  validateLoginPassword,
+} from "../../lib/validation";
 import { PATHS } from "../../routes/paths";
 import { logInAtom } from "../../store/sessionActions";
 import { authNoticeAtom } from "../../store/sessionAtoms";
@@ -36,15 +42,11 @@ const FORGOT_PASSWORD_TEXT = "Forgot your password? Contact the alumni office. "
 
 // It does not say which of the two was wrong (AC47).
 const WRONG_CREDENTIALS_MESSAGE = "The email or password is not correct.";
-const GENERAL_ERROR_MESSAGE = "Something went wrong. Try again.";
 const SESSION_ENDED_MESSAGE = "Your session has ended. Log in again.";
 const ACCOUNT_CREATED_MESSAGE = "Account created. Log in to continue.";
 
 // What the server answers to a wrong email or password.
 const WRONG_CREDENTIALS_STATUS = 401;
-
-// The same length as the "User" columns (varchar(100)).
-const MAX_EMAIL_LENGTH = 100;
 
 type FieldErrors = {
   email: string | null;
@@ -80,24 +82,13 @@ export default function LoginPage() {
   const [rememberEmail, setRememberEmail] = useState(rememberedEmail !== "");
 
   const [errors, setErrors] = useState<FieldErrors>(NO_ERRORS);
-  // A new object for every failed request, so focus moves to the message each time.
-  const [formError, setFormError] = useState<{ text: string } | null>(null);
+  const { formError, setFormError, formErrorRef, sending } = useFormError();
   const [busy, setBusy] = useState(false);
   // The notices say why the user is here. They go once a request was sent.
   const [requestSent, setRequestSent] = useState(false);
 
-  // Set in the same tick as the submit, so a second submit cannot slip in
-  // before the busy state is drawn.
-  const sending = useRef(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const formErrorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (formError !== null) {
-      formErrorRef.current?.focus();
-    }
-  }, [formError]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

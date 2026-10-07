@@ -3,18 +3,18 @@ import { useCallback, useState } from "react";
 import { Link as RouterLink, NavLink } from "react-router-dom";
 import { APP_NAME } from "../../../config/app";
 import { MenuIcon } from "../../../icons/MenuIcon";
+import { isAdmin } from "../../../lib/token";
 import { PATHS } from "../../../routes/paths";
 import { profileAtom } from "../../../store/profileAtoms";
 import type { Profile } from "../../../store/profileAtoms";
 import { sessionAtom } from "../../../store/sessionAtoms";
 import { Avatar } from "../../ui/Avatar/Avatar";
 import { Skeleton, SkeletonGroup, SkeletonStack } from "../../ui/Skeleton/Skeleton";
+import { MAIN_NAV_LABEL, MY_PROFILE_LABEL } from "../navLabels";
 import { PhoneMenu } from "../PhoneMenu/PhoneMenu";
 import type { PhoneMenuLink } from "../PhoneMenu/PhoneMenu";
 import { ThemeSwitch } from "../ThemeSwitch/ThemeSwitch";
 import styles from "./Header.module.css";
-
-const MY_PROFILE = "My profile";
 
 const EVERYONE_LINKS: readonly PhoneMenuLink[] = [
   { to: PATHS.dashboard, label: "Dashboard" },
@@ -34,7 +34,7 @@ function UserBlock({ profile }: { profile: Profile }) {
   if (profile.status === "idle" || profile.status === "loading") {
     return (
       <>
-        <span className="visuallyHidden">{MY_PROFILE}</span>
+        <span className="visuallyHidden">{MY_PROFILE_LABEL}</span>
         <div className={styles.userLoading}>
           <SkeletonGroup layout="row">
             <Skeleton shape="avatar-sm" />
@@ -54,7 +54,7 @@ function UserBlock({ profile }: { profile: Profile }) {
     return (
       <>
         <Avatar size="sm" name={null} photoUrl={profile.user?.photo_url} />
-        {MY_PROFILE}
+        {MY_PROFILE_LABEL}
       </>
     );
   }
@@ -63,7 +63,7 @@ function UserBlock({ profile }: { profile: Profile }) {
     <>
       <Avatar size="sm" name={name} photoUrl={profile.user?.photo_url} />
       <span className={styles.userName}>{name}</span>
-      <span className="visuallyHidden">, {MY_PROFILE}</span>
+      <span className="visuallyHidden">, {MY_PROFILE_LABEL}</span>
     </>
   );
 }
@@ -78,7 +78,7 @@ export function Header() {
   const profile = useAtomValue(profileAtom);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const links = session?.role === "admin" ? ADMIN_LINKS : EVERYONE_LINKS;
+  const links = isAdmin(session) ? ADMIN_LINKS : EVERYONE_LINKS;
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   return (
@@ -88,7 +88,7 @@ export function Header() {
           <RouterLink className={styles.appName} to={PATHS.dashboard}>
             {APP_NAME}
           </RouterLink>
-          <nav className={styles.nav} aria-label="Main">
+          <nav className={styles.nav} aria-label={MAIN_NAV_LABEL}>
             {links.map(({ to, label }) => (
               // NavLink sets aria-current="page" on the current one.
               <NavLink key={to} className={styles.navLink} to={to}>

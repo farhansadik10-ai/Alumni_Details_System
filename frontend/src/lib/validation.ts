@@ -10,6 +10,12 @@ export const PHOTO_LINK_INVALID_MESSAGE = "Enter a link that starts with https:/
 
 export const MIN_PASSWORD_LENGTH = 8;
 
+// The same length as the "User" email column (varchar(100)).
+export const MAX_EMAIL_LENGTH = 100;
+
+// Shown when a request failed in a way the user cannot fix by editing a field.
+export const GENERAL_ERROR_MESSAGE = "Something went wrong. Try again.";
+
 // Something, an @, something, a dot, something; no spaces and one @ only.
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const WEB_LINK_START = /^https?:\/\//i;
