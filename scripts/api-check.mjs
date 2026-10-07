@@ -22,29 +22,42 @@ const REQUEST_TIMEOUT_MS = 15000;
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
 const MISSING_ID = 2147483646; // fits a PostgreSQL integer; no row has it
-const BAD_IDS = ["abc", "1.5", "0", "-3", "12abc"];
+// The last two are whole numbers too big for a PostgreSQL integer column.
+const BAD_IDS = ["abc", "1.5", "0", "-3", "12abc", "2147483648", "99999999999"];
+const BAD_ID_TEXT = "Invalid id";
 const MAX_ERROR_TEXT = 200;
 
 const EMAIL_TAKEN = "This email is already registered";
 const USER_HAS_CONTENT =
   "This user has posts, comments or an alumni profile and cannot be deleted";
 const BAD_LOGIN = "Invalid email or password";
-const INTERNAL_ERROR = "Internal server error";
+const INVALID_VALUE = "Invalid value in request";
 
-// Text that only PostgreSQL writes. None of it may reach a response (AC5).
+// Text that only PostgreSQL or its driver writes: its wording, constraint and
+// index names, system names. None of it may reach a response (AC5).
 const DB_TEXT =
-  /violates|duplicate key|relation "|syntax error|invalid input syntax|character varying|out of range for type|null value in column|_fkey|_pkey|User_email_key/i;
+  /violates|duplicate key|constraint|relation|syntax|invalid input|invalid byte sequence|character varying|out of range|null value|column "|does not exist|permission denied|deadlock|SQLSTATE|ECONNREFUSED|ETIMEDOUT|pg_|_fkey|_pkey|_key\b|_check\b|_idx\b|"User"/i;
+
+// What every alumni and comment answer holds, reads and writes alike.
+const ALUMNI_KEYS = [
+  "id", "user_id", "department", "graduation_year", "current_company", "job_title",
+  "experience", "bio", "linkedin_url", "mentorship_available", "field",
+  "name", "email", "photo_url",
+];
+const COMMENT_KEYS = ["id", "posts_id", "parent_id", "user_id", "content", "created_at", "name", "photo_url"];
 
 const RUN = String(Date.now());
 const emailOf = (who) => `apicheck-${RUN}-${who}@example.com`;
 const newPassword = () => globalThis.crypto.randomUUID();
 
-// The four test users. `token` and `password` stay in memory and are never printed.
+// The test users. `token` and `password` stay in memory and are never printed.
+// Carol signs up only at the end, for the two-creates-at-once check.
 const people = {
   alice: { name: `Apicheck Alice ${RUN}`, email: emailOf("alice"), role: "alumni", password: newPassword() },
   bob: { name: `Apicheck Bob ${RUN}`, email: emailOf("bob"), role: "alumni", password: newPassword() },
   sam: { name: `Apicheck Sam ${RUN}`, email: emailOf("sam"), role: "student", password: newPassword() },
   dana: { name: `Apicheck Dana ${RUN}`, email: emailOf("dana"), role: "student", password: newPassword() },
+  carol: { name: `Apicheck Carol ${RUN}`, email: emailOf("carol"), role: "alumni", password: newPassword() },
 };
 const admin = { token: undefined };
 
@@ -68,6 +81,7 @@ const BOB_PROFILE = {
 const livePosts = new Map();
 const liveComments = new Map();
 const ids = {}; // named ids the checks share: post1, c1, aliceProfile, ...
+const answers = {}; // write answers kept for the shape checks: alumniCreate, commentCreate, commentUpdate
 const stats = {};
 
 // ---------------------------------------------------------------- runner
@@ -174,9 +188,22 @@ function expectError(res, expected, exactText) {
   if (DB_TEXT.test(res.json.error)) {
     fail(`the error text looks like a raw database message: ${errorText(res)}`);
   }
+  if (hasDbText(res.json)) {
+    fail(`status ${expected}, but a key or value beside \`error\` looks like raw database text`);
+  }
   if (exactText !== undefined && res.json.error !== exactText) {
     fail(`expected error ${JSON.stringify(exactText)}, got ${errorText(res)}`);
   }
+}
+
+/** True when any key or any text anywhere in `value` matches DB_TEXT. */
+function hasDbText(value) {
+  if (typeof value === "string") return DB_TEXT.test(value);
+  if (Array.isArray(value)) return value.some((item) => hasDbText(item));
+  if (isObject(value)) {
+    return Object.entries(value).some(([key, item]) => DB_TEXT.test(key) || hasDbText(item));
+  }
+  return false;
 }
 
 function expectNoPassword(value, where) {
@@ -327,7 +354,42 @@ async function expectBadIds(method, pathOf, who) {
     if (res.status !== 400) {
       fail(`id "${badId}": expected status 400, got ${res.status}, error: ${errorText(res)}`);
     }
-    expectError(res, 400);
+    if (res.json?.error !== BAD_ID_TEXT) {
+      fail(`id "${badId}": expected error ${JSON.stringify(BAD_ID_TEXT)}, got ${errorText(res)}`);
+    }
+    expectError(res, 400, BAD_ID_TEXT);
+  }
+}
+
+/** The comments of one post, as `GET /api/posts/:id/comments` lists them. */
+async function commentsOf(postId) {
+  const res = await get(`/api/posts/${postId}/comments`, tokenOf("sam"));
+  expectStatus(res, 200);
+  if (!Array.isArray(res.json)) fail("the comment list is not an array");
+  return res.json;
+}
+
+/**
+ * Confirms a three-level thread is really there before a delete: `top` has no
+ * parent, `reply` hangs under `top`, `deep` under `reply`.
+ */
+function expectThread(list, top, reply, deep) {
+  const byId = new Map(list.map((item) => [item.id, item]));
+  const levels = { "the top comment": top, "the reply": reply, "the reply to the reply": deep };
+  for (const [label, id] of Object.entries(levels)) {
+    if (!byId.has(id)) fail(`cannot test the deep delete: ${label} is not on the post`);
+  }
+  expectEqual(byId.get(top).parent_id, null, "parent_id of the top comment");
+  expectEqual(byId.get(reply).parent_id, top, "parent_id of the reply");
+  expectEqual(byId.get(deep).parent_id, reply, "parent_id of the reply to the reply");
+}
+
+/** Every comment in `gone` answers 404 on edit. The 404 comes before the author check. */
+async function expectCommentsGone(gone) {
+  for (const [label, id] of Object.entries(gone)) {
+    const res = await put(`/api/comments/${id}`, tokenOf("sam"), { content: "still here?" });
+    if (res.status !== 404) fail(`${label}: expected status 404 on edit, got ${res.status}, error: ${errorText(res)}`);
+    expectError(res, 404);
   }
 }
 
@@ -384,25 +446,33 @@ async function errorShapeChecks() {
     expectError(await post("/api/users", undefined, taken), 409);
     expectError(await get(`/api/alumni/${MISSING_ID}`, tokenOf("alice")), 404);
   });
-  await check("A07", "AC5", "a value the database refuses (name too long) shows no database text", async () => {
+  await check("A07", "AC5", "a value too long for its column answers 400 with the fixed text and no database text", async () => {
+    // "User".name and "User".email hold 100 characters.
+    const bodies = {
+      "name of 150 characters": { name: "n".repeat(150), email: emailOf("longname") },
+      "email of 150 characters": { name: "X", email: `apicheck-${RUN}-${"e".repeat(150)}@example.com` },
+    };
+    for (const [label, body] of Object.entries(bodies)) {
+      const res = await post("/api/users", undefined, { ...body, password: newPassword(), role: "student" });
+      if (res.status === 201) fail(`${label}: the sign-up was accepted; that user row now exists`);
+      if (res.status !== 400) fail(`${label}: expected status 400, got ${res.status}, error: ${errorText(res)}`);
+      expectError(res, 400, INVALID_VALUE);
+    }
+  });
+  await check("A08", "AC5", "text the database cannot store (a zero byte) answers 400 with the fixed text and no database text", async () => {
     const res = await post("/api/users", undefined, {
-      name: "n".repeat(150),
-      email: emailOf("toolong"),
+      name: "zero\u0000byte",
+      email: emailOf("zerobyte"),
       password: newPassword(),
       role: "student",
     });
-    if (res.status === 201) {
-      fail("the sign-up was accepted; a user row with a 150-character name now exists");
-    }
-    if (res.status !== 400 && res.status !== 500) {
-      fail(`expected status 400 or 500, got ${res.status}, error: ${errorText(res)}`);
-    }
-    expectError(res, res.status, res.status === 500 ? INTERNAL_ERROR : undefined);
+    if (res.status === 201) fail("the sign-up was accepted; that user row now exists");
+    expectError(res, 400, INVALID_VALUE);
   });
 }
 
 async function idChecks() {
-  await check("B01", "AC6", "GET /api/users/:id refuses abc, 1.5, 0, -3, 12abc with 400", () =>
+  await check("B01", "AC6", "GET /api/users/:id refuses abc, 1.5, 0, -3, 12abc, 2147483648, 99999999999 with 400 Invalid id", () =>
     expectBadIds("GET", (id) => `/api/users/${id}`, "alice"));
   await check("B02", "AC6", "PUT /api/users/:id refuses the bad ids with 400", () =>
     expectBadIds("PUT", (id) => `/api/users/${id}`, "alice"));
@@ -538,6 +608,7 @@ async function alumniWriteChecks() {
     expectEqual(res.json.field, ALICE_PROFILE.field, "field");
     expectEqual(res.json.user_id, idOf("alice"), "user_id (a user_id in the body must be ignored)");
     ids.aliceProfile = res.json.id;
+    answers.alumniCreate = res.json;
   });
   await check("E05", "AC14", "POST /api/alumni without the two fields stores false and null", async () => {
     const res = await post("/api/alumni", tokenOf("bob"), BOB_PROFILE);
@@ -586,22 +657,23 @@ async function alumniWriteChecks() {
     const list = expectList(await alumniList({ q: people.alice.name }), "the alumni list");
     expectKeys(list.items[0], ["mentorship_available", "field"], "a list item");
   });
+  await check("E10", "AC16", "the POST /api/alumni answer has the same fields as a read: name, email, photo_url, no password", async () => {
+    const created = need(answers.alumniCreate, "the answer of POST /api/alumni (see E04)");
+    expectKeys(created, ALUMNI_KEYS, "the POST /api/alumni answer");
+    expectEqual(created.name, people.alice.name, "name");
+    expectEqual(created.email, people.alice.email, "email");
+    expectNoPassword(created, "the POST /api/alumni answer");
+  });
 }
 
 async function alumniListChecks() {
-  const ITEM_KEYS = [
-    "id", "user_id", "department", "graduation_year", "current_company", "job_title",
-    "experience", "bio", "linkedin_url", "mentorship_available", "field",
-    "name", "email", "photo_url",
-  ];
-
   await check("F01", "AC18", "GET /api/alumni: list shape, defaults page 1 and limit 12, item fields, no password, open to a student", async () => {
     const list = expectList(await get("/api/alumni", tokenOf("sam")), "the alumni list");
     expectEqual(list.page, 1, "page");
     expectEqual(list.limit, DEFAULT_LIMIT, "limit");
     if (list.items.length > DEFAULT_LIMIT) fail(`more than ${DEFAULT_LIMIT} items came back`);
     if (list.items.length === 0) fail("the list is empty, but two profiles were just created");
-    list.items.forEach((item) => expectKeys(item, ITEM_KEYS, "a list item"));
+    list.items.forEach((item) => expectKeys(item, ALUMNI_KEYS, "a list item"));
     const mine = expectList(await alumniList({ q: people.alice.name }), "the alumni list");
     expectEqual(mine.items[0]?.name, people.alice.name, "name");
     expectEqual(mine.items[0]?.email, people.alice.email, "email");
@@ -701,14 +773,21 @@ async function alumniListChecks() {
     );
     expectEqual(empty.total, 2, "matches when the other filters are sent empty");
   });
-  await check("F11", "AC21", "the alumni list is newest first (highest id), and the same on a second call", async () => {
-    const first = expectList(await alumniList({ limit: MAX_LIMIT }), "the alumni list");
-    const second = expectList(await alumniList({ limit: MAX_LIMIT }), "the alumni list");
-    if (!isSortedBy(first.items, (a, b) => b.id - a.id)) fail("the ids are not in falling order");
-    if (!sameJson(first.items.map((item) => item.id), second.items.map((item) => item.id))) {
+  await check("F11", "AC21", "the alumni list is newest first (highest id): Bob's profile before Alice's, the same on a second call", async () => {
+    const whole = expectList(await alumniList({ limit: MAX_LIMIT }), "the alumni list");
+    if (!isSortedBy(whole.items, (a, b) => b.id - a.id)) fail("the ids are not in falling order");
+    // Only this run's two profiles are compared, so a profile someone else
+    // adds during the run cannot fail the check.
+    const expected = [need(ids.bobProfile, "Bob's profile id"), need(ids.aliceProfile, "Alice's profile id")];
+    if (!(expected[0] > expected[1])) fail("cannot run: Bob's profile was expected to have the higher id");
+    const first = expectList(await alumniList({ q: RUN }), "this run's profiles");
+    const second = expectList(await alumniList({ q: RUN }), "this run's profiles");
+    if (!sameJson(first.items.map((item) => item.id), expected)) {
+      fail("this run's two profiles are not in newest-first order (Bob's, then Alice's)");
+    }
+    if (!sameJson(second.items.map((item) => item.id), expected)) {
       fail("two calls with the same query gave a different order");
     }
-    expectEqual(first.items[0]?.id, need(ids.bobProfile, "Bob's profile id"), "the first item (the newest profile)");
   });
   await check("F12", "AC22", "GET /api/alumni/filters: three sorted lists of distinct values, no null or blank", async () => {
     const res = await get("/api/alumni/filters", tokenOf("sam"));
@@ -734,6 +813,18 @@ async function alumniListChecks() {
     if (!departments.includes(ALICE_PROFILE.department)) fail("Alice's department is missing");
     if (!fields.includes(ALICE_PROFILE.field)) fail("Alice's field is missing");
     if (!years.includes(2019) || !years.includes(2021)) fail("2019 or 2021 is missing from graduation_years");
+  });
+  await check("F13", "AC20", "a query key sent twice (?department=a&department=b) answers 400", async () => {
+    for (const key of ["q", "department", "graduation_year", "field", "mentoring"]) {
+      const res = await get(`/api/alumni?${key}=a&${key}=b`, tokenOf("sam"));
+      if (res.status !== 400) fail(`${key} sent twice: expected status 400, got ${res.status}, error: ${errorText(res)}`);
+      expectError(res, 400, `${key} must be a single value`);
+    }
+    for (const key of ["page", "limit"]) {
+      const res = await get(`/api/alumni?${key}=1&${key}=2`, tokenOf("sam"));
+      if (res.status !== 400) fail(`${key} sent twice: expected status 400, got ${res.status}, error: ${errorText(res)}`);
+      expectError(res, 400);
+    }
   });
 }
 
@@ -786,6 +877,14 @@ async function alumniUpdateChecks() {
     expectEqual(read.json?.bio, `Bio ${RUN}`, "bio after the refused edit");
     expectEqual(read.json?.user_id, idOf("alice"), "user_id");
   });
+  await check("G06", "AC16", "the PUT /api/alumni/:id answer has the same fields as a read: name, email, photo_url, no password", async () => {
+    const res = await put(path(), tokenOf("alice"), { bio: `Bio ${RUN}` });
+    expectStatus(res, 200);
+    expectKeys(res.json, ALUMNI_KEYS, "the PUT /api/alumni/:id answer");
+    expectEqual(res.json.name, people.alice.name, "name");
+    expectEqual(res.json.email, people.alice.email, "email");
+    expectNoPassword(res.json, "the PUT /api/alumni/:id answer");
+  });
 }
 
 async function userRuleChecks() {
@@ -810,6 +909,17 @@ async function userRuleChecks() {
   await check("H05", "AC33", "DELETE /api/users/:id by a non-admin answers 403 and deletes nothing", async () => {
     expectError(await del(`/api/users/${idOf("dana")}`, tokenOf("alice")), 403);
     expectStatus(await get(`/api/users/${idOf("dana")}`, tokenOf("alice")), 200);
+  });
+  await check("H06", "AC12", "a user changes their own password: login with the new one answers 200, with the old one 401", async () => {
+    const oldPassword = people.dana.password;
+    const changed = newPassword();
+    const res = await put(`/api/users/${idOf("dana")}`, tokenOf("dana"), { password: changed });
+    expectStatus(res, 200);
+    people.dana.password = changed;
+    expectNoPassword(res.json, "the updated user");
+    await logIn("dana");
+    const old = await post("/api/auth/login", undefined, { email: people.dana.email, password: oldPassword });
+    expectError(old, 401, BAD_LOGIN);
   });
 }
 
@@ -885,10 +995,13 @@ async function commentChecks() {
     expectError(await post("/api/comments", tokenOf("sam"), { posts_id: post1(), parent_id: "abc", content: "x" }), 400);
     expectError(await post("/api/comments", tokenOf("sam"), { posts_id: MISSING_ID, parent_id: "abc", content: "x" }), 400);
     expectError(await post("/api/comments", tokenOf("sam"), { posts_id: post1(), content: 5 }), 400, "Content is required");
+    expectError(await post("/api/comments", tokenOf("sam"), { posts_id: 99999999999, content: "x" }), 400, "Invalid posts_id");
+    expectError(await post("/api/comments", tokenOf("sam"), { posts_id: post1(), parent_id: 99999999999, content: "x" }), 400, "Invalid parent_id");
   });
   await check("J03", "AC28", "comment_count is 0 on a new post and 1 after a comment", async () => {
     await expectCommentCount(post1(), 0);
     const created = await createComment("sam", "c1", { posts_id: post1(), content: `Top ${RUN}`, user_id: idOf("bob") });
+    answers.commentCreate = created;
     expectEqual(created.user_id, idOf("sam"), "user_id (a user_id in the body must be ignored)");
     expectEqual(created.posts_id, post1(), "posts_id");
     expectEqual(created.parent_id, null, "parent_id");
@@ -924,7 +1037,7 @@ async function commentChecks() {
     if (!Array.isArray(res.json)) fail("the answer is not an array");
     expectNoPassword(res.json, "the comment list");
     res.json.forEach((item) =>
-      expectKeys(item, ["id", "posts_id", "parent_id", "user_id", "content", "created_at", "name", "photo_url"], "a comment"));
+      expectKeys(item, COMMENT_KEYS, "a comment"));
     const expected = ["c1", "r1", "r2", "s1"].map((name) => need(ids[name], `${name}'s id`));
     if (!sameJson(res.json.map((item) => item.id), expected)) {
       fail(`expected the four comments in the order they were written, got ${res.json.length} in another order`);
@@ -945,6 +1058,7 @@ async function commentChecks() {
     expectError(await put(path, tokenOf("sam"), { content: "   " }), 400);
     const res = await put(path, tokenOf("sam"), { content: `Top edited ${RUN}`, posts_id: ids.post2 });
     expectStatus(res, 200);
+    answers.commentUpdate = res.json;
     expectEqual(res.json?.content, `Top edited ${RUN}`, "content");
     expectEqual(res.json?.posts_id, post1(), "posts_id (must not change)");
     expectError(await put(`/api/comments/${MISSING_ID}`, tokenOf("sam"), { content: "x" }), 404);
@@ -953,28 +1067,73 @@ async function commentChecks() {
     expectError(await del(`/api/comments/${need(ids.r2, "the nested reply's id")}`, tokenOf("sam")), 403);
     await expectCommentCount(post1(), 4);
   });
-  await check("J11", "AC31", "deleting a reply removes only that reply: comment_count goes 4 to 3", async () => {
-    const replyId = need(ids.r2, "the nested reply's id");
-    expectStatus(await del(`/api/comments/${replyId}`, tokenOf("alice")), 200);
-    liveComments.delete(replyId);
-    await expectCommentCount(post1(), 3);
-    expectError(await del(`/api/comments/${replyId}`, tokenOf("alice")), 404);
+  await check("J11", "AC31", "deleting a reply with nothing under it removes only that reply: comment_count goes 5 to 4", async () => {
+    // A new leaf under the sibling comment, so the three-level thread under
+    // the first comment stays whole for J12.
+    const leaf = await createComment("dana", "leaf", { posts_id: post1(), parent_id: need(ids.s1, "the sibling comment's id"), content: `Leaf ${RUN}` });
+    await expectCommentCount(post1(), 5);
+    expectStatus(await del(`/api/comments/${leaf.id}`, tokenOf("dana")), 200);
+    liveComments.delete(leaf.id);
+    await expectCommentCount(post1(), 4);
+    expectError(await del(`/api/comments/${leaf.id}`, tokenOf("dana")), 404);
+    const left = (await commentsOf(post1())).map((item) => item.id);
+    if (!left.includes(ids.s1)) fail("the parent of the deleted reply is gone too");
   });
-  await check("J12", "AC31", "deleting a top comment removes its replies too; the sibling comment survives", async () => {
+  await check("J12", "AC31", "deleting a top comment with a reply and a reply to that reply removes all three; the sibling comment survives", async () => {
     const topId = need(ids.c1, "the first comment's id");
     const replyId = need(ids.r1, "the reply's id");
+    const deepId = need(ids.r2, "the nested reply's id");
+    const siblingId = need(ids.s1, "the sibling comment's id");
+    const before = await commentsOf(post1());
+    expectThread(before, topId, replyId, deepId);
+    if (!before.some((item) => item.id === siblingId)) fail("cannot run: the sibling comment is not on the post");
+    await expectCommentCount(post1(), before.length);
+
     expectStatus(await del(`/api/comments/${topId}`, tokenOf("sam")), 200);
-    liveComments.delete(topId);
-    liveComments.delete(replyId);
-    const res = await get(`/api/posts/${post1()}/comments`, tokenOf("sam"));
-    expectStatus(res, 200);
-    if (!sameJson(res.json.map((item) => item.id), [need(ids.s1, "the sibling comment's id")])) {
-      fail(`expected only the sibling comment to be left, found ${res.json.length} comments`);
+    for (const id of [topId, replyId, deepId]) liveComments.delete(id);
+
+    const after = await commentsOf(post1());
+    expectEqual(after.length, before.length - 3, "comments left on the post (three fewer)");
+    if (!sameJson(after.map((item) => item.id), [siblingId])) {
+      fail(`expected only the sibling comment to be left, found ${after.length} comments`);
     }
-    expectError(await put(`/api/comments/${replyId}`, tokenOf("bob"), { content: "still here?" }), 404);
+    await expectCommentsGone({ "the top comment": topId, "the reply": replyId, "the reply to the reply": deepId });
+    await expectCommentCount(post1(), before.length - 3);
+    // The sibling is still a working comment, not only a row in the list.
+    expectStatus(await put(`/api/comments/${siblingId}`, tokenOf("sam"), { content: `Sibling ${RUN}` }), 200);
   });
   await check("J13", "AC28", "comment_count is right after the deletes: 1", async () => {
     await expectCommentCount(post1(), 1);
+  });
+  await check("J14", "AC12", "GET /api/comments answers 200 with an array, no password in any item, name and photo_url on this run's comments, and none of the deleted comments", async () => {
+    const res = await get("/api/comments", tokenOf("dana"));
+    expectStatus(res, 200);
+    if (!Array.isArray(res.json)) fail("the answer is not an array");
+    expectNoPassword(res.json, "the comment list");
+    res.json.forEach((item) => expectKeys(item, ["id", "posts_id", "parent_id", "user_id", "content"], "a comment"));
+    const all = new Set(res.json.map((item) => item.id));
+    if (!all.has(need(ids.s1, "the sibling comment's id"))) fail("the sibling comment is missing");
+    if (!all.has(need(ids.extra, "the second post's comment id"))) fail("the second post's comment is missing");
+    // Only this run's own comments are held to the joined shape.
+    for (const item of res.json) {
+      if (item.id === ids.s1) expectKeys(item, ["name", "photo_url"], "the sibling comment in the list");
+      if (item.id === ids.extra) expectKeys(item, ["name", "photo_url"], "the second post's comment in the list");
+    }
+    for (const name of ["c1", "r1", "r2", "leaf"]) {
+      if (all.has(need(ids[name], `${name}'s id`))) fail(`a deleted comment (${name}) is still listed`);
+    }
+  });
+  await check("J15", "AC12", "the POST /api/comments answer has the same fields as a read: name, photo_url, no password", async () => {
+    const created = need(answers.commentCreate, "the answer of POST /api/comments (see J03)");
+    expectKeys(created, COMMENT_KEYS, "the POST /api/comments answer");
+    expectEqual(created.name, people.sam.name, "name");
+    expectNoPassword(created, "the POST /api/comments answer");
+  });
+  await check("J16", "AC12", "the PUT /api/comments/:id answer has the same fields as a read: name, photo_url, no password", async () => {
+    const updated = need(answers.commentUpdate, "the answer of PUT /api/comments/:id (see J09)");
+    expectKeys(updated, COMMENT_KEYS, "the PUT /api/comments/:id answer");
+    expectEqual(updated.name, people.sam.name, "name");
+    expectNoPassword(updated, "the PUT /api/comments/:id answer");
   });
 }
 
@@ -985,28 +1144,43 @@ async function postDeleteChecks() {
     expectError(await del(`/api/posts/${postId}`, tokenOf("sam")), 403);
     await expectCommentCount(postId, 1);
   });
-  await check("K02", "AC30", "deleting a post with a comment and a reply answers 200", async () => {
+  await check("K02", "AC30", "deleting a post that holds a comment, a reply and a reply to that reply answers 200", async () => {
     const postId = need(ids.post1, "the first post's id");
-    await createComment("dana", "s2", { posts_id: postId, parent_id: need(ids.s1, "the sibling comment's id"), content: `Late reply ${RUN}` });
-    await expectCommentCount(postId, 2);
+    const topId = need(ids.s1, "the sibling comment's id");
+    const reply = await createComment("dana", "s2", { posts_id: postId, parent_id: topId, content: `Late reply ${RUN}` });
+    const deep = await createComment("bob", "s3", { posts_id: postId, parent_id: reply.id, content: `Late reply to reply ${RUN}` });
+    const before = await commentsOf(postId);
+    expectEqual(before.length, 3, "comments on the post before the delete");
+    expectThread(before, topId, reply.id, deep.id);
+    await expectCommentCount(postId, 3);
+    await readStats("beforePostDelete");
     expectStatus(await del(`/api/posts/${postId}`, tokenOf("alice")), 200);
     livePosts.delete(postId);
-    liveComments.delete(ids.s1);
-    liveComments.delete(ids.s2);
+    for (const id of [topId, reply.id, deep.id]) liveComments.delete(id);
   });
-  await check("K03", "AC30", "after the delete: the post's comments answer 404, its comments are gone, the post is out of the feed", async () => {
+  await check("K03", "AC30", "after the delete: the post's comments answer 404, all three levels are gone, the post is out of the feed", async () => {
     const postId = need(ids.post1, "the first post's id");
     if (livePosts.has(postId)) fail("cannot run: the post was not deleted (see K02)");
     expectError(await get(`/api/posts/${postId}/comments`, tokenOf("sam")), 404);
-    expectError(await put(`/api/comments/${need(ids.s1, "the sibling comment's id")}`, tokenOf("sam"), { content: "x" }), 404);
-    expectError(await put(`/api/comments/${need(ids.s2, "the late reply's id")}`, tokenOf("dana"), { content: "x" }), 404);
+    await expectCommentsGone({
+      "the top comment": need(ids.s1, "the sibling comment's id"),
+      "the reply": need(ids.s2, "the late reply's id"),
+      "the reply to the reply": need(ids.s3, "the late reply-to-reply's id"),
+    });
     expectError(await del(`/api/posts/${postId}`, tokenOf("alice")), 404);
     const list = expectList(await get("/api/posts" + query({ limit: MAX_LIMIT }), tokenOf("sam")), "the post list");
     if (list.items.some((item) => item.id === postId)) fail("the deleted post is still in the list");
+    const counts = await readStats("afterPostDelete");
+    expectEqual(counts.posts, need(stats.beforePostDelete, "the stats read before the delete").posts - 1, "stats.posts");
   });
   await check("K04", "AC30", "the other posts and their comments are untouched", async () => {
-    await expectCommentCount(need(ids.post2, "the second post's id"), 1);
+    const otherPost = need(ids.post2, "the second post's id");
+    await expectCommentCount(otherPost, 1);
     await expectCommentCount(need(ids.post3, "Bob's post id"), 0);
+    const left = (await commentsOf(otherPost)).map((item) => item.id);
+    if (!sameJson(left, [need(ids.extra, "the second post's comment id")])) {
+      fail(`expected the second post to keep its one comment, found ${left.length}`);
+    }
   });
 }
 
@@ -1090,8 +1264,40 @@ async function adminChecks() {
     expectError(await get(`/api/users/${danaId}`, admin.token), 404);
     expectError(await del(`/api/users/${MISSING_ID}`, admin.token), 404);
     for (const badId of BAD_IDS) {
-      expectError(await del(`/api/users/${badId}`, admin.token), 400);
+      expectError(await del(`/api/users/${badId}`, admin.token), 400, BAD_ID_TEXT);
     }
+  });
+}
+
+// Runs last: Carol and her profile must not be there while the earlier checks
+// count this run's users and profiles.
+async function raceChecks() {
+  await check("R01", "AC24", "two POST /api/alumni sent at the same moment for one new user: exactly one 201 and one 409", async () => {
+    await signUp("carol");
+    await logIn("carol");
+    const body = { job_title: `Race ${RUN}` };
+    const both = await Promise.all([
+      post("/api/alumni", tokenOf("carol"), body),
+      post("/api/alumni", tokenOf("carol"), body),
+    ]);
+    const created = both.filter((res) => res.status === 201);
+    if (created.length > 0 && isObject(created[0].json)) ids.carolProfile = created[0].json.id;
+    const statuses = both.map((res) => res.status).sort((a, b) => a - b);
+    if (!sameJson(statuses, [201, 409])) {
+      fail(`expected one 201 and one 409, got ${statuses.join(" and ")}`);
+    }
+    expectError(both.find((res) => res.status === 409), 409);
+    expectKeys(created[0].json, ALUMNI_KEYS, "the POST /api/alumni answer");
+    expectEqual(created[0].json.user_id, idOf("carol"), "user_id");
+  });
+  await check("R02", "AC24", "after the two creates Carol has exactly one profile", async () => {
+    const profileId = need(ids.carolProfile, "Carol's profile id");
+    const mine = await get("/api/alumni/me", tokenOf("carol"));
+    expectStatus(mine, 200);
+    expectEqual(mine.json?.id, profileId, "the id /me answers (the profile the 201 answered)");
+    const list = expectList(await alumniList({ q: people.carol.name }), "the alumni list");
+    expectEqual(list.total, 1, "profiles for Carol");
+    expectEqual(list.items[0]?.id, profileId, "the listed profile");
   });
 }
 
@@ -1127,10 +1333,12 @@ async function cleanUp() {
   }
 
   // With an admin, the two students can go once their comments are gone.
+  // Carol too, but only when her profile was never created.
   if (admin.token) {
-    for (const who of ["sam", "dana"]) {
+    for (const who of ["sam", "dana", "carol"]) {
       const person = people[who];
       if (person.id === undefined || person.deleted) continue;
+      if (ids[`${who}Profile`] !== undefined) continue;
       try {
         const res = await del(`/api/users/${person.id}`, admin.token);
         if (res.status === 200 || res.status === 404) person.deleted = true;
@@ -1146,7 +1354,7 @@ async function cleanUp() {
     const person = people[who];
     if (person.id === undefined || person.deleted) continue;
     left += 1;
-    const profile = who === "alice" ? ids.aliceProfile : who === "bob" ? ids.bobProfile : undefined;
+    const profile = ids[`${who}Profile`];
     const profileNote = profile === undefined ? "" : `, alumni profile id ${profile}`;
     console.log(`  user id ${person.id}  ${person.email}  (${person.role})${profileNote}`);
   }
@@ -1224,6 +1432,7 @@ async function main() {
   // The admin login comes before the lookups: one of them needs an admin.
   await adminChecks();
   await lookupChecks();
+  await raceChecks();
   await cleanUp();
 
   return summary() > 0 ? 1 : 0;
