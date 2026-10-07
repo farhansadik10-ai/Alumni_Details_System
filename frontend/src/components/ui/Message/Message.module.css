@@ -1,0 +1,39 @@
+/* The error and success messages of system.html, "Messages and states". Tokens only. */
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-edge) solid;
+  border-radius: var(--radius);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-semibold);
+}
+
+.error {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger-soft-text);
+}
+
+.success {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success-soft-text);
+}
+
+/* As tall as one line of the words, so the icon sits beside the first line
+   when the words wrap. */
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: calc(var(--text-body) * var(--leading-body));
+}
+
+.words {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
