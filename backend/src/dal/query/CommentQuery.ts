@@ -1,51 +1,87 @@
 import pool from "../config/db";
 import { CommentDTO } from "../dto/CommentDTO";
+import { withTransaction } from "./transaction";
+
+// The one joined comment read: the comment's own columns plus its author's
+// name and photo. The "User" columns are named one by one (never u.*), so
+// `password` can never come along. Create, update and the list of a post's
+// comments all return this shape, and so does every other comment read.
+const COMMENT_READ = `
+  SELECT c.*, u.name, u.photo_url
+  FROM comment c LEFT JOIN "User" u ON u.id = c.user_id`;
 
 export class CommentQuery {
   constructor() {}
+
+  /**
+   * Inserts the comment, then returns it through the joined read.
+   *
+   * Both statements run on one transaction's client, so the re-read always
+   * finds the row: nothing else can see or delete it before the commit.
+   */
   public async createComment(comment: CommentDTO): Promise<CommentDTO> {
-    const info = await pool.query(
-      "INSERT INTO comment (user_id, posts_id,parent_id,content)VALUES ($1,$2,$3,$4) RETURNING * ",
-      [comment.user_id, comment.posts_id, comment.parent_id, comment.content],
-    );
-    return info.rows[0];
+    return withTransaction(async (client) => {
+      const inserted = await client.query(
+        `INSERT INTO comment (user_id, posts_id, parent_id, content)
+        VALUES ($1, $2, $3, $4) RETURNING id`,
+        [comment.user_id, comment.posts_id, comment.parent_id, comment.content],
+      );
+      const info = await client.query(
+        `${COMMENT_READ}
+        WHERE c.id = $1`,
+        [inserted.rows[0].id],
+      );
+      return info.rows[0];
+    });
   }
+  /** Every comment, newest first; the id breaks a tie so the order is fixed. */
   public async getAllComments(): Promise<CommentDTO[]> {
     const info = await pool.query(
-      "SELECT * FROM comment ORDER BY created_at DESC",
+      `${COMMENT_READ}
+      ORDER BY c.created_at DESC, c.id DESC`,
     );
-     const comments: CommentDTO[] = [];
-        for (const comment of info.rows) {
-            comments.push(comment);
-        }
-        return comments;
+    return info.rows;
   }
 
   public async findCommentById(id: number): Promise<CommentDTO | undefined> {
-    const info = await pool.query("SELECT * FROM comment WHERE id = $1", [id]);
+    const info = await pool.query(
+      `${COMMENT_READ}
+      WHERE c.id = $1`,
+      [id],
+    );
     return info.rows[0];
   }
 
+  /**
+   * Writes the new content, then returns the comment through the joined read.
+   * Returns `undefined` when no comment has this id.
+   */
   public async updateComment(
     comment: CommentDTO,
   ): Promise<CommentDTO | undefined> {
-    const info = await pool.query(
-      `UPDATE comment SET content=$1, updated_at=NOW()
-            WHERE id=$2 RETURNING *`,
+    const updated = await pool.query(
+      `UPDATE comment SET content = $1, updated_at = NOW()
+      WHERE id = $2 RETURNING id`,
       [comment.content, comment.id],
+    );
+    if (updated.rows.length === 0) {
+      return undefined;
+    }
+    const info = await pool.query(
+      `${COMMENT_READ}
+      WHERE c.id = $1`,
+      [updated.rows[0].id],
     );
     return info.rows[0];
   }
 
   /**
    * The comments of one post, oldest first, each with its author's name and
-   * photo. The "User" columns are named one by one, so `password` can never
-   * come along.
+   * photo.
    */
   public async listCommentsByPost(postId: number): Promise<CommentDTO[]> {
     const info = await pool.query(
-      `SELECT c.*, u.name, u.photo_url
-      FROM comment c LEFT JOIN "User" u ON u.id = c.user_id
+      `${COMMENT_READ}
       WHERE c.posts_id = $1
       ORDER BY c.created_at ASC, c.id ASC`,
       [postId],

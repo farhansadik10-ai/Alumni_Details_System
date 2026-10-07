@@ -57,6 +57,9 @@ export class AlumniQuery {
    * alumni.user_id has no UNIQUE constraint, so the check and the insert run
    * in one transaction behind a per-user lock: a second create for the same
    * user waits for the first to finish and then sees its row.
+   *
+   * The new profile is returned through the joined read, so a create answers
+   * with the same shape as every alumni read (name, email, photo_url).
    */
   public async createAlumni(alumni: AlumniDTO): Promise<AlumniDTO | undefined> {
     return withTransaction(async (client) => {
@@ -73,8 +76,8 @@ export class AlumniQuery {
         return undefined;
       }
 
-      const info = await client.query(
-        "INSERT INTO alumni (user_id, department, graduation_year, current_company, job_title, experience, bio, linkedin_url, mentorship_available, field) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *",
+      const inserted = await client.query(
+        "INSERT INTO alumni (user_id, department, graduation_year, current_company, job_title, experience, bio, linkedin_url, mentorship_available, field) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
         [
           alumni.user_id,
           alumni.department,
@@ -88,6 +91,13 @@ export class AlumniQuery {
           alumni.field,
         ],
       );
+
+      // The joined re-read runs on the transaction's own client, before the
+      // transaction ends. The row is not committed yet, so only this
+      // connection can see it; pool.query here would find nothing.
+      const info = await client.query(`${ALUMNI_READ} WHERE a.id = $1`, [
+        inserted.rows[0].id,
+      ]);
       return info.rows[0];
     });
   }
@@ -114,27 +124,30 @@ export class AlumniQuery {
     return info.rows[0];
   }
 
+  /**
+   * Writes only the fields present in `data`. Returns the updated profile
+   * through the joined read, the same shape every alumni read has, or
+   * `undefined` when no profile has this id. With nothing to write it runs no
+   * UPDATE and returns the current profile.
+   */
   public async updateAlumni(
     id: number,
     data: UpdateFields<AlumniUpdateColumn>,
   ): Promise<AlumniDTO | undefined> {
     const { assignments, values } = buildUpdateSet(data, UPDATABLE_COLUMNS);
 
-    // Nothing was sent: write nothing and return the row as it is, with the
-    // alumni columns only, the same shape the UPDATE returns.
-    // Keep this a bare alumni SELECT, not the joined read: writes return alumni columns only (gotcha G25).
     if (assignments.length === 0) {
-      const current = await pool.query(`SELECT * FROM alumni WHERE id = $1`, [
-        id,
-      ]);
-      return current.rows[0];
+      return this.findAlumniById(id);
     }
 
-    const info = await pool.query(
-      `UPDATE alumni SET ${assignments.join(", ")}, updated_at = NOW() WHERE id = $${values.length + 1} RETURNING *`,
+    const updated = await pool.query(
+      `UPDATE alumni SET ${assignments.join(", ")}, updated_at = NOW() WHERE id = $${values.length + 1} RETURNING id`,
       [...values, id],
     );
-    return info.rows[0];
+    if (updated.rows.length === 0) {
+      return undefined;
+    }
+    return this.findAlumniById(id);
   }
 
   /**
