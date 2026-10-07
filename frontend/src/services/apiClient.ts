@@ -15,6 +15,11 @@ declare module "axios" {
      * (wrong password), sign-up and log out.
      */
     skipAuthHandling?: boolean;
+    /**
+     * Set on log in and sign-up: the stored token is not sent with them (an
+     * old token must not travel with a new log in). Log out still sends it.
+     */
+    withoutToken?: boolean;
     /** Written by the client: the token this request was sent with. */
     sentToken?: string;
   }
@@ -41,7 +46,7 @@ export function configureApiClient(next: ApiClientHooks): void {
 export const apiClient = axios.create();
 
 apiClient.interceptors.request.use((config) => {
-  const token = hooks.getToken();
+  const token = config.withoutToken === true ? null : hooks.getToken();
   if (token !== null) {
     config.headers.set("Authorization", `Bearer ${token}`);
     config.sentToken = token;

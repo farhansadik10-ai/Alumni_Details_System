@@ -7,6 +7,7 @@ const LOGIN_PATH = "/api/auth/login";
 export async function logIn(body: LoginUserDTO): Promise<LoginResponse> {
   const response = await apiClient.post<LoginResponse>(LOGIN_PATH, body, {
     skipAuthHandling: true,
+    withoutToken: true,
   });
   return response.data;
 }

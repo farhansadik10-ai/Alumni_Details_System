@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import type { SignUpUserDTO } from "@alumni/shared";
 import { REMEMBERED_EMAIL_STORAGE_KEY } from "../config/storageKeys";
 import { removeStored, writeStored } from "../lib/browserStorage";
-import { readToken } from "../lib/token";
+import { isLiveSession, readToken } from "../lib/token";
 import { toApiFailure } from "../services/apiError";
 import type { ApiFailure } from "../services/apiError";
 import { logIn } from "../services/authService";
@@ -62,7 +62,9 @@ const startSessionAtom = atom(null, (_get, set, token: string) => {
 async function requestToken(email: string, password: string): Promise<TokenResult> {
   try {
     const { token } = await logIn({ email, password });
-    if (typeof token !== "string" || readToken(token) === null) {
+    // A token that is already expired on this clock would be ended at once
+    // by the guards, leaving the form busy: it counts as unreadable too.
+    if (typeof token !== "string" || !isLiveSession(readToken(token), Date.now())) {
       return { ok: false, failure: UNREADABLE_ANSWER };
     }
     return { ok: true, token };

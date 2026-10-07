@@ -1,61 +1,9 @@
+import { useEffect, useRef } from "react";
+import { clampPage, pageRange } from "../../../lib/pageRange";
 import { Button } from "../Button/Button";
 import styles from "./Pagination.module.css";
 
-// Up to this many pages, every page number is shown.
-const MAX_PAGES_SHOWN_IN_FULL = 7;
-const GAP_TEXT = "â€¦";
-
-export type PageRangeItem = number | "gap";
-
-/**
- * The page numbers to show. Up to 7 pages: all of them. More: the first, the
- * last, the current page and its two neighbours, with "gap" where pages are
- * left out. A gap never stands for one page only; that page is shown instead.
- *
- *   pageRange(1, 3)   -> [1, 2, 3]
- *   pageRange(1, 25)  -> [1, 2, "gap", 25]
- *   pageRange(4, 25)  -> [1, 2, 3, 4, 5, "gap", 25]
- *   pageRange(12, 25) -> [1, "gap", 11, 12, 13, "gap", 25]
- *
- * A page outside 1..pageCount is treated as the nearest page inside.
- * Fewer than 1 page gives [].
- */
-export function pageRange(page: number, pageCount: number): PageRangeItem[] {
-  const last = Number.isFinite(pageCount) ? Math.floor(pageCount) : 0;
-  if (last < 1) {
-    return [];
-  }
-  const current = clampPage(page, last);
-
-  if (last <= MAX_PAGES_SHOWN_IN_FULL) {
-    return Array.from({ length: last }, (_, index) => index + 1);
-  }
-
-  const shown = [1, current - 1, current, current + 1, last].filter(
-    (value, index, all) => value >= 1 && value <= last && all.indexOf(value) === index,
-  );
-
-  const items: PageRangeItem[] = [];
-  let previous = 0;
-  for (const value of shown) {
-    const leftOut = value - previous - 1;
-    if (leftOut === 1) {
-      items.push(value - 1);
-    } else if (leftOut > 1) {
-      items.push("gap");
-    }
-    items.push(value);
-    previous = value;
-  }
-  return items;
-}
-
-function clampPage(page: number, last: number): number {
-  if (!Number.isFinite(page)) {
-    return 1;
-  }
-  return Math.min(Math.max(Math.floor(page), 1), last);
-}
+const GAP_TEXT = "…";
 
 export type PaginationProps = {
   // Counted from 1.
@@ -65,6 +13,19 @@ export type PaginationProps = {
 };
 
 export function Pagination({ page, pageCount, onChange }: PaginationProps) {
+  const navRef = useRef<HTMLElement>(null);
+  const keepFocus = useRef(false);
+
+  // Next or Previous that reaches the last or first page turns itself
+  // disabled, and focus would fall to the page body. Once the new page is
+  // shown, focus goes to the current page number instead.
+  useEffect(() => {
+    if (keepFocus.current) {
+      keepFocus.current = false;
+      navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+    }
+  }, [page]);
+
   const items = pageRange(page, pageCount);
   // One page or none: there is nowhere to go, so nothing is shown.
   if (items.length <= 1) {
@@ -74,10 +35,16 @@ export function Pagination({ page, pageCount, onChange }: PaginationProps) {
   const current = clampPage(page, last);
 
   return (
-    <nav className={styles.nav} aria-label="Pages">
+    <nav ref={navRef} className={styles.nav} aria-label="Pages">
       <ul className={styles.list}>
         <li>
-          <Button disabled={current === 1} onClick={() => onChange(current - 1)}>
+          <Button
+            disabled={current === 1}
+            onClick={() => {
+              keepFocus.current = current - 1 === 1;
+              onChange(current - 1);
+            }}
+          >
             Previous
           </Button>
         </li>
@@ -102,7 +69,13 @@ export function Pagination({ page, pageCount, onChange }: PaginationProps) {
           ),
         )}
         <li>
-          <Button disabled={current === last} onClick={() => onChange(current + 1)}>
+          <Button
+            disabled={current === last}
+            onClick={() => {
+              keepFocus.current = current + 1 === last;
+              onChange(current + 1);
+            }}
+          >
             Next
           </Button>
         </li>
