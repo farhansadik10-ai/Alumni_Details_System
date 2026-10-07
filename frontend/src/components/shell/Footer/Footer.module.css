@@ -1,0 +1,12 @@
+.footer {
+  border-top: var(--border-line) solid var(--line);
+}
+
+.inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-5) var(--gutter);
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}

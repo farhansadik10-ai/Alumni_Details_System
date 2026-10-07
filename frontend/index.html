@@ -4,7 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alumni Details System</title>
+    <title>%APP_NAME%</title>
+    <!-- THEME-SCRIPT: sets the theme before the first paint (ADR-14). Keep it
+         above every stylesheet and module script. It must agree with
+         src/store/themeAtoms.ts; the key is written in by vite.config.ts. -->
+    <script>
+      (function () {
+        var theme = "light";
+        try {
+          var saved = null;
+          try {
+            saved = window.localStorage.getItem("%THEME_STORAGE_KEY%");
+          } catch (storageError) {
+            saved = null;
+          }
+          if (saved === "light" || saved === "dark") {
+            theme = saved;
+          } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            theme = "dark";
+          }
+        } catch (error) {
+          theme = "light";
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

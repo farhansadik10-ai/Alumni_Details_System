@@ -1,0 +1,114 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  border: var(--border-edge) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  cursor: pointer;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Sizes. A min-height, so a label that wraps at 200% zoom is not cut off. */
+.md {
+  min-height: var(--control-h);
+  padding: var(--space-1) var(--space-5);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.sm {
+  min-height: var(--control-h-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.lg {
+  min-height: var(--control-h-lg);
+  padding: var(--space-1) var(--space-5);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+/* Variants. A busy button keeps these colors and does not answer to hover. */
+.primary {
+  border-color: var(--accent-edge);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: var(--weight-bold);
+}
+
+.primary:hover:not(:disabled, [aria-busy="true"]) {
+  background: var(--accent-hover);
+}
+
+.secondary {
+  border-color: var(--edge);
+  background: var(--surface);
+}
+
+.secondary:hover:not(:disabled, [aria-busy="true"]) {
+  background: var(--sunken);
+}
+
+.quiet.md,
+.quiet.lg {
+  padding: var(--space-1) var(--space-3);
+}
+
+.quiet.sm {
+  padding: var(--space-1) var(--space-2);
+}
+
+.quiet:hover:not(:disabled, [aria-busy="true"]) {
+  background: var(--sunken);
+}
+
+.quiet.toneDanger {
+  color: var(--danger);
+}
+
+.quiet.toneDanger:hover:not(:disabled, [aria-busy="true"]) {
+  color: var(--danger-hover);
+}
+
+.danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-danger);
+  font-weight: var(--weight-bold);
+}
+
+.danger:hover:not(:disabled, [aria-busy="true"]) {
+  border-color: var(--danger-hover);
+  background: var(--danger-hover);
+}
+
+.button[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Disabled, as drawn in system.html. Written last so it wins over the variants. */
+.button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.primary:disabled,
+.danger:disabled {
+  border-color: var(--line);
+  background: var(--line);
+}
+
+.secondary:disabled {
+  border-color: var(--line);
+}

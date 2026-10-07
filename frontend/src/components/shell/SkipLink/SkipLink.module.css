@@ -1,0 +1,23 @@
+/*
+ * Sits above the top edge of the page until it has focus. No transition:
+ * it is there or it is not. Tokens only.
+ */
+.skip {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: var(--z-header);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}

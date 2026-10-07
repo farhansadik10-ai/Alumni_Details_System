@@ -13,7 +13,8 @@
     "dev:api": "npm run dev --workspace=@alumni/api",
     "dev:frontend": "npm run dev --workspace=@alumni/frontend",
     "dev": "npm run dev:api & npm run dev:frontend",
-    "build": "npm run build --workspace=@alumni/api && npm run build --workspace=@alumni/frontend"
+    "build": "npm run build --workspace=@alumni/api && npm run build --workspace=@alumni/frontend",
+    "check:frontend": "node scripts/frontend-style-check.mjs && npx tsx scripts/frontend-lib-check.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

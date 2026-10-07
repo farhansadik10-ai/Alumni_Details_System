@@ -45,14 +45,14 @@ shared (@alumni/shared) — TypeScript types used across workspaces
 | `backend/src/api` (`@alumni/api`) | Express app. `routes/*Routes.ts` wire URL paths to `controllers/*Controller.ts`, which call the Managers. `app.ts` mounts `/api/auth`, `/api/users`, `/api/alumni`, `/api/posts`, `/api/comments`, `/api/stats` and `/api/health`, then a 404 handler and the error middleware. | Express |
 | `backend/src/server.ts` | Process entrypoint: loads env, calls `app.listen`. | Node, `tsx` |
 | `shared` (`@alumni/shared`) | Cross-cutting types in `shared/types/*.types.ts`, consumed by workspace name. Compiled `.js`/`.d.ts` output is checked in beside the sources, but the package `main` is `index.ts`, so most imports resolve to source. | TypeScript |
-| `frontend` (`@alumni/frontend`) | React app, **being rebuilt from scratch** in `frontend/src`. What is there now is the legacy Ant Design (`antd`) app; the redesign replaces it. The new structure is decided at the architect gate, not here. No UI library: components are built in the repo on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]). | React, Vite, TypeScript, jotai |
+| `frontend` (`@alumni/frontend`) | React app, rebuilt from scratch in `frontend/src` (REQ-fs-004, part 1 of 4: foundation, theme, base components, app shell, log in and sign-up). Four one-way layers: pages and components, store, services, lib. No UI library: components are built in the repo on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]], [[architecture/adr-13-frontend-structure-css-modules-on-tokens|ADR-13]]). See [[knowledge/components/frontend-app]]. | React, Vite, TypeScript, jotai |
 
 ## Data stores
 
 | Store | Holds | Tech |
 |---|---|---|
 | PostgreSQL | Tables `"User"`, `alumni`, `posts`, `comment`. See "Database schema" below. | `pg` `Pool` in `backend/src/dal/config/db.ts` |
-| Browser `localStorage` | The login token (legacy frontend: seeds `tokenAtom` in `src/store/authAtom.ts`). | jotai |
+| Browser `localStorage` | The login token (`ua.token`), the theme choice (`ua.theme`) and an optionally remembered email (`ua.rememberedEmail`); keys in `frontend/src/config/storageKeys.ts` ([[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]]). | jotai |
 
 ## Database schema
 
@@ -120,5 +120,7 @@ What follows from it:
 - [[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]] — The About page is built last; the Privacy page and password reset are later work
 - [[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]] — Code throws typed errors; one middleware turns them into `{ error }`
 - [[architecture/adr-12-list-endpoints-answer-items-total-page-limit|ADR-12]] — List endpoints answer `{ items, total, page, limit }`
+- [[architecture/adr-13-frontend-structure-css-modules-on-tokens|ADR-13]] — Frontend structure: four layers, CSS Modules on one token file, own icons, self-hosted font
+- [[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]] — The session token and the theme choice are kept in the browser's localStorage
 
 Known backend problems are in [[knowledge/gotchas]] (G01–G42; each entry's Status row says whether it is still open).

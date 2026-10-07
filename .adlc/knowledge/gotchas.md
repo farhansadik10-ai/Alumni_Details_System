@@ -887,6 +887,9 @@ Where each old item went:
 
 **Related:** [[knowledge/gotchas#^g29|G29]], [[knowledge/gotchas#^g16|G16]].
 
+
+**Update 2026-10-07 (REQ-fs-004):** The legacy sign-up form is deleted. The new form shows "This email is already registered." under the Email field on any 409, and never reads or shows the server's own text; it matches on the status only (`SignUpPage.tsx`, `lib/validation.ts`).
+
 ---
 
 ## G35 — `checkFields` passes on only the keys that have a rule, and always says "has the wrong type" ^g35
@@ -983,6 +986,9 @@ Where each old item went:
 
 **Related:** [[knowledge/gotchas#^g25|G25]].
 
+
+**Update 2026-10-07 (REQ-fs-004):** The legacy frontend is deleted. Nothing under `frontend/src` imports `User` or `CreateUserDTO` any more, and the new frontend reads only `shared/index.ts`. The lines in `shared/types/user.types.ts` that say "kept for the legacy frontend" are now stale; removing them (and the two legacy types) is shared code and waits for the owner (review finding m18).
+
 ---
 
 ## G39 — List order and filter rules differ per endpoint ^g39
@@ -1078,3 +1084,195 @@ Where each old item went:
 **Don't:** Don't show the email on a public-facing card without asking the owner. Don't rely on "no role" meaning "cannot log in".
 
 **Related:** [[knowledge/concepts/user-join-read-shape]], [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]].
+
+---
+
+## G43 — `index.html` rewrites placeholders everywhere, and the theme rule exists twice ^g43
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `frontend/index.html`, `frontend/vite.config.ts`, `store/themeAtoms.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** The Vite plugin replaces `%APP_NAME%` and `%THEME_STORAGE_KEY%` in the whole of `index.html`, comments included. The rule that picks the theme (saved light or dark wins, else ask the system, no answer means light) is written twice: in the head script and in `themeAtoms.ts`. The head script must stay above everything else in the head.
+
+**Where:** `frontend/index.html` (head script), `vite.config.ts` (plugin), `frontend/src/store/themeAtoms.ts`.
+
+**Why it's surprising:** A placeholder named in a comment is replaced too; and the head script cannot import the store, so the rule cannot be shared. Vite adds its own module script and stylesheet at the end of the head, so a script placed by hand stays first.
+
+**Why it exists:** The page needs the theme before React starts, to avoid a flash (AC15, [[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]]).
+
+**Don't:** Don't write a `%PLACEHOLDER%` in a comment. Don't change the theme rule in one place only. Don't move the script below the stylesheet.
+
+**Related:** [[knowledge/components/frontend-app]]
+
+---
+
+## G44 — The frontend style check trips on a few innocent things ^g44
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `scripts/frontend-style-check.mjs` |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** A string such as `"#feed"` or `"#123"` reads as a hex color. A type-only import from `services/` in a component, page, route, hook or icon fails rule d. The px/em/rem rule covers `base.css` as well as module stylesheets. Rule i ignores the bare `"/"` on purpose. Comments are skipped; strings are not.
+
+**Where:** `scripts/frontend-style-check.mjs` (rules a to j); run with `npm run check:frontend`.
+
+**Why it's surprising:** It looks at text, not at meaning, so it cannot tell an in-page link from a color.
+
+**Why it exists:** No parser runs; a regular pass is enough for the rules the owner set.
+
+**Don't:** Don't weaken a rule to pass. Add a token for a size that has none; reach a type through the store; reword a string that starts with `#` and hex letters.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-004-6-a-check-that-reads-only-tracked-files]]
+
+---
+
+## G45 — A native `<dialog>`: style it on `[open]`; tokens in `::backdrop` need a 2024 browser ^g45
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `components/ui/Dialog/`, `hooks/useModalDialog.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** The dialog stays in the page while closed, so its layout (`display: flex`) must be set on `.dialog[open]` only, or it shows when closed. `var(--token)` inside `::backdrop` works only in Chrome 122, Firefox 120, Safari 17.4 and later. `onClose` must set `open` to false: the dialog does not close itself on Escape.
+
+**Where:** `Dialog.module.css:22,29`, `Dialog.tsx`, `PhoneMenu.tsx` (also a native `<dialog>`).
+
+**Why it's surprising:** A plain `display` beats the browser's `display: none` for a closed dialog. Before 2024 the backdrop inherited nothing and is clear.
+
+**Why it exists:** The browser owns focus trapping, Escape, the inert page and focus return.
+
+**Don't:** Don't put `display` on `.dialog` without `[open]`. Don't call `showModal()` on an open dialog (it throws).
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-004-4-check-focus-for-real]]
+
+---
+
+## G46 — A table turned into cards, and a fieldset, both need a line of CSS or markup ^g46
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `components/ui/Table/`, `components/ui/RadioCards/` |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** When CSS turns a `<table>` into cards with `display: block` or `grid`, some browsers stop telling a screen reader it is a table: the roles are written on the elements by hand. A cell that becomes a grid needs its content wrapped in one element, or each child lands in its own grid cell. A `<fieldset>` needs `min-width: 0`, or it cannot get narrower than its content.
+
+**Where:** `Table.tsx:27,57`, `RadioCards.module.css:3`.
+
+**Why it's surprising:** Changing `display` changes accessibility; a fieldset's default width is its content.
+
+**Why it exists:** The phone layout shows each row as a card ([[context/design-system]], Table row).
+
+**Don't:** Don't drop the explicit roles or the cell wrapper. Not proven with a real screen reader.
+
+**Related:** [[knowledge/components/frontend-app]]
+
+---
+
+## G47 — The API client: axios needs its two type parameters, and a 200 may not be the API ^g47
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `services/apiClient.ts`, `store/sessionActions.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** To add a field to axios's `AxiosRequestConfig`, repeat its exact parameters (`<D = any, P = any>` in axios 1.20) or the build fails. A log in that answers 200 with something that is not a token (Apache serving `index.html` for `/api` when its proxy is off) must count as a failure, so the token is read before it is stored. A 401 ends the session only when the request carried a token and it is still the current one. Only log out has a timeout (5 s).
+
+**Where:** `apiClient.ts:12,54`, `sessionActions.ts` (`requestToken`), `userService.ts`.
+
+**Why it's surprising:** Older axios examples show one type parameter; a 200 from a proxy looks like success.
+
+**Why it exists:** See [[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]] and [[knowledge/lessons/LESSON-REQ-fs-004-3-401-flag-token-header-timeout]].
+
+**Don't:** Don't treat any 200 from log in as a session. Don't reuse `skipAuthHandling` to mean "no header".
+
+**Related:** [[knowledge/concepts/frontend-session-flow]], G41
+
+---
+
+## G48 — Store traps: updates after `await`, StrictMode effects, other tabs, hot reload ^g48
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `store/sessionActions.ts`, `store/sessionAtoms.ts`, `store/themeAtoms.ts`, `AppShell.tsx` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** In a Jotai write atom, after an `await`, separate `set` calls each notify listeners alone: change several atoms through one inner write-only atom (log out must clear the token and set the `loggedOut` notice in one update, or the guard sees a logged-out user with no notice). A token another tab stored is adopted in memory only, never written back. An effect that must run once per state reads the state from the store inside the effect: StrictMode runs the same closure twice. A module that adds listeners when loaded removes them in `import.meta.hot.dispose`.
+
+**Where:** `sessionActions.ts:48`, `sessionAtoms.ts:33`, `AppShell.tsx:51`, `themeAtoms.ts:97`.
+
+**Why it's surprising:** Each one worked on the first try and failed only with a listener, a second tab or development mode.
+
+**Why it exists:** Found by running the store in a scratch harness with listeners (not shipped: finding m17).
+
+**Don't:** Don't rewrite these "for tidiness".
+
+**Related:** [[knowledge/concepts/frontend-session-flow]]
+
+---
+
+## G49 — Shell traps: toast order, lazy-page focus, two guards, router state ^g49
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | `App.tsx`, `AppShell.tsx`, `routes/PublicOnly.tsx`, `routes/RequireAuth.tsx` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `ToastViewport` is mounted after the routes, so the skip link stays the first Tab stop (the plan said "at the top"). react-router 7 keeps the old page until a lazy page's file arrives, so a "focus the new heading" effect runs when the real page is there. After a log in, the focus step is a sibling component inside the same `Suspense`. `RequireAuth` ends an expired session in an effect while `PublicOnly` still sees the old token for one render, so `PublicOnly` also judges expiry. `AFTER_LOG_IN_STATE` stays in `history.state` after a reload (finding n1, open).
+
+**Where:** `App.tsx:51`, `AppShell.tsx:65`, `PublicOnly.tsx:42`, `paths.ts:22`.
+
+**Why it's surprising:** Each is invisible until a screen reader user or a reload hits it.
+
+**Why it exists:** Seen in review rounds 1 and 2 ([[knowledge/lessons/LESSON-REQ-fs-004-1-router-state-survives-a-reload]]).
+
+**Don't:** Don't mount a fixed region with buttons before the skip link. Don't navigate from a page after a log in: `PublicOnly` is the only code that does.
+
+**Related:** [[knowledge/concepts/frontend-session-flow]]
+
+---
+
+## G50 — Checking a page in headless Chrome: seven ways to fool yourself ^g50
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-004 |
+| Component | tooling (review and implement phases) |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** Headless Chrome on Windows will not go narrower than about 500 px (check 360 px in an `<iframe>`). `element.focus()` shows no ring on buttons, links, checkboxes or radios (press Tab for real). An image with `loading="lazy"` neither loads nor fails until scrolled into view. A full-page screenshot over the debugging port changes the page width by the 15 px scrollbar, so measure first. A synthetic mouse press can leave the tab deaf to later key events. `--dump-dom` runs no animation frames, so a dialog's `close` event never fires. Each parallel Chrome run needs its own `--user-data-dir`.
+
+**Where:** No file: how the implement and review agents looked at the app (headless Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`, driven with plain Node over the debugging port; Node 22+ has `WebSocket`).
+
+**Why it's surprising:** Each produced a false "it is broken" or a false "it works".
+
+**Why it exists:** Chrome behaviour, not our code.
+
+**Don't:** Don't read one headless result as proof; re-run in a fresh browser before calling it a page bug.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-004-4-check-focus-for-real]], [[knowledge/lessons/LESSON-REQ-fs-004-5-find-out-what-listens-on-the-api-port]]

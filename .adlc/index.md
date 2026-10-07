@@ -19,6 +19,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ-fs-001 | Fix AlumniQuery and CommentQuery against db/schema.md | merged | `specs/_archive/2026-10/fs/REQ-fs-001-fix-alumni-comment-queries` |
 | REQ-fs-002 | Close the security and data-loss gaps in the backend | merged | `specs/_archive/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
 | REQ-fs-003 | Finish the backend API: class controllers, shared errors, alumni search, feed data | merged | `specs/_archive/2026-10/fs/REQ-fs-003-finish-backend-api` |
+| REQ-fs-004 | New frontend part 1 of 4: foundation, theme, base components, app shell, log in and sign-up | ready to merge | `specs/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth` |
 
 ## ADRs
 
@@ -36,6 +37,8 @@ _(REQ pages by id, with a one-line summary)_
 | [[architecture/adr-10-about-page-last-privacy-and-password-reset-later\|ADR-10]] | The About page is built last; the Privacy page and password reset are later work | accepted | 2026-10-06 |
 | [[architecture/adr-11-typed-errors-and-one-error-middleware\|ADR-11]] | Code throws typed errors; one middleware turns them into `{ error }` | accepted | 2026-10-06 |
 | [[architecture/adr-12-list-endpoints-answer-items-total-page-limit\|ADR-12]] | List endpoints answer `{ items, total, page, limit }` | accepted | 2026-10-06 |
+| [[architecture/adr-13-frontend-structure-css-modules-on-tokens\|ADR-13]] | Frontend structure: four layers, CSS Modules on one token file, own icons, self-hosted font | accepted | 2026-10-07 |
+| [[architecture/adr-14-session-and-theme-kept-in-the-browser\|ADR-14]] | The session token and the theme choice are kept in the browser's localStorage | accepted | 2026-10-07 |
 
 ## Concepts
 
@@ -46,6 +49,7 @@ Patterns, rules that must always hold, domain models.
 | [[knowledge/concepts/user-join-read-shape]] | Reads that need the person join `"User"` with named columns, never `password` |
 | [[knowledge/concepts/partial-update-sent-fields]] | An update writes only the fields that were sent; `null` clears; column names never come from the request |
 | [[knowledge/concepts/paged-list-query]] | A paged list answers `{ items, total, page, limit }`; one WHERE shared by a count and a page query |
+| [[knowledge/concepts/frontend-session-flow]] | One token, one way to end a session, one place that navigates after a log in |
 
 ## Components
 
@@ -55,6 +59,7 @@ One page per major module.
 |---|---|---|
 | [[knowledge/components/dal-query-classes]] | `backend/src/dal/query/`, `dal/dto/` | farhansadik10-ai |
 | [[knowledge/components/api-controllers-and-routes]] | `backend/src/api/controllers/`, `routes/`, `MiddleWare/`, `utils/` | farhansadik10-ai |
+| [[knowledge/components/frontend-app]] | `frontend/src/` (config, styles, lib, services, store, routes, hooks, components, pages) | farhansadik10-ai |
 
 ## Lessons
 

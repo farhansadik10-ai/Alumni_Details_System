@@ -1,16 +1,30 @@
+// Every address of the app, in one place. No address is written anywhere else.
 export const PATHS = {
-  LOGIN: "/",
-  SIGNUP: "/signup",
-  DASHBOARD: "/dashboard",
-  PROFILE: "/profile",
-  ALUMNI: "/alumni",
-  ALUMNI_DETAIL: "/alumni/:id",
-  POSTS: "/posts",
-  ADMIN_USERS: "/admin/users",
-  // Development only (registered in App.tsx when import.meta.env.DEV is true).
-  DEV_COMPONENTS: "/dev/components",
+  login: "/login",
+  signup: "/signup",
+  // Only sends the user on to the Dashboard.
+  home: "/",
+  dashboard: "/dashboard",
+  directory: "/directory",
+  alumniProfile: "/directory/:id",
+  feed: "/feed",
+  myProfile: "/profile",
+  users: "/users",
+  // Development build only (TASK-010 adds the route).
+  devComponents: "/dev/components",
 } as const;
 
-export function alumniDetailPath(id: number): string {
-  return `/alumni/${id}`;
+// The route pattern for an address that matches no page.
+export const ANY_OTHER_PATH = "*";
+
+// Router state PublicOnly attaches when it sends a user on after a log in, so
+// the shell can move focus to the page heading (an in-app move does that too).
+export const AFTER_LOG_IN_STATE = { afterLogIn: true } as const;
+
+export function isAfterLogIn(state: unknown): boolean {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    (state as { afterLogIn?: unknown }).afterLogIn === true
+  );
 }

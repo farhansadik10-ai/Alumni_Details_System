@@ -1,0 +1,478 @@
+/*
+ * The components page (development only). Laid out after
+ * docs/design/screens/system.html. Tokens only: no color and no size literal.
+ * Sizes drawn off the scale are snapped as architecture.md says (20 to 24,
+ * 56 to 48, 6 to 8).
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  min-width: 0;
+  padding: var(--space-7);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.sub {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Two sections side by side on a wide screen. */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-7);
+  align-items: start;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-edge) solid var(--edge);
+}
+
+.sectionTitle {
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+}
+
+/* A small labelled part of a section. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.note {
+  max-width: var(--measure);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.wrapRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.endRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
+/* ----- Color ----- */
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-8) * 2), 1fr));
+  gap: var(--space-5) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.chip {
+  height: var(--space-7);
+  border: var(--border-line) solid var(--line);
+  border-radius: var(--radius);
+}
+
+.swatchText {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  overflow-wrap: anywhere;
+}
+
+.swatchName {
+  font-weight: var(--weight-semibold);
+}
+
+.swatchToken {
+  color: var(--muted);
+}
+
+/* One class per color token, so no color is written in the page itself. */
+.ground { background: var(--ground); }
+.surface { background: var(--surface); }
+.sunken { background: var(--sunken); }
+.text { background: var(--text); }
+.muted { background: var(--muted); }
+.line { background: var(--line); }
+.edge { background: var(--edge); }
+.focus { background: var(--focus); }
+.action { background: var(--action); }
+.onAction { background: var(--on-action); }
+.accent { background: var(--accent); }
+.onAccent { background: var(--on-accent); }
+.accentHover { background: var(--accent-hover); }
+.accentEdge { background: var(--accent-edge); }
+.accentSoft { background: var(--accent-soft); }
+.accentSoftText { background: var(--accent-soft-text); }
+.danger { background: var(--danger); }
+.onDanger { background: var(--on-danger); }
+.dangerHover { background: var(--danger-hover); }
+.dangerSoft { background: var(--danger-soft); }
+.dangerSoftText { background: var(--danger-soft-text); }
+.success { background: var(--success); }
+.successSoft { background: var(--success-soft); }
+.successSoftText { background: var(--success-soft-text); }
+.band { background: var(--band); }
+.bandText { background: var(--band-text); }
+.bandMuted { background: var(--band-muted); }
+
+/* ----- Type ----- */
+
+.typeSample {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.typeDisplay {
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.typeH1 {
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.typeH2 {
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.typeH3 {
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-semibold);
+}
+
+.typeBody {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.typeSmall {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.typeCaption {
+  color: var(--muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* ----- Space and shape ----- */
+
+.spaceItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.spaceBox {
+  background: var(--text);
+}
+
+.space1 { width: var(--space-1); height: var(--space-1); }
+.space2 { width: var(--space-2); height: var(--space-2); }
+.space3 { width: var(--space-3); height: var(--space-3); }
+.space4 { width: var(--space-4); height: var(--space-4); }
+.space5 { width: var(--space-5); height: var(--space-5); }
+.space6 { width: var(--space-6); height: var(--space-6); }
+.space7 { width: var(--space-7); height: var(--space-7); }
+.space8 { width: var(--space-8); height: var(--space-8); }
+
+.shapes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.shapeBox {
+  height: var(--space-8);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.shapeEdge {
+  border: var(--border-edge) solid var(--edge);
+}
+
+.shapeLine {
+  border: var(--border-line) solid var(--line);
+}
+
+/* A picture of the focus ring, on a box that cannot take focus. */
+.shapeFocus {
+  border: var(--border-edge) solid var(--edge);
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* ----- Buttons ----- */
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: calc(var(--space-7) * 2) repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: center;
+  justify-items: start;
+}
+
+.rowName {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+.icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iconItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* ----- Form controls ----- */
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+/* ----- Cards ----- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.cardWide {
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.personName {
+  font-weight: var(--weight-bold);
+}
+
+.cardTitle {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-bold);
+}
+
+.personSub {
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.cardText {
+  margin: 0;
+}
+
+.postImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--space-8) * 2);
+  border: var(--border-line) dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--sunken);
+  color: var(--muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.cardFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: var(--border-line) solid var(--line);
+}
+
+/* ----- Table ----- */
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.quietText {
+  color: var(--muted);
+}
+
+/* ----- Messages and states ----- */
+
+.states {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.stateColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.startOnly {
+  align-self: flex-start;
+}
+
+.loadingBox {
+  padding: var(--space-5);
+  border: var(--border-edge) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+@media (max-width: 767.98px) {
+  .page {
+    gap: var(--space-6);
+    padding: var(--space-5) var(--gutter);
+  }
+
+  .title {
+    font-size: var(--text-h1);
+    line-height: var(--leading-h1);
+  }
+
+  .pair,
+  .formGrid,
+  .cards,
+  .states {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pair {
+    gap: var(--space-6);
+  }
+
+  .cardWide {
+    grid-column: auto;
+  }
+
+  /* The row name takes its own line; the three states share the next one. */
+  .buttonGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .rowName,
+  .gridCorner {
+    grid-column: 1 / -1;
+  }
+
+  .gridCorner {
+    display: none;
+  }
+}

@@ -5,8 +5,8 @@
 | Status | agreed (what the owner decided) |
 | Approved | 2026-10-06, by farhansadik10-ai (owner). Direction name: **Oak, ink band** |
 | Last audited | not audited yet (`/ux-doctor` has not run) |
-| Token source | decide in the REQ that builds it. The README fixes the mechanism (CSS variables on the root element, switched with a `data-theme` attribute, plus `color-scheme`) but not the file |
-| Component library | none. We build our own components on the tokens. Ant Design (`antd`) is legacy and is removed screen by screen; no new `antd` imports ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]) |
+| Token source | `frontend/src/styles/tokens.css` (decided in REQ-fs-004, [[architecture/adr-13-frontend-structure-css-modules-on-tokens\|ADR-13]]). CSS variables: the color tokens on `:root, [data-theme="light"]` and on `[data-theme="dark"]` (each with `color-scheme`), then the non-color tokens, a phone override block, and a block for tokens later tasks add |
+| Component library | none. Our own components in `frontend/src/components/ui/` and `components/shell/`, on the tokens. `antd` was removed in REQ-fs-004 ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]) |
 | Copied from | `docs/design/README.md` (sections 1 to 10), on 2026-10-06. Rules marked "owner, 2026-10-06" are the owner's answers to gaps in the README, given the same day |
 
 This file is the UI contract the toolkit audits against: `/ux-doctor` measures drift from it, the `ui-reviewer` design-matches against it in `/review`, and the `architecture-adversary`'s UX lens checks plans against it in `/architect`. Keep it honest — a stale rule here produces false findings everywhere.
@@ -27,9 +27,9 @@ Components use the semantic tokens only. Never copy a hex value into a component
 | Tier | Examples | Source |
 |---|---|---|
 | Palette | decide in the REQ that builds it. The README defines no raw palette tier (no names like `oak-500`); it gives semantic tokens with their values directly | — |
-| Semantic | `--ground`, `--surface`, `--text`, `--edge`, `--action`, `--accent`, `--danger`, `--band` — full list under "Color" | `docs/design/README.md` section 2; code file: decide in the REQ that builds it |
+| Semantic | `--ground`, `--surface`, `--text`, `--edge`, `--action`, `--accent`, `--danger`, `--band` — full list under "Color" | `docs/design/README.md` section 2; code file: `frontend/src/styles/tokens.css` |
 
-Token **names** exist only for color. The README gives values for type, spacing, radius, borders and control heights, but no token names for them. Names: decide in the REQ that builds it.
+The README names only the color tokens. REQ-fs-004 named the rest, all in `tokens.css`: `--font-family`, `--weight-regular/medium/semibold/bold`; `--text-band/display/h1/h2/h3/body/small/caption` each with `--leading-*` (and `--tracking-band/tight/snug`); `--space-1` to `--space-8`; `--radius`, `--border-edge`, `--border-line`, `--focus-width`, `--focus-offset`; `--control-h`, `--control-h-sm`, `--control-h-lg`, `--check-size`; `--header-h`, `--content-max`, `--gutter`, `--band-overlap`, `--bar-w`, `--bar-h`, `--nav-marker`, `--form-max`, `--dialog-max`, `--measure`; `--icon-sm/md/lg`, `--avatar-sm/md/lg`; `--z-header`, `--z-toast`. A size the scales lack gets a named token with a comment (for example `--hidden-size`, `--table-row-h`).
 
 ## Scales
 
@@ -37,7 +37,7 @@ A value outside a scale is a finding, not a variation.
 
 ### Type
 
-Font: **Hanken Grotesk**, weights 400, 500, 600, 700. Fallback: `'Segoe UI', Helvetica, sans-serif`. How the font is loaded (self-hosted or from a font service): decide in the REQ that builds it.
+Font: **Hanken Grotesk**, weights 400, 500, 600, 700. Fallback: `'Segoe UI', Helvetica, sans-serif`. Loaded from our own build with the package `@fontsource-variable/hanken-grotesk` (imported in `main.tsx`); no request to a font service.
 
 | Style | Size / line height / weight |
 |---|---|
@@ -67,11 +67,11 @@ Steps: 4, 8, 12, 16, 24, 32, 48, 64 px.
 - **Focus ring:** 3px `--focus`, offset 2px, on every control and link.
 - **Content width:** max 1200px, centered, 32px side padding (16px on phone).
 - **Header height:** 72px (60px on phone).
-- **z-index:** decide in the REQ that builds it.
+- **z-index:** `--z-header` 100 and `--z-toast` 400. Dialogs and the phone menu are native `<dialog>` elements in the browser's top layer and need no number.
 
 ### Breakpoints
 
-The switch width: decide in the REQ that builds it. What the README does give:
+The phone layout starts below **768px** (`frontend/src/config/layout.ts`, `PHONE_LAYOUT_QUERY`; CSS repeats it as `@media (max-width: 767.98px)` because variables do not work in media queries; style-check rule j pins every copy). What the README gives:
 
 - The layout must work from 360px wide.
 - The phone pictures are drawn at 390px.
@@ -128,12 +128,12 @@ Color rules:
 | Danger text button ("Delete" in tables) | text `--danger-hover` | owner, 2026-10-06 |
 | Solid danger button | `--danger-hover` | README ("Danger hover") |
 
-A hover color for table rows, a pressed (active) color for buttons, and a warning or info color: decide in the REQ that builds it.
+Decided in REQ-fs-004: a table row under the pointer takes `--sunken` (as `system.html` draws it); a pressed button looks like its hover; no warning or info color exists.
 
 ### Themes
 
 - Three choices: light, dark, system. Default is system.
-- The choice is saved in the browser. The storage key and method: decide in the REQ that builds it.
+- The choice is saved in `localStorage` under `ua.theme` ([[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]]). A short script in `frontend/index.html` applies it before the first paint, so there is no flash.
 - System mode follows `prefers-color-scheme` (from [[context/conventions]]).
 - Screens without a dark picture (sign-up, dashboard, feed, users, my profile) use the same layout with the dark tokens.
 
@@ -151,33 +151,33 @@ Checked by the owner, 2026-10-06:
 
 ## Components
 
-Before building a new component, check this list. All are drawn in `docs/design/screens/system.html` (light) and `docs/design/screens/system-dark.html` (dark). No component is built yet, so every path is "not built".
+Before building a new component, check this list. All are drawn in `docs/design/screens/system.html` (light) and `docs/design/screens/system-dark.html` (dark). Built in REQ-fs-004; the paths are in the Path column. Every component here is shown on the development-only page `/dev/components`.
 
 | Component | Path | Variants / states | Notes |
 |---|---|---|---|
-| Button, primary | not built | hover uses `--accent-hover` | `--accent` background, `--on-accent` text, 1.5px `--accent-edge` border, weight 700. One per view |
-| Button, secondary | not built | hover: `--sunken` background, border and text unchanged | `--surface` background, 1.5px `--edge` border, weight 600 |
-| Button, danger | not built | text link in tables; solid in the confirm dialog; hover uses `--danger-hover` | Red text link style in tables ("Delete"); solid `--danger` with `--on-danger` text in the confirm dialog |
-| Text input, select, textarea | not built | default, disabled, error | 1.5px `--edge` border, label above (14px, 600), help or error text below |
-| Disabled input | not built | — | `--sunken` background, `--muted` text |
-| Checkbox | not built | — | Real checkbox with a label. The mentoring one sits in an `--accent-soft` box |
-| Tag, plain | not built | — | 1px `--line` outline. For facts: department, class year, field |
-| Tag, mentoring | not built | — | `--accent-soft` background, text "Open to mentoring" |
-| Tag, role | not built | Student, Alumni, Admin | Student `--sunken`, Alumni `--accent`, Admin `--action` |
-| Avatar | not built | initials, photo | Square, `--accent-soft`, initials. Shows the photo when `photo_url` is set ([[architecture/adr-04-profile-photo-is-a-url-field\|ADR-04]]) |
-| Card | not built | — | `--surface`, 1.5px `--edge` border, 24 to 32px padding |
-| Table | not built | desktop table, phone cards | Head row `--sunken`, 1px row dividers. On phone each row becomes a card |
-| Pagination | not built | current page | Previous, page numbers, Next, "Page 1 of 25". Current page uses `--action` |
-| Dialog | not built | — | Centered card, heading, one sentence, two buttons. Used to confirm Delete |
-| Messages | not built | error, success, toast | Error `--danger-soft`, success `--success-soft`, toast `--action` |
-| Link | not built | hover: `--accent-soft-text` | Real `<a>`. Focus ring like every control |
-| States | not built | loading, empty, error | For every list. An empty state says what to do next |
-| Skeleton | not built | — | The loading state: blocks in the shape of the content, filled with `--sunken`. No spinner |
-| Theme switch | not built | light, dark, system; pressed | Three icon buttons in the header; three text buttons (Light, Dark, System) in the phone menu. The pressed one uses `--action` |
-| Header | not built | desktop, phone | See "Page pattern" |
-| Band | not built | page heading; avatar and name on profile pages | See "Page pattern" |
-| Footer | not built | before and after the About page exists | App name on the left. The "About" link on the right is not rendered until the About page exists; the About REQ adds it. No dead links |
-| Icons | not built | — | Simple line icons, 2px stroke, `currentColor`. No emoji. The icon set: decide in the REQ that builds it |
+| Button, primary | `frontend/src/components/ui/Button/` | hover uses `--accent-hover` | `--accent` background, `--on-accent` text, 1.5px `--accent-edge` border, weight 700. One per view |
+| Button, secondary | `frontend/src/components/ui/Button/` | hover: `--sunken` background, border and text unchanged | `--surface` background, 1.5px `--edge` border, weight 600 |
+| Button, danger | `frontend/src/components/ui/Button/` | text link in tables; solid in the confirm dialog; hover uses `--danger-hover` | Red text link style in tables ("Delete"); solid `--danger` with `--on-danger` text in the confirm dialog |
+| Text input, select, textarea | `frontend/src/components/ui/Field/, TextInput/, PasswordInput/, Select/, Textarea/` | default, disabled, error | 1.5px `--edge` border, label above (14px, 600), help or error text below |
+| Disabled input | `frontend/src/components/ui/TextInput/` | — | `--sunken` background, `--muted` text |
+| Checkbox | `frontend/src/components/ui/Checkbox/, RadioCards/` | — | Real checkbox with a label. The mentoring one sits in an `--accent-soft` box |
+| Tag, plain | `frontend/src/components/ui/Tag/` | — | 1px `--line` outline. For facts: department, class year, field |
+| Tag, mentoring | `frontend/src/components/ui/Tag/` | — | `--accent-soft` background, text "Open to mentoring" |
+| Tag, role | `frontend/src/components/ui/Tag/ (RoleTag)` | Student, Alumni, Admin | Student `--sunken`, Alumni `--accent`, Admin `--action` |
+| Avatar | `frontend/src/components/ui/Avatar/` | initials, photo | Square, `--accent-soft`, initials. Shows the photo when `photo_url` is set ([[architecture/adr-04-profile-photo-is-a-url-field\|ADR-04]]) |
+| Card | `frontend/src/components/ui/Card/` | — | `--surface`, 1.5px `--edge` border, 24 to 32px padding |
+| Table | `frontend/src/components/ui/Table/` | desktop table, phone cards | Head row `--sunken`, 1px row dividers. On phone each row becomes a card |
+| Pagination | `frontend/src/components/ui/Pagination/` | current page | Previous, page numbers, Next, "Page 1 of 25". Current page uses `--action` |
+| Dialog | `frontend/src/components/ui/Dialog/ (ConfirmDialog)` | — | Centered card, heading, one sentence, two buttons. Used to confirm Delete |
+| Messages | `frontend/src/components/ui/Message/, Toast/` | error, success, toast | Error `--danger-soft`, success `--success-soft`, toast `--action` |
+| Link | `frontend/src/components/ui/Link/` | hover: `--accent-soft-text` | Real `<a>`. Focus ring like every control |
+| States | `frontend/src/components/ui/EmptyState/, ErrorState/` | loading, empty, error | For every list. An empty state says what to do next |
+| Skeleton | `frontend/src/components/ui/Skeleton/` | — | The loading state: blocks in the shape of the content, filled with `--sunken`. No spinner |
+| Theme switch | `frontend/src/components/shell/ThemeSwitch/` | light, dark, system; pressed | Three icon buttons in the header; three text buttons (Light, Dark, System) in the phone menu. The pressed one uses `--action` |
+| Header | `frontend/src/components/shell/Header/, PhoneMenu/` | desktop, phone | See "Page pattern" |
+| Band | `frontend/src/components/shell/Band/, PageLayout/` | page heading; avatar and name on profile pages | See "Page pattern" |
+| Footer | `frontend/src/components/shell/Footer/` | before and after the About page exists | App name on the left. The "About" link on the right is not rendered until the About page exists; the About REQ adds it. No dead links |
+| Icons | `frontend/src/icons/` | — | Simple line icons, 2px stroke, `currentColor`. No emoji. Drawn in the repo as small React components; no icon package |
 
 ## Patterns
 
@@ -251,7 +251,7 @@ Places we deliberately break our own rules, each with a reason and scope. If it'
 
 | Where | Diverges how | Why | Since |
 |---|---|---|---|
-| (none) | | | |
+| Sizes in the pictures that are off the README scales (15, 17, 19, 64px text; 6, 10, 14, 20px gaps; 40px theme buttons; phone bar 48×6) | Built at the nearest README step; the header user block is a link without a chevron and the select is a real `<select>` | The README wins over the pictures; approved by the owner at the REQ-fs-004 design gate | 2026-10-07 |
 
 ---
 
@@ -277,13 +277,13 @@ Places we deliberately break our own rules, each with a reason and scope. If it'
 ### Theming / brands
 
 - White-label: no university logo. The app name is text from one constant (a single exported constant in one config file); it is never hard-coded in components ([[architecture/adr-09-white-label-app-name-from-one-constant|ADR-09]]).
-- One contact email for the alumni office, a constant in the same config file as the app name. Used on the log-in page and the About page. Its value: decide in the REQ that builds it.
+- One contact email for the alumni office, a constant in the same config file as the app name. Used on the log-in page and the About page. Its value is the placeholder `alumni-office@example.com` in `frontend/src/config/app.ts`; the owner replaces it.
 - Two token sets (light, dark) under one set of names. Components never branch on the theme; they read the tokens.
 - Whether a buyer may change the tokens (their own accent color, for example): decide in the REQ that builds it.
 
 ### How the system grows
 
-Decide in the REQ that builds it.
+A new component goes in `frontend/src/components/ui/<Name>/` (a `.tsx` and a `.module.css`, no barrel file), reads tokens only, and is added to `/dev/components`. Run `npm run check:frontend` and `npm run build`. Add the pattern to `docs/frontend-patterns.md`.
 
 ## Related
 

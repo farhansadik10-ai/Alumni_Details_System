@@ -1,69 +1,76 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AppLayout from "./components/layout/AppLayout";
-import { ROLES } from "./constants/roles";
-import UserManagementPage from "./pages/admin/UserManagementPage";
-import AlumniDetailPage from "./pages/alumni/AlumniDetailPage";
-import AlumniListPage from "./pages/alumni/AlumniListPage";
-import LoginPage from "./pages/auth/LoginPage";
-import SignUpPage from "./pages/auth/SignUpPage";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import NotFoundPage from "./pages/errors/NotFoundPage";
-import PostsFeedPage from "./pages/posts/PostsFeedPage";
-import ProfilePage from "./pages/profile/ProfilePage";
-import { PATHS } from "./routes/paths";
-import RequireAuth from "./routes/RequireAuth";
-import RequireRole from "./routes/RequireRole";
+import { Suspense, lazy } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { LOADING_TEXT } from "./config/text";
+import { AppShell } from "./components/shell/AppShell/AppShell";
+import { ToastViewport } from "./components/ui/Toast/ToastViewport";
+import { ANY_OTHER_PATH, PATHS } from "./routes/paths";
+import { PublicOnly } from "./routes/PublicOnly";
+import { RequireAdmin } from "./routes/RequireAdmin";
+import { RequireAuth } from "./routes/RequireAuth";
 
-// Development only: import.meta.env.DEV is false in production builds, so this page is left out of the bundle.
-const ComponentPreviewPage = import.meta.env.DEV
-  ? lazy(() => import("./pages/dev/ComponentPreviewPage"))
+// Every page is its own file in the build and is fetched when first shown (AC6).
+// NoAccessPage is loaded the same way by RequireAdmin.
+const LoginPage = lazy(() => import("./pages/LoginPage/LoginPage"));
+const SignUpPage = lazy(() => import("./pages/SignUpPage/SignUpPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage/DashboardPage"));
+const DirectoryPage = lazy(() => import("./pages/DirectoryPage/DirectoryPage"));
+const AlumniProfilePage = lazy(() => import("./pages/AlumniProfilePage/AlumniProfilePage"));
+const FeedPage = lazy(() => import("./pages/FeedPage/FeedPage"));
+const MyProfilePage = lazy(() => import("./pages/MyProfilePage/MyProfilePage"));
+const UsersPage = lazy(() => import("./pages/UsersPage/UsersPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
+
+// Development only. In a production build the condition is false at build
+// time, so the import is dropped and the page file is not in the bundle (AC31).
+const ComponentsPage = import.meta.env.DEV
+  ? lazy(() => import("./pages/dev/ComponentsPage/ComponentsPage"))
   : null;
 
-function App() {
+// The route table. The three guards do all the sending-on (architecture.md,
+// "Routes"): after a log in or a log out no page navigates, with one
+// exception: SignUpPage sends the user to log in when the account was created
+// but the log in that follows failed. PublicOnly is the only code that
+// navigates after a successful log in.
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path={PATHS.LOGIN} element={<LoginPage />} />
-        <Route path={PATHS.SIGNUP} element={<SignUpPage />} />
-
-        {/* Logged-in screens: RequireAuth sends everyone else to the login page. */}
-        <Route
-          element={
-            <RequireAuth>
-              <AppLayout />
-            </RequireAuth>
-          }
-        >
-          <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
-          <Route path={PATHS.POSTS} element={<PostsFeedPage />} />
-          <Route path={PATHS.ALUMNI} element={<AlumniListPage />} />
-          <Route path={PATHS.ALUMNI_DETAIL} element={<AlumniDetailPage />} />
-          <Route path={PATHS.PROFILE} element={<ProfilePage />} />
-          <Route
-            path={PATHS.ADMIN_USERS}
-            element={
-              <RequireRole roles={[ROLES.ADMIN]}>
-                <UserManagementPage />
-              </RequireRole>
-            }
-          />
-          <Route path="*" element={<NotFoundPage />} />
+        <Route element={<PublicOnly />}>
+          <Route path={PATHS.login} element={<LoginPage />} />
+          <Route path={PATHS.signup} element={<SignUpPage />} />
         </Route>
 
-        {ComponentPreviewPage && (
+        {/* Outside the guards and the shell: it needs no session. */}
+        {ComponentsPage !== null ? (
           <Route
-            path={PATHS.DEV_COMPONENTS}
+            path={PATHS.devComponents}
             element={
-              <Suspense fallback={null}>
-                <ComponentPreviewPage />
+              <Suspense fallback={<p className="visuallyHidden">{LOADING_TEXT}</p>}>
+                <ComponentsPage />
               </Suspense>
             }
           />
-        )}
+        ) : null}
+
+        <Route element={<RequireAuth />}>
+          <Route element={<AppShell />}>
+            <Route path={PATHS.home} element={<Navigate to={PATHS.dashboard} replace />} />
+            <Route path={PATHS.dashboard} element={<DashboardPage />} />
+            <Route path={PATHS.directory} element={<DirectoryPage />} />
+            <Route path={PATHS.alumniProfile} element={<AlumniProfilePage />} />
+            <Route path={PATHS.feed} element={<FeedPage />} />
+            <Route path={PATHS.myProfile} element={<MyProfilePage />} />
+            <Route element={<RequireAdmin />}>
+              <Route path={PATHS.users} element={<UsersPage />} />
+            </Route>
+            <Route path={ANY_OTHER_PATH} element={<NotFoundPage />} />
+          </Route>
+        </Route>
       </Routes>
+
+      {/* After the pages in the document, so the skip link stays the first
+          stop for the keyboard. It is fixed to the corner of the screen. */}
+      <ToastViewport />
     </BrowserRouter>
   );
 }
-
-export default App;

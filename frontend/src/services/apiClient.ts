@@ -1,52 +1,70 @@
 import axios from "axios";
-import { PATHS } from "../routes/paths";
-import { TOKEN_STORAGE_KEY } from "../store/authAtom";
-import type { ApiErrorBody } from "../types/api";
+
+// The one API client. Paths are relative (/api/...): the Vite dev server and
+// Apache forward them to the backend.
+//
+// This file knows nothing about the store. store/wireApi.ts hands it two
+// functions at start-up: how to read the token, and what to do on a 401.
 
 declare module "axios" {
-  interface AxiosRequestConfig {
-    // Set on requests whose 401 means "wrong credentials", not "session expired"
-    // (the login call), so the caller handles the error itself.
-    skipAuthRedirect?: boolean;
+  // The type parameters must repeat the ones axios declares.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  interface AxiosRequestConfig<D = any, P = any> {
+    /**
+     * Set on calls where a 401 is not "your session has ended": log in
+     * (wrong password), sign-up and log out.
+     */
+    skipAuthHandling?: boolean;
+    /**
+     * Set on log in and sign-up: the stored token is not sent with them (an
+     * old token must not travel with a new log in). Log out still sends it.
+     */
+    withoutToken?: boolean;
+    /** Written by the client: the token this request was sent with. */
+    sentToken?: string;
   }
 }
 
-// Relative /api paths: the Vite dev proxy forwards them in development, Apache in production.
-const apiClient = axios.create();
+export interface ApiClientHooks {
+  /** The current login token, or null when nobody is logged in. */
+  getToken: () => string | null;
+  /** Called when the server refuses the current token. */
+  onUnauthorized: () => void;
+}
+
+const UNAUTHORIZED_STATUS = 401;
+
+let hooks: ApiClientHooks = {
+  getToken: () => null,
+  onUnauthorized: () => undefined,
+};
+
+export function configureApiClient(next: ApiClientHooks): void {
+  hooks = next;
+}
+
+export const apiClient = axios.create();
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (token && !config.skipAuthRedirect) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const token = config.withoutToken === true ? null : hooks.getToken();
+  if (token !== null) {
+    config.headers.set("Authorization", `Bearer ${token}`);
+    config.sentToken = token;
   }
   return config;
 });
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: unknown) => {
-    if (
-      axios.isAxiosError(error) &&
-      error.response?.status === 401 &&
-      !error.config?.skipAuthRedirect
-    ) {
-      // Token missing, invalid or expired: drop it and start a fresh session at the login page.
-      // A full page load also resets the Jotai atoms, which are seeded from localStorage.
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      if (window.location.pathname !== PATHS.LOGIN) {
-        window.location.assign(PATHS.LOGIN);
-      }
-    }
-    return Promise.reject(error);
+apiClient.interceptors.response.use(undefined, (error: unknown) => {
+  if (
+    axios.isAxiosError(error) &&
+    error.response?.status === UNAUTHORIZED_STATUS &&
+    error.config !== undefined &&
+    error.config.skipAuthHandling !== true &&
+    error.config.sentToken !== undefined &&
+    // An answer to an older token says nothing about the one in use now.
+    error.config.sentToken === hooks.getToken()
+  ) {
+    hooks.onUnauthorized();
   }
-);
-
-export function getErrorMessage(error: unknown, fallback = "Something went wrong"): string {
-  if (axios.isAxiosError<ApiErrorBody>(error)) {
-    return error.response?.data?.message || error.response?.data?.error || fallback;
-  }
-  if (error instanceof Error && error.message) return error.message;
-  return fallback;
-}
-
-export default apiClient;
+  return Promise.reject(error);
+});
