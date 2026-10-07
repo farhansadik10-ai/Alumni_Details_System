@@ -229,3 +229,125 @@
 **Claim:** To test an expired or refused session by hand, edit the stored token in the browser console (move `exp` back, or spoil the signature) instead of waiting an hour; only "expires while the page is open" needs the real wait.
 **Saw it in:** `.adlc/specs/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth/manual-checklist.md:215` (steps 49 to 51)
 **Context:** Any change to the payload breaks the signature, so a hand-made token always gets a 401 on the first API call; it cannot stand in for a live session.
+
+## CAND-047 [review-arch]
+**Claim:** Put a rule that several guards must agree on (session is live) in one lib function, not in each guard.
+**Saw it in:** `frontend/src/routes/RequireAuth.tsx:23` (also PublicOnly.tsx:42, wireApi.ts:16)
+**Context:** Three copies of the same expiry check; drift gives redirect loops.
+
+## CAND-048 [review-arch]
+**Claim:** A literal that CSS cannot take from a token (media query width) needs one guard covering every language that repeats it, not only CSS.
+**Saw it in:** `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx:33`
+**Context:** Style check pins the CSS breakpoint but not the TSX copy.
+
+## CAND-QUAL-001 [review-qual]
+**Claim:** Put the tricky native-dialog logic in one hook; do not copy it between dialog-like components.
+**Saw it in:** `frontend/src/components/ui/Dialog/Dialog.tsx` and `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx`
+**Context:** About 60 identical lines (showModal guard, held-back Escape, layout-effect close) in two files.
+
+## CAND-QUAL-002 [review-qual]
+**Claim:** Keep pure logic that guards security or has edge cases in `lib/` so the no-test-runner check script can reach it.
+**Saw it in:** `frontend/src/routes/PublicOnly.tsx:13` (`readReturnAddress`), `frontend/src/components/ui/Pagination/Pagination.tsx:23`
+**Context:** The check script imports only `lib/`, so logic placed in routes or components is unchecked.
+
+## CAND-QUAL-003 [review-qual]
+**Claim:** Wire check scripts into root npm scripts, or the next REQ will not run them.
+**Saw it in:** `package.json:12-17`
+**Context:** `frontend-style-check.mjs` and `frontend-lib-check.ts` exist but only as commands in prose.
+
+## CAND-QUAL-004 [review-qual]
+**Claim:** Write one shared "is the session live" helper; two guards judging expiry separately can loop.
+**Saw it in:** `frontend/src/routes/PublicOnly.tsx:42`, `frontend/src/routes/RequireAuth.tsx:23`, `frontend/src/store/wireApi.ts:16`
+**Context:** Three copies of the same expiry test, with a comment saying two must agree.
+
+## CAND-QUAL-005 [review-qual]
+**Claim:** Add a style-check rule for path and storage-key literals outside their one config file.
+**Saw it in:** `scripts/frontend-style-check.mjs:11-18`
+**Context:** Rules cover colors, sizes, imports and app name, but not the "no magic strings" rule for addresses and keys.
+
+## CAND-049 [review-corr]
+**Claim:** When a page relies on a guard to leave after success, reset its busy state anyway or make the action refuse results the guard will refuse.
+**Saw it in:** `frontend/src/pages/LoginPage/LoginPage.tsx:4701` (packet)
+**Context:** A token already expired on the browser clock keeps PublicOnly on the login page with the button busy forever.
+
+## CAND-050 [review-corr]
+**Claim:** Put a timeout on every call whose failure path is the only way out (log out).
+**Saw it in:** `frontend/src/services/userService.ts:5556` (packet)
+**Context:** axios has no default timeout; a hung server never reaches the catch that logs the user out.
+
+## CAND-051 [review-corr]
+**Claim:** A flag that skips 401 handling is not a flag that skips the Authorization header; name and implement each separately.
+**Saw it in:** `frontend/src/services/apiClient.ts:5443` (packet)
+**Context:** `skipAuthHandling` replaced `skipAuthRedirect` but login and sign-up now send any stored token.
+
+## CAND-047 [review-reflect]
+**Claim:** A REQ that deletes a whole old module must grep the vault and shared code for "legacy" and "kept for" in the same REQ, and close each line it finds.
+**Saw it in:** `shared/types/user.types.ts:1` (also G34, G38, ADR-07)
+**Context:** The legacy antd frontend was deleted; four places still say it needs `User` / `CreateUserDTO` or that antd stays installed.
+
+## CAND-048 [review-reflect]
+**Claim:** When a second page needs the same message or limit as the first, move it to one shared file at that moment, not "when the third form comes".
+**Saw it in:** `frontend/src/pages/SignUpPage/SignUpPage.tsx:46,54` (copy of `LoginPage.tsx:39,47`)
+**Context:** Documented as an open point instead of fixed; same shape as LESSON-REQ-fs-002-3 (third REQ in a row).
+
+## CAND-049 [review-reflect]
+**Claim:** A patterns doc that tells the reader to "check each path exists" needs a script that does it; run one over the doc before the gate.
+**Saw it in:** `docs/frontend-patterns.md:562`
+**Context:** Every path in the doc was correct this time, but only because the writer checked by hand; nothing re-checks it after parts 2 to 4 edit it.
+
+## CAND-UI-1 [ui-review]
+**Claim:** A control that disables itself on activation (Pagination Next/Previous) drops keyboard focus; use aria-disabled or move focus, as `Button` already does for busy.
+**Saw it in:** `frontend/src/components/ui/Pagination/Pagination.tsx:105`
+**Context:** Focus on Next, activate to the last page: `document.activeElement` becomes BODY. Parts 2 and 4 reuse Pagination.
+
+## CAND-UI-2 [ui-review]
+**Claim:** A toggle button should either keep one name and use aria-pressed, or change its name and drop aria-pressed; not both.
+**Saw it in:** `frontend/src/components/ui/PasswordInput/PasswordInput.tsx:56`
+**Context:** Screen readers get "Hide password, toggle button, pressed". Same check applies to ThemeSwitch if it ever renames.
+
+## CAND-UI-3 [ui-review]
+**Claim:** The "wrap as a safety net" header hides a real layout at 768 to 850px; check the widths just above the phone breakpoint, not only 360 and 1280.
+**Saw it in:** `frontend/src/components/shell/Header/Header.module.css:12`
+**Context:** Header is 145px high at 768 and 800 with a short user name; 200% zoom of a 1536px laptop lands there.
+
+## CAND-IMPL-A1 [implement-task]
+**Claim:** To act once a lazy page is on screen, render a sibling effect component inside the same Suspense; its effect runs only after the boundary resolves.
+**Saw it in:** `frontend/src/components/shell/AppShell/AppShell.tsx` (FocusHeading)
+**Context:** Focusing the h1 at shell mount would hit the loading fallback, not the page.
+
+## CAND-IMPL-B1 [implement-task]
+**Claim:** Blank string contents one-for-one (also after a backslash) when a check maps a position in blanked text back to the file.
+**Saw it in:** `scripts/frontend-style-check.mjs` (`openingTagAttributes`)
+**Context:** The old version skipped an escaped character without output, so the offsets drifted; rule f's role check needs exact offsets.
+
+## CAND-IMPL-B2 [implement-task]
+**Claim:** A shared hook keeps one effect order; a caller that also needs the latest props keeps its own small ref instead of exporting the hook's.
+**Saw it in:** `frontend/src/hooks/useModalDialog.ts`, `components/shell/PhoneMenu/PhoneMenu.tsx`
+**Context:** PhoneMenu's route-change effect must read the newest `open` and `onClose` without re-running when they change.
+
+- (architecture-reviewer, round 2) When fixes add files to a layer-ruled folder (config/, lib/, hooks/), update the architecture folder list at wrap-up; it is the placement contract for the next part.
+- (architecture-reviewer, round 2) A per-call request flag (`withoutToken`, `skipAuthHandling`) read by the API client itself keeps the client store-free; prefer it over new injected hooks.
+
+- (reflector, round 2) When a fix removes a duplication or adds a check rule, grep the docs for the old claim ("known duplication", "eight rules", case counts): the prose is the last copy left (LESSON-REQ-fs-002-3, third sighting).
+- (quality-reviewer, round 2) A comment that names a check rule by letter goes stale when rules are added; name the rule by what it checks, or grep for "rule " after adding one.
+- (quality-reviewer, round 2) A TypeScript type predicate (`x is T`) also narrows the false branch; use it only when "false" really means "not T".
+
+## CAND-R2A [review-corr]
+**Claim:** Router state outlives the navigation (it is kept in history.state across reloads); never use it as a one-shot signal without clearing it.
+**Saw it in:** `frontend/src/routes/paths.ts:22`
+**Context:** AFTER_LOG_IN_STATE focus flag is read at AppShell mount and survives a reload.
+
+## CAND-R2B [review-corr]
+**Claim:** A "do this on the next change" ref flag must be tied to the expected target value, not just set and cleared by the effect.
+**Saw it in:** `frontend/src/components/ui/Pagination/Pagination.tsx:17`
+**Context:** keepFocus stays true if the parent never changes the page.
+
+## CAND-R2-UI1 [ui-review]
+**Claim:** Router state that triggers a one-time action (focus the heading) outlives a reload; clear it after use or the action repeats.
+**Saw it in:** `frontend/src/components/shell/AppShell/AppShell.tsx:68`
+**Context:** history.state keeps `afterLogIn` on reload, so focus jumps to the h1 again.
+
+## CAND-R2-UI2 [ui-review]
+**Claim:** A mock API added only through Vite `configureServer` does not answer under `vite preview`; also set `configurePreviewServer`.
+**Saw it in:** scratchpad `vite.mock.config.mjs` (not in repo)
+**Context:** the first preview run showed false "Something went wrong" errors.

@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] verify-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | findings: C0/M0/m12 open after round 2 (16 fixed in round 1: both majors); 8 left for the owner (m2, m5, m13, m15, m16, m17, m18, t3), 7 small new ones carried to wrap-up (n1 to n5, t5, t6)
+## [2026-10-07] verify-round | REQ-fs-004-frontend-foundation-shell-auth | round 2: all five reviewers re-ran on sonnet; the 16 fixes hold; 7 new small findings
+## [2026-10-07] verified | REQ-fs-004-frontend-foundation-shell-auth | build, style check (10 rules) and library check (108 of 108) pass; UI seen in headless Chrome on a mock API (dev and production build); nothing sent to port 3000; real backend, real screen reader and Firefox/Safari left to the owner's checklist
+
 ## [2026-10-07] implement-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 11 tasks done; build, style check and library check (72 cases) pass; owner checked log in, sign-up, theme, shell and phone menu in a browser; 11 decide items open in check-notes.md
 
 ## [2026-10-07] architect-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 11 tasks in 7 tiers; stress-test 0 critical, 1 major, 3 minor (all fixed); owner approved the legacy delete list and snapping picture sizes to the README scale
