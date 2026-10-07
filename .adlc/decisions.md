@@ -16,10 +16,13 @@ Catalog of all ADRs (architecture decision records). Updated by `/wrapup` when a
 | [[architecture/adr-10-about-page-last-privacy-and-password-reset-later\|ADR-10]] | The About page is built last; the Privacy page and password reset are later work | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-11-typed-errors-and-one-error-middleware\|ADR-11]] | Code throws typed errors; one middleware turns them into `{ error }` | accepted | 2026-10-06 | (none) | (none) |
 | [[architecture/adr-12-list-endpoints-answer-items-total-page-limit\|ADR-12]] | List endpoints answer `{ items, total, page, limit }` | accepted | 2026-10-06 | (none) | (none) |
+| [[architecture/adr-13-frontend-structure-css-modules-on-tokens\|ADR-13]] | Frontend structure: four layers, CSS Modules on one token file, our own icons, a self-hosted font | accepted | 2026-10-07 | (none) | (none) |
+| [[architecture/adr-14-session-and-theme-kept-in-the-browser\|ADR-14]] | The session token and the theme choice are kept in the browser's localStorage | accepted | 2026-10-07 | (none) | (none) |
 
 ADR-01 to ADR-06 are the owner's answers to questions Q2 to Q7 of the retired AI-DLC plan, carried over on 2026-10-05. Q1 (the Ant Design navy theme and Inter font) was dropped with the redesign and has no ADR.
 
 ADR-07 to ADR-10 record the design approved by the owner on 2026-10-06 (`docs/design/README.md`).
+ADR-13 and ADR-14 are the frontend foundation decisions of REQ-fs-004, accepted by the owner on 2026-10-07.
 
 ## Status legend
 

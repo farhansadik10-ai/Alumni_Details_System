@@ -17,6 +17,15 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] architect-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 11 tasks in 7 tiers; stress-test 0 critical, 1 major, 3 minor (all fixed); owner approved the legacy delete list and snapping picture sizes to the README scale
+## [2026-10-07] adr-accepted | ADR-14 the session token and the theme choice are kept in the browser's localStorage
+## [2026-10-07] adr-accepted | ADR-13 frontend structure: four layers, CSS Modules on one token file, own icons, self-hosted font
+## [2026-10-07] component | frontend-app — stub created
+
+## [2026-10-07] work-path-set | REQ-fs-004-frontend-foundation-shell-auth | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-004-frontend-foundation-shell-auth, off redesign)
+
+## [2026-10-07] spec-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 65 criteria in 7 parts (roadmap F1 to F5); owner chose: remove all legacy frontend code now, sign-up logs the user in, contact email is a placeholder
+
 ## [2026-10-07] req-archived | REQ-fs-003-finish-backend-api
 ## [2026-10-07] req-merged | REQ-fs-003-finish-backend-api | merge commit ce5cb8ff on redesign
 
