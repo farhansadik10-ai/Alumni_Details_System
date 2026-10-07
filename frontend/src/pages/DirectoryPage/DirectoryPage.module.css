@@ -1,0 +1,35 @@
+/*
+ * The results of the directory (directory.html, phone-directory.html):
+ * the count line, the cards and the pages. Tokens only.
+ */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.count {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+/* As many card columns as fit at 320px or more; one column on a narrow
+   screen or at 200% zoom, never wider than the page (as drawn). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(calc(var(--space-8) * 5), 100%), 1fr));
+  gap: var(--space-5);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The card fills its row, so the cards of one row are the same height. */
+.item {
+  display: grid;
+  min-width: 0;
+}

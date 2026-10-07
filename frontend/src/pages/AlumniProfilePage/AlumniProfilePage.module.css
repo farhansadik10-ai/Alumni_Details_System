@@ -1,0 +1,74 @@
+/*
+ * The content of the alumni profile (profile.html). Tokens only.
+ * About is the wide column, Details the narrow one, as drawn; one column on a
+ * phone. minmax(0, ...) lets a column be narrower than a long unbroken word,
+ * so the word wraps instead of widening the page (AC20).
+ */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.cardHeading {
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+}
+
+/* Line breaks the person typed are kept; the text is never read as HTML. */
+.bio {
+  max-width: var(--measure);
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.details {
+  margin: 0;
+  border-top: var(--border-edge) solid var(--edge);
+}
+
+/* Label on the left, value on the right; the value wraps under a long word. */
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-line) solid var(--line);
+}
+
+.label {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+.value {
+  min-width: 0;
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767.98px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+}
