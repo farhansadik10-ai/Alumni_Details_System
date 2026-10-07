@@ -16,8 +16,8 @@ export type {
   UpdateCommentDTO,
 } from "./types/comment.types";
 export type { Paged, AlumniFilters, Stats } from "./types/list.types";
-// The legacy `User` (it has `password`) and `CreateUserDTO` are left out on
-// purpose: the legacy frontend reaches them by file path.
+// `User` and `CreateUserDTO` are left out on purpose: both carry `password`.
+// New code uses `PublicUser`, `SignUpUserDTO` and `UpdateUserDTO`.
 export type {
   SignUpUserDTO,
   UpdateUserDTO,

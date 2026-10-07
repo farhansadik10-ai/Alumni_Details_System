@@ -1,75 +1,39 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web app for the alumni system: React, TypeScript and Vite, with Jotai for state, React Router for pages and CSS Modules on our own design tokens (no UI library).
 
-Currently, two official plugins are available:
+## Run it
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Run every command from the repo root, not from this folder. Run `npm install` once first.
 
-## React Compiler
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the API and the frontend dev servers together |
+| `npm run dev:frontend` | Starts only the frontend dev server (Vite) |
+| `npm run build` | Builds the API, then the frontend (the frontend build runs `tsc -b`, so a type error fails it) |
+| `npm run check:frontend` | Runs the style check and the library check in `scripts/` |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+In development, Vite sends every `/api` request to the API at `http://localhost:3000` (see `vite.config.ts`). If requests fail, check that the API dev server is running.
 
-## Expanding the ESLint configuration
+## Folders under `src/`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Folder | What it holds |
+|---|---|
+| `config/` | Constants: the app name, layout breakpoints, storage keys and every word the pages show |
+| `lib/` | Small helpers with no React in them |
+| `services/` | The one API client and the calls to the API; all requests use relative `/api` paths |
+| `store/` | Jotai atoms and the actions that change them |
+| `hooks/` | Shared React hooks |
+| `routes/` | Every address in one object, and the route guards |
+| `icons/` | The icon components |
+| `styles/` | The design tokens (`tokens.css`) and the base styles |
+| `components/ui/` | The base components every page builds on |
+| `components/shell/` | The app shell: header, navigation, page frame |
+| `components/auth/` | Parts of the log in and sign-up pages |
+| `components/alumni/` | Parts of the alumni directory |
+| `components/profile/` | Parts of the alumni profile and My profile pages |
+| `pages/` | One folder per page |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## How the code is written
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+The patterns (layers, tokens, store, API client, failure handling, routes) are in [`docs/frontend-patterns.md`](../docs/frontend-patterns.md). Read it before adding a page or a component.
