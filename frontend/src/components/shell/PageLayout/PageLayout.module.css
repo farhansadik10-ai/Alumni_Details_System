@@ -1,0 +1,46 @@
+/* The content column of a shell page (directory.html, <main>). Tokens only. */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter) var(--space-8);
+}
+
+/* The first card overlaps the band. */
+.content > :first-child {
+  position: relative;
+  margin-top: calc(-1 * var(--band-overlap));
+}
+
+/* PageNote: the words of a card that says one thing about the page. */
+.note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.noteTitle {
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+}
+
+.noteText {
+  margin: 0;
+  color: var(--muted);
+}
+
+.noteExtra {
+  padding-top: var(--space-2);
+}
+
+@media (max-width: 767.98px) {
+  .content {
+    gap: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+}

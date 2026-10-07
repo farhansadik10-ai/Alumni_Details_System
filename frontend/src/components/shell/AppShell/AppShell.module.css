@@ -1,0 +1,17 @@
+/* Header at the top, footer at the bottom, the page takes what is left. */
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex-grow: 1;
+}
+
+/* <main> takes focus from the skip link. It is as wide as the screen, so its
+   ring is drawn inside its edge, where it can be seen. */
+.main:focus-visible {
+  outline-offset: calc(-1 * var(--focus-width));
+}

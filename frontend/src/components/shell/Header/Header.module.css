@@ -1,0 +1,142 @@
+/*
+ * The header of directory.html (wide) and phone-directory.html (phone).
+ * Tokens only. --header-h and --gutter change on a phone through tokens.css.
+ */
+.header {
+  border-bottom: var(--border-edge) solid var(--edge);
+  background: var(--surface);
+}
+
+/* Wraps to a second row when the links and the user do not fit side by side. */
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-5);
+  max-width: var(--content-max);
+  min-height: var(--header-h);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-7);
+  min-width: 0;
+}
+
+.appName {
+  color: var(--text);
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.navLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--header-h);
+  padding: 0 var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navLink[aria-current="page"] {
+  color: var(--text);
+  font-weight: var(--weight-bold);
+}
+
+/* The marker of the current link: a line at the bottom edge. A drawn box,
+   not a shadow (no shadows). It sits beside dark text, so the accent is
+   never the only signal. */
+.navLink[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--nav-marker);
+  background: var(--accent);
+}
+
+.end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--header-h);
+}
+
+/* The link to My profile: avatar and name. */
+.user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+/* A long name is cut with "…", so the header keeps its shape. */
+.userName {
+  max-width: calc(var(--space-8) * 3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The room the skeleton takes while the name loads. */
+.userLoading {
+  width: calc(var(--space-8) * 2);
+}
+
+.menuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Phone: the app name and the menu button only. */
+@media (max-width: 767.98px) {
+  .inner {
+    flex-wrap: nowrap;
+    padding: 0 var(--space-2) 0 var(--gutter);
+  }
+
+  .nav,
+  .end {
+    display: none;
+  }
+
+  .menuButton {
+    display: flex;
+    flex-shrink: 0;
+  }
+}
