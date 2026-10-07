@@ -1,0 +1,6 @@
+.textarea {
+  composes: control from "../Field/Field.module.css";
+  min-height: var(--control-h);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
