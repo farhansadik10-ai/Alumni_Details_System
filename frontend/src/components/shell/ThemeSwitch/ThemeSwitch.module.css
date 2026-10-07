@@ -1,0 +1,66 @@
+/*
+ * Three joined buttons: Light, Dark, System. One edge border around the group
+ * and between the buttons (login.html, phone-menu.html). Tokens only; the
+ * colors change with the theme through tokens.css.
+ */
+
+.group {
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+}
+
+/* Header, log in, sign-up: three square icon buttons. */
+.icons {
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--control-h-sm));
+}
+
+/* Phone menu: three equal columns of words, as wide as the place allows. */
+.text {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.button + .button {
+  border-inline-start: var(--border-edge) solid var(--edge);
+}
+
+.icons .button {
+  height: var(--control-h-sm);
+}
+
+.text .button {
+  height: var(--control-h-lg);
+}
+
+.button:hover {
+  background: var(--sunken);
+}
+
+.button[aria-pressed="true"] {
+  background: var(--action);
+  color: var(--on-action);
+  font-weight: var(--weight-bold);
+}
+
+/* Lifts the focused button so its ring (base.css) is not covered by its neighbours. */
+.button:focus-visible {
+  position: relative;
+  z-index: 1;
+}
