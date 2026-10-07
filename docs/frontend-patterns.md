@@ -108,15 +108,17 @@ When two stylesheets need the same block, one owns it and the other takes it wit
 
 - An ordinary pair: `frontend/src/components/ui/Button/Button.tsx` and `frontend/src/components/ui/Button/Button.module.css`.
 - `composes` in use: `frontend/src/components/ui/TextInput/TextInput.module.css` takes the shared control box from `frontend/src/components/ui/Field/Field.module.css`. `frontend/src/pages/LoginPage/LoginPage.module.css` takes the shared form styles from `frontend/src/components/auth/AuthLayout/AuthLayout.module.css`.
-- The guard: `scripts/frontend-style-check.mjs`. It has eight rules, a to h:
+- The guard: `scripts/frontend-style-check.mjs`. It has ten rules, a to j:
   - a: no color literal outside `tokens.css`
   - b: no `px`, `em` or `rem` number in a module stylesheet or in `base.css`
   - c: no import of `antd`, `@ant-design` or `@fontsource-variable/inter`
   - d: no import of `axios` or `services/` from UI folders (pattern 1)
   - e: the app name and the contact email are written only in the config file (pattern 5)
-  - f: no `onClick` on a `<div>` or a `<span>`
+  - f: no `onClick` on a `<div>` or a `<span>`, and no `role="button"` on either
   - g: no `dangerouslySetInnerHTML`
   - h: no `box-shadow`, no gradient, no `outline: none`
+  - i: no address from `routes/paths.ts` and no storage key (`ua.…`) written as a string outside their config files
+  - j: every `@media (max-width: …)` line in a stylesheet equals the phone query in `config/layout.ts`
 
 **Why we chose it.** "All values come from tokens" is easy to agree on and easy to break by accident. A script that fails makes the rule real. CSS Modules come with Vite, so they cost no package.
 
@@ -360,7 +362,7 @@ Every route has its own page file, even the pages that only say "being built". S
 - The waiting state for the public pages: `frontend/src/routes/PublicOnly.tsx`
 - A page file: `frontend/src/pages/DashboardPage/DashboardPage.tsx`
 
-**Why we chose it.** A visitor who only logs in should not download the directory, the feed and the admin screens. The check is simple: after `npm run build`, `frontend/dist/assets` has a file named after each page.
+**Why we chose it.** A visitor who only logs in should not download the directory, the feed and the admin screens. The check is simple: after `npm run build`, `frontend/dist/assets` has a file for each page, plus a few shared files.
 
 We did not split by hand in the Vite config, and we did not preload every page after log in. That can come in the polish part (F10) if moving between pages feels slow.
 
@@ -424,7 +426,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (72 cases; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (108 cases; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -452,7 +454,7 @@ The caller owns `open`. On Escape the dialog asks to be closed (`onClose`); it c
 
 We did not use a `<div role="dialog">` with our own trap, and we did not add a dialog package. The price is that the element needs a browser from 2023 or later; that was accepted.
 
-Known duplication: `PhoneMenu.tsx` repeats about 40 lines of `Dialog.tsx` (open, close, Escape, close before unmount). A shared hook would hold them once. See "Open points".
+The open, close, Escape and close-before-unmount logic is held once in `frontend/src/hooks/useModalDialog.ts`. `Dialog.tsx` and `PhoneMenu.tsx` both use it and keep their own markup.
 
 ---
 
@@ -574,25 +576,27 @@ Run all four from the repo root before you say a piece of work is done. All must
 | Command | What it proves |
 |---|---|
 | `npm run build` | The code compiles (type errors fail it) and the production build works. |
-| `node scripts/frontend-style-check.mjs` | The eight style and layer rules of pattern 3. |
+| `node scripts/frontend-style-check.mjs` | The ten style and layer rules of pattern 3. |
 | `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers. |
 | `git grep -n --untracked "antd" -- frontend/src frontend/package.json` | Prints nothing: the old UI library is gone. Keep `--untracked`; without it git skips files that are not committed yet. |
 
 After the build, two looks at the output:
 
-- `ls frontend/dist/assets` shows one `.js` file named after each page.
+- `ls frontend/dist/assets` shows one `.js` file for each page, plus a few shared files.
 - `grep -rlF "Compare each section with" frontend/dist` prints nothing: the components page is not in the build.
 
 When you add a validator or another pure function, add its cases to `scripts/frontend-lib-check.ts`. Write the expected answer from the spec, not from the code.
 
 What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault.
 
+## Files added in review round 1
+
+Seven files were added after the first draft of this document. All paths are under `frontend/src/`: `hooks/useModalDialog.ts` (the native-dialog logic of Dialog and PhoneMenu), `hooks/useFormError.ts` (the form error message, its focus and the double-submit guard of both auth pages), `config/layout.ts` (the phone-layout query), `config/text.ts` (`LOADING_TEXT`), `lib/returnAddress.ts` (the open-redirect guard), `lib/pageRange.ts` (the page numbers) and `components/shell/navLabels.ts` (the shared navigation labels).
+
 ## Open points
 
 Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-notes.md` in the REQ-fs-004 folder.
 
 - The API client has no general timeout. Only log out has one (5 seconds); other calls wait for the server.
-- `PhoneMenu.tsx` and `Dialog.tsx` share about 40 lines that a hook could hold once.
-- "Something went wrong. Try again." is written as a constant in both form pages.
 - The checks on the store (401 handling, start-up check) were run from a scratch file and are not in `scripts/`.
 - ESLint is not installed, so nothing lints the code.

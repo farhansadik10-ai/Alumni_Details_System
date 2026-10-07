@@ -14,6 +14,7 @@ This is an npm workspaces monorepo. Run all commands from the repo root.
 - Run only the frontend dev server: `npm run dev:frontend` (Vite, workspace `@alumni/frontend`)
 - Build everything: `npm run build` (builds `@alumni/api` then `@alumni/frontend`)
 - Frontend-only build/preview: `npm run build --workspace=@alumni/frontend`, `npm run preview --workspace=@alumni/frontend`
+- Frontend checks: `npm run check:frontend` (the style check and the library check in `scripts/`; there is still no test runner)
 
 There is no test runner configured anywhere in the repo (the `shared` package's `test` script is an unimplemented placeholder). `backend/src/businessLogic/src/TestManager.ts` and `backend/src/dal/TestDal.ts` are ad hoc, commented-out manual scratch scripts used during development, not an actual test suite — don't treat them as tests or try to run them as such.
 
@@ -43,7 +44,7 @@ Holds cross-cutting TypeScript types (`shared/types/*.types.ts`) consumed by wor
 
 ### Frontend (`frontend/`, workspace `@alumni/frontend`)
 
-React + TypeScript + Vite. The current `frontend/src` is built with `antd` (Ant Design), plus `axios` for HTTP, `jotai` for state and `react-router-dom` for routing. `antd` is legacy: the redesign rebuilds `frontend/src` from scratch and replaces it, so don't extend the existing antd screens or treat them as a pattern to follow. The rules for the new frontend are in "Conventions (redesign)" below.
+React + TypeScript + Vite, with `jotai` for state, `react-router-dom` for routing and one `axios` client in `src/services/`. Styles are CSS Modules on the design tokens in `src/styles/tokens.css`; there is no UI library. Part 1 of the rebuild (REQ-fs-004) is done: foundation, theme, base components, app shell, log in and sign-up; the other pages are "This page is being built" placeholders. The structure and the patterns are in `docs/frontend-patterns.md`; the rules are in "Conventions (redesign)" below.
 
 ### Ignored files
 
@@ -71,7 +72,7 @@ The root `.gitignore` ignores `node_modules/` (at any depth, including the neste
 ### Frontend
 - React + Vite + TypeScript, rebuilt from scratch in frontend/src.
 - State: Jotai atoms in src/store/.
-- No UI library; we build our own components on the design tokens. antd is legacy and is removed screen by screen; no new antd imports.
+- No UI library; we build our own components on the design tokens. antd was removed in REQ-fs-004; do not add a UI library.
 - Scandinavian design: neutral palette, generous whitespace, clean typography, few accents.
 - White-label: no university logo; the app name is text from one constant.
 - Theme: light, dark, system; toggle in header; choice persisted; follows prefers-color-scheme in system mode.
