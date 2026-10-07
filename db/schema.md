@@ -2,6 +2,8 @@
 
 Output of the `psql` commands from bolt B8 (`\dt`, `\d "User"`, `\d users`, `\d alumni`, `\d posts`, `\d comment`, `\d comments`), run by the owner on 2026-10-02 against the database in the root `.env`. Saved unchanged.
 
+The `alumni` columns `mentorship_available` and `field` were added by the owner on 2026-10-06 with `ALTER TABLE alumni ADD COLUMN mentorship_available boolean NOT NULL DEFAULT false, ADD COLUMN field text;`. Those two rows were typed in by hand from that statement, not pasted from `psql`.
+
 ```text
            List of tables
  Schema |  Name   | Type  |  Owner   
@@ -46,6 +48,8 @@ Did not find any relation named "users".
  experience      | character varying(100)      |           |          | 
  bio             | text                        |           |          | 
  linkedin_url    | text                        |           |          | 
+ mentorship_available | boolean                     |           | not null | false
+ field           | text                        |           |          | 
  updated_at      | timestamp without time zone |           |          | CURRENT_TIMESTAMP
 Indexes:
     "alumni_pkey" PRIMARY KEY, btree (id)

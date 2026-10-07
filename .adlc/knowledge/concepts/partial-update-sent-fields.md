@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Concept | partial-update-sent-fields |
-| Status | built in REQ-fs-002 (2026-10-06) |
+| Status | built in REQ-fs-002 (2026-10-06); typed input and two more alumni fields in REQ-fs-003 (2026-10-07) |
 | Created | 2026-10-06 |
 
 Confirmed against the real database by the owner's 39-check run (2026-10-06, 39 passed): unsent fields are kept on user, post and alumni updates; an empty update is 400; a wrong type for `graduation_year` is 400. Updates made by an admin on someone else's row are not yet tested (`STATUS: needs verification` for that path only).
@@ -29,7 +29,7 @@ Used by `PUT /api/users/:id`, `PUT /api/posts/:id`, `PUT /api/alumni/:id`.
 
 ## Adding an updatable column
 
-Change three things together: the controller's key list, its type check, and the Query's column list ([[knowledge/gotchas#^g30|G30]]). The column must be in `db/schema.md` first. The next ones due are `alumni.mentorship_available` and `alumni.field` ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]); `mentorship_available` is a boolean, so it needs a new type check.
+Change three things together: the controller's key list, its type check, and the Query's column list ([[knowledge/gotchas#^g30|G30]]). The column must be in `db/schema.md` first. `alumni.mentorship_available` and `alumni.field` were added this way in REQ-fs-003; `mentorship_available` is checked with `isBoolean` and may not be `null`.
 
 ## Related
 
@@ -40,3 +40,10 @@ Change three things together: the controller's key list, its type check, and the
 ## Backlinks
 
 - REQ-fs-002
+
+## Update 2026-10-07 (REQ-fs-003)
+
+- The controller now builds the update object with `checkFields(pickSent(body, KEYS), RULES)`, which returns `UpdateFields<K>` (`dal/query/updateSet.ts`). The Query's `update...` method takes `UpdateFields<its own column type>`, so a key the Query does not know is a compile error and no cast is needed ([[knowledge/gotchas#^g31|G31]]).
+- `checkFields` drops a key that has no rule and always answers `<key> has the wrong type` ([[knowledge/gotchas#^g35|G35]]).
+- Creates for alumni and posts are checked with the same rules as their updates.
+- A class or DTO type does not fit `UpdateFields` if it has a `Date` field; build the object key by key.

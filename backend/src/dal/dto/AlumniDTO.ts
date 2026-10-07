@@ -1,41 +1,45 @@
 import { BaseDTO } from "./BaseDTO";
 
+// Mirrors the alumni table in db/schema.md. Every column the table shows
+// without "not null" is typed `T | null` (gotcha G31).
 export class AlumniDTO implements BaseDTO {
   id!: number;
-  user_id: number;
-  graduation_year?: number;
-  department: string;
-  current_company?: string;
-  job_title?: string;
-  experience?: string;
-  bio?: string;
-  linkedin_url?: string;
-  created_at: Date;
-  updated_at: Date;
-  name?: string;
-  email?: string;
-  photo_url?: string;
+  user_id: number | null;
+  graduation_year: number | null = null;
+  department: string | null;
+  current_company: string | null;
+  job_title: string | null;
+  experience: string | null;
+  bio: string | null;
+  linkedin_url: string | null;
+  mentorship_available: boolean;
+  field: string | null;
+  updated_at: Date | null;
+  // Read from the joined "User" row; never written to alumni (gotcha G25).
+  name?: string | null;
+  email?: string | null;
+  photo_url?: string | null;
 
   constructor(
-    
-    user_id: number,
-    department: string,
-    current_company?: string,
-    job_title?: string,
-    experience?: string,
-    bio?: string,
-    linkedin_url?: string,
+    user_id?: number | null,
+    department?: string | null,
+    current_company?: string | null,
+    job_title?: string | null,
+    experience?: string | null,
+    bio?: string | null,
+    linkedin_url?: string | null,
+    mentorship_available: boolean = false,
+    field: string | null = null,
   ) {
-    
-    this.user_id = user_id;
-    this.department = department;
-    this.current_company = current_company;
-    this.job_title = job_title;
-    this.experience = experience;
-    this.bio = bio;
-    this.linkedin_url = linkedin_url;
-    const now = new Date();
-    this.created_at = now;
-    this.updated_at = now;
+    this.user_id = user_id ?? null;
+    this.department = department ?? null;
+    this.current_company = current_company ?? null;
+    this.job_title = job_title ?? null;
+    this.experience = experience ?? null;
+    this.bio = bio ?? null;
+    this.linkedin_url = linkedin_url ?? null;
+    this.mentorship_available = mentorship_available;
+    this.field = field;
+    this.updated_at = new Date();
   }
 }

@@ -6,6 +6,8 @@ export class AlumniManager {
   constructor() {
     this.alumniQuery = new AlumniQuery();
   }
+
+  // Gives back undefined when the user already has a profile.
   public async createAlumni(alumni: AlumniDTO) {
     const newAlumni = await this.alumniQuery.createAlumni(alumni);
     return newAlumni;
@@ -17,18 +19,33 @@ export class AlumniManager {
   }
 
   public async findAlumniById(id: number) {
-    
     const alumni = await this.alumniQuery.findAlumniById(id);
     return alumni;
   }
 
-  public async updateAlumni(id: number, alumni: Partial<AlumniDTO>) {
-    const updatedAlumni = await this.alumniQuery.updateAlumni(id, alumni);
+  public async findAlumniByUserId(userId: number) {
+    const alumni = await this.alumniQuery.findAlumniByUserId(userId);
+    return alumni;
+  }
+
+  public async updateAlumni(
+    id: number,
+    data: Parameters<AlumniQuery["updateAlumni"]>[1],
+  ) {
+    const updatedAlumni = await this.alumniQuery.updateAlumni(id, data);
     return updatedAlumni;
   }
 
-  public async getAllAlumni() {
-    const allAlumni = await this.alumniQuery.getAllAlumni();
-    return allAlumni;
+  public async listAlumni(
+    filter: Parameters<AlumniQuery["listAlumni"]>[0],
+    page: Parameters<AlumniQuery["listAlumni"]>[1],
+  ) {
+    const alumniPage = await this.alumniQuery.listAlumni(filter, page);
+    return alumniPage;
+  }
+
+  public async getFilterValues() {
+    const filterValues = await this.alumniQuery.getFilterValues();
+    return filterValues;
   }
 }

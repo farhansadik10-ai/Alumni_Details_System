@@ -17,6 +17,46 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] ship-gate-cleared | REQ-fs-003-finish-backend-api | roadmap B3, B3a, B4, B5 marked done; root CLAUDE.md auth and api lines updated; G42 (who may see an alumni email) left open by the owner
+
+## [2026-10-07] req-ready-to-merge | REQ-fs-003-finish-backend-api | class controllers and one error middleware, two alumni columns, search and paged lists, stats, feed data with authors and counted comments, deletes that take replies; run against the real database by the owner
+## [2026-10-07] lesson | L-REQ-fs-003-7 — plan a tighter helper signature in the same task as its callers
+## [2026-10-07] lesson | L-REQ-fs-003-6 — when an endpoint changes, change its shared request and response types in the same change
+## [2026-10-07] lesson | L-REQ-fs-003-5 — never log a whole database error: its detail can hold the failing row
+## [2026-10-07] lesson | L-REQ-fs-003-4 — a check must be able to fail: build the case the code could get wrong
+## [2026-10-07] lesson | L-REQ-fs-003-3 — one resource, one answer shape: every write and read through the same joined query
+## [2026-10-07] lesson | L-REQ-fs-003-2 — when the code cannot be run here, run its pure expressions alone
+## [2026-10-07] lesson | L-REQ-fs-003-1 — write the API check from the spec and the schema, not from the code
+## [2026-10-07] lesson-recurred | L-REQ-fs-002-3 — small copies left beside new helpers, seen again twice in REQ-fs-003
+## [2026-10-07] gotcha | G42 — not decided: every logged-in user can read every alumni's email; a user with no role still gets a token
+## [2026-10-07] gotcha | G41 — a DTO built with new carries made-up timestamps; logout answers an empty 200
+## [2026-10-07] gotcha | G40 — importing @alumni/businesslogic or the app connects to the database
+## [2026-10-07] gotcha | G39 — list order and filter rules differ per endpoint
+## [2026-10-07] gotcha | G38 — the compiled .js / .d.ts files in shared/ are older than the .ts sources
+## [2026-10-07] gotcha | G37 — duplicate alumni profiles made before the lock are still there; /me returns the lowest id
+## [2026-10-07] gotcha | G36 — fixed paths must be registered above /:id in a router
+## [2026-10-07] gotcha | G35 — checkFields passes on only the keys that have a rule, and always says "has the wrong type"
+## [2026-10-07] gotcha-status | G08, G13, G16, G24, G25, G26, G27, G29, G31, G34 fixed; G11 closed (count worked out when read); G32 partly fixed; G30 still open with more copies (REQ-fs-003)
+## [2026-10-07] adr-updated | ADR-03, ADR-05, ADR-06, ADR-08, ADR-11, ADR-12 — what REQ-fs-003 built; ADR-06 and ADR-11 wording brought in line with the code
+## [2026-10-07] concept | paged-list-query — first captured
+## [2026-10-07] component | api-controllers-and-routes, dal-query-classes — rewritten for REQ-fs-003; records where each rule lives (owner's decision on M3)
+
+## [2026-10-07] verify-gate-cleared | REQ-fs-003-finish-backend-api | findings: C0/M0/m4 open after round 3 (12 fixed; M3 decided: record, no code change); owner reports both scripts pass on the final code
+## [2026-10-07] verify-round | REQ-fs-003-finish-backend-api | round 3: n1, n2, n4, m6 fixed and re-checked
+## [2026-10-07] verify-round | REQ-fs-003-finish-backend-api | round 2: M1, M2, M4, m2, m3, m5 fixed and re-checked; 4 new minors
+
+## [2026-10-07] verified | REQ-fs-003-finish-backend-api | owner ran against the real database, round 2: own script 91 of 91 passed (14 admin checks); scripts/api-check.mjs with the admin account 0 failed
+
+## [2026-10-07] implement-gate-cleared | REQ-fs-003-finish-backend-api | 12 tasks done, build passes; owner ran his own script and scripts/api-check.mjs against the real database, both pass after round 2; owner decided: comment body key is posts_id, a new comment needs content
+
+## [2026-10-06] architect-gate-cleared | REQ-fs-003-finish-backend-api | 12 tasks in 4 tiers; stress-test 0 critical, 2 major, 7 minor (8 fixed, 1 accepted)
+## [2026-10-06] adr-accepted | ADR-12 list endpoints answer { items, total, page, limit }
+## [2026-10-06] adr-accepted | ADR-11 code throws typed errors; one middleware turns them into { error }
+
+## [2026-10-06] work-path-set | REQ-fs-003-finish-backend-api | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-003-finish-backend-api, off redesign)
+
+## [2026-10-06] spec-gate-cleared | REQ-fs-003-finish-backend-api | 38 criteria in 4 parts (roadmap B3, B3a, B4, B5); owner kept 404 on empty lookups, 409 on a second alumni profile, alumni list newest first
+
 ## [2026-10-06] req-archived | REQ-fs-002-backend-security-data-loss-gaps
 ## [2026-10-06] req-merged | REQ-fs-002-backend-security-data-loss-gaps | merge commit a2d805e0 on redesign
 

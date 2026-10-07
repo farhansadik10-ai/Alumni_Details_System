@@ -30,11 +30,11 @@ _From the owner, 2026-10-05._
 - **Library:** _(not written down in the source docs)_
 - **Levels:** _(when to use debug, info, warn, error)_
 - **Structured fields:** _(required fields on every log line)_
-- **No `console.log` in production code.** _(template default — not confirmed for this project; the existing `*Query.ts` classes do call `console.log`)_
+- **No `console.log` in production code.** _(template default — not confirmed for this project.)_ Since REQ-fs-003 no Query class or controller logs. The error middleware uses `console.error` for failures nobody planned for, and logs a short summary of a database error, never the error object.
 
 ## Error handling
 
-- Backend: one shared error middleware; no per-method `try`/`catch` for HTTP mapping. _(From the owner, 2026-10-05. Not built yet — today each controller function has its own `try`/`catch`.)_
+- Backend: one shared error middleware; no per-method `try`/`catch` for HTTP mapping. _(From the owner, 2026-10-05. Built in REQ-fs-003.)_ Code refuses a request by throwing a typed error from `@alumni/businesslogic`; every error body is `{ "error": "<message>" }` ([[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]]).
 - TypeScript `strict` is on for the whole repo (root `tsconfig.json`, and `frontend/tsconfig.app.json`). This includes `noImplicitAny` and `strictNullChecks`. _(STATUS: needs verification — read from the config files.)_
 - Frontend: every list and form has loading, empty and error states. _(From the owner, 2026-10-05.)_
 
@@ -52,13 +52,13 @@ _From the owner, 2026-10-05._
 _From the owner, 2026-10-05, except where marked._
 
 - **Layering:** npm workspaces; layers stay routes → controllers → Managers → Query classes. No skipped layers.
-- **Controllers** are classes; routes bind instance methods. _(Not built yet — today's controllers are exported functions.)_
+- **Controllers** are classes; routes bind instance methods with `handler(instance, "method")`. _(Built in REQ-fs-003.)_
 - **Errors:** one shared error middleware; no per-method `try`/`catch` for HTTP mapping.
 - **Auth:** every non-public route uses `authMiddleware`, plus `requireRole` and an owner check where needed. Route files compose them per route; auth is not applied globally.
 - **SQL** uses the real names in `db/schema.md` (`"User"`, `alumni`, `posts`, `comment`), lives only in `dal/query/*Query.ts`, and is always parameterized. No schema change without the owner's approval.
 - **No endpoint returns the `password` column.**
-- **Response format:** _(not written down)_
-- **Pagination:** _(not written down)_
+- **Response format:** an error is `{ "error": "<message>" }` with the right status (ADR-11). A paged list is `{ items, total, page, limit }` (ADR-12). Anything else answers the row or object itself.
+- **Pagination:** `page` from 1, default 1; `limit` default 12, above 50 treated as 50; a bad number is 400; every list has a fixed order ([[architecture/adr-12-list-endpoints-answer-items-total-page-limit|ADR-12]], [[knowledge/concepts/paged-list-query]]).
 - **Versioning:** none — routes are mounted directly under `/api/...`. _(STATUS: needs verification.)_
 
 ## Frontend
@@ -117,4 +117,4 @@ _From the owner, 2026-10-05. The frontend is rebuilt from scratch in `frontend/s
 ### Known quirks
 
 - `shared` has compiled `.js`/`.d.ts`/`.map` files checked in beside the `.ts` sources. Edit the `.ts`.
-- Known backend problems are listed in [[knowledge/gotchas]] (G01–G34; each entry's Status row says whether it is still open). Decisions in effect are in [[decisions]].
+- Known backend problems are listed in [[knowledge/gotchas]] (G01–G42; each entry's Status row says whether it is still open). Decisions in effect are in [[decisions]].

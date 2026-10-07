@@ -93,3 +93,7 @@ This does not change [[architecture/adr-06-deleting-rows-that-other-rows-referen
 - Lessons: (none)
 - ADRs: [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]], [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]], [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]
 - Context: [[context/design-system]]
+
+## Update 2026-10-07 (REQ-fs-003)
+
+The owner ran the migration on 2026-10-06 (`mentorship_available boolean NOT NULL DEFAULT false`, `field text`); `db/schema.md` lists both, hand-edited from the statement. Create, update and every alumni read carry them. The filter choices come from `GET /api/alumni/filters`, which closes that open question. A length limit for `field` is still open.

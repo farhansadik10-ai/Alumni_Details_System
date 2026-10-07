@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Concept | The read shape for any query that needs the person behind a row |
-| Status | in use (alumni reads, since REQ-fs-001) |
+| Status | in use for alumni (REQ-fs-001), posts and comments (REQ-fs-003) |
 | First captured | 2026-10-05 |
 | Decided by | Owner — ADR-05 (posts), and the REQ-fs-001 request (alumni) |
 
@@ -20,7 +20,7 @@ LEFT JOIN "User" u ON u.id = a.user_id
 - `a.*` is safe: it is the base table only, so `id` and `updated_at` stay the base row's and do not clash with the user's.
 - `"User"` is always double-quoted.
 - `LEFT JOIN` keeps base rows that have no user; their user fields come back as `null`.
-- A write (`INSERT` / `UPDATE … RETURNING *`) cannot join, so it returns the base columns only. Callers re-read ([[knowledge/gotchas#^g25|G25]]).
+- A write (`INSERT` / `UPDATE … RETURNING`) cannot join. Since REQ-fs-003 each write returns `id` and then reads the row back through the same joined constant, so writes and reads answer one shape ([[knowledge/lessons/LESSON-REQ-fs-003-3]]).
 
 ## Where it is used
 
@@ -28,12 +28,11 @@ LEFT JOIN "User" u ON u.id = a.user_id
 
 ## Not yet applied
 
-- `PostQuery.getAllPosts` — decided in ADR-05, not built.
-- Comments — not decided (ADR-05, open question).
+- Nothing: posts and comments use it since REQ-fs-003.
 
 ## Open
 
-- Field names. Alumni uses `name`, `email`, `photo_url`. ADR-05 left the author field names for posts open. `STATUS: needs verification` — the owner has not said whether posts must use the same names.
+- Settled in REQ-fs-003: posts and comments use `name` and `photo_url`, the same names as alumni. Still open: whether every logged-in user should see an alumni's `email` ([[knowledge/gotchas#^g42|G42]]).
 
 ## Related
 
@@ -45,3 +44,7 @@ LEFT JOIN "User" u ON u.id = a.user_id
 ## Backlinks
 
 - [[knowledge/gotchas]] (G05, G25)
+
+## Update 2026-10-07 (REQ-fs-003)
+
+The join text now lives in one constant per class: `ALUMNI_READ` (`a.*` plus `name`, `email`, `photo_url`), `POST_READ` (named post columns, `name`, `photo_url`, and `comment_count` as a counting sub-query; the stored column is left out on purpose), `COMMENT_READ` (`c.*` plus `name`, `photo_url`). Every read and every write of the resource uses it.

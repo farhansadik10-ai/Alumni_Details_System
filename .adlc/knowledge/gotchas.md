@@ -226,7 +226,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/PostQuery.ts`, `CommentQuery.ts`, `UserQuery.ts`; database |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** No foreign key has `ON DELETE CASCADE`. Deleting a post that has comments, a comment that has replies, or a user who has posts, comments or an alumni row fails with a foreign-key error.
@@ -236,6 +236,8 @@ Where each old item went:
 **Why it's surprising:** Delete works in a quick test on a fresh row and fails only once related rows exist. The controllers return it as a 400 with the raw database message.
 
 **Don't:** Don't add `ON DELETE CASCADE` or any migration. The decided handling is in [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]: posts and comments delete their comments / replies in the backend in one transaction; users with related rows are never deleted.
+
+**Update 2026-10-07 (REQ-fs-003):** Deleting a post removes its comments and every reply under them in one transaction (`PostQuery.deletePost`). Deleting a comment removes every reply under it in one recursive statement (`CommentQuery.deleteComment`). Deleting a user who has posts, comments or an alumni profile answers 409 and deletes nothing; a user with none is deleted; an unknown id is 404. Confirmed by the owner's runs against the real database (2026-10-07). Still open: how an admin removes a user who has content (ADR-06).
 
 **Related:** [[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]], [[knowledge/gotchas#^g07|G07]]. Origin: SQL problems.
 
@@ -296,7 +298,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/dal/query/PostQuery.ts` |
-| Status | confirmed |
+| Status | closed by REQ-fs-003 (2026-10-07): the count is worked out when read; the stored column is unused |
 | Severity | careful (check before touching) |
 
 **What:** `PostQuery.updateCommentCount` exists but nothing calls it, so `comment_count` stays at its default, 0.
@@ -306,6 +308,8 @@ Where each old item went:
 **Why it's surprising:** The column and the method both exist, so the count looks maintained.
 
 **Don't:** Don't show `comment_count` on a screen as if it were correct. Either call the method on comment create / delete, or compute the count.
+
+**Update 2026-10-07 (REQ-fs-003):** `comment_count` in every post answer is counted at read time, replies included (`POST_READ` in `PostQuery.ts`). `updateCommentCount` is gone. The column `posts.comment_count` is still in the table, is never read or written, and stays 0. **Don't** select it or `p.*` in a new post read: the row would carry the stale 0. Confirmed by the owner's runs against the real database (2026-10-07).
 
 **Related:** [[knowledge/gotchas#^g24|G24]]. Origin: SQL problems, L.11.
 
@@ -342,7 +346,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/controllers/CommentController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | trap (will bite a normal change) |
 
 **What:** `POST /api/comments` and `PUT /api/comments/:id` read `post_id` from the body. The column, the DTO field and the response field are `posts_id`.
@@ -352,6 +356,8 @@ Where each old item went:
 **Why it's surprising:** The same value has one name going in and another coming out. A client that sends `posts_id` creates a comment attached to no post.
 
 **Don't:** Don't "fix" one side without the other. Until they are aligned, send `post_id` and read `posts_id`.
+
+**Update 2026-10-07 (REQ-fs-003):** `POST /api/comments` reads `posts_id`, the same name as the column and the answer. `post_id` is not read: a body with only `post_id` answers 400 `Invalid posts_id`. Decided by the owner at the REQ-fs-003 implement gate. Before this, a body with `posts_id` answered 201 and saved a comment attached to no post; comments made that way by earlier test runs may still be in the database with an empty `posts_id`. Confirmed by the owner's runs against the real database (2026-10-07).
 
 **Related:** [[knowledge/gotchas#^g24|G24]]. Origin: SQL problems (related), L.14.
 
@@ -412,7 +418,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/controllers/AlumniController.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** `findAlumniById` and `findAlumniByEmail` send `res.status(200).json(alumni)` even when `alumni` is `undefined`. A missing record is a 200 with no body, not a 404.
@@ -422,6 +428,8 @@ Where each old item went:
 **Why it's surprising:** The `catch` block returns 404, which reads as "not found is handled". It only runs when the query throws.
 
 **Don't:** Don't treat a 200 from these endpoints as "found". Check for an empty body until they return 404.
+
+**Update 2026-10-07 (REQ-fs-003):** The four lookups (`GET /api/users/:id`, `/api/users/email/:email`, `/api/alumni/:id`, `/api/alumni/email/:email`) answer 404 `{ error }` when nothing is found. Confirmed by the owner's runs against the real database (2026-10-07).
 
 **Related:** [[knowledge/gotchas#^g03|G03]], [[knowledge/gotchas#^g04|G04]]. Origin: SQL problems (related), L.6.
 
@@ -606,7 +614,7 @@ Where each old item went:
 | Discovered | 2026-10-02 |
 | REQ | — |
 | Component | `backend/src/api/routes/CommentRoutes.ts`, `backend/src/dal/query/CommentQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** The only read is `GET /api/comments`, which returns every comment in the system. Showing one post's comments means downloading all of them and filtering by `posts_id` on the client.
@@ -616,6 +624,8 @@ Where each old item went:
 **Why it's surprising:** A comment thread per post is the only way comments are shown, and it has no endpoint of its own.
 
 **Don't:** Don't treat client-side filtering as the design. It is a stopgap until a comments-by-post endpoint exists.
+
+**Update 2026-10-07 (REQ-fs-003):** `GET /api/posts/:id/comments` answers every comment of one post, replies included, oldest first, each with the author's `name` and `photo_url`; a missing post is 404. `GET /api/comments` still returns every comment in the system, unpaged, newest first, now with the author fields too. Confirmed by the owner's runs against the real database (2026-10-07).
 
 **Related:** [[knowledge/gotchas#^g11|G11]], [[knowledge/gotchas#^g13|G13]]. Origin: L.15.
 
@@ -628,7 +638,7 @@ Where each old item went:
 | Discovered | 2026-10-05 |
 | REQ | REQ-fs-001 |
 | Component | `backend/src/dal/query/AlumniQuery.ts`, `backend/src/dal/dto/AlumniDTO.ts`, `shared/types/alumni.types.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** `getAllAlumni`, `findAlumniById` and `findAlumniByEmail` return the alumni columns plus the user's `name`, `email` and `photo_url`. `createAlumni` and `updateAlumni` return the alumni columns only. On a read, the three user fields are `null` when the alumni row has no user.
@@ -641,6 +651,8 @@ Where each old item went:
 
 **Don't:** Don't refresh UI state from a create or update response; GET the row again. Treat `name`, `email`, `photo_url` as nullable. Add them to the shared `Alumni` type (as `string | null`) before the first screen uses them.
 
+**Update 2026-10-07 (REQ-fs-003):** Create and update for alumni now answer through the same joined read as the reads (`ALUMNI_READ`), so every alumni answer has `name`, `email`, `photo_url` (review finding M1). Comments and posts do the same. The shared `Alumni`, `Post` and `Comment` types declare the author fields as `string | null`. Confirmed by the owner's runs against the real database (2026-10-07).
+
 **Related:** [[knowledge/concepts/user-join-read-shape]], [[knowledge/gotchas#^g05|G05]], [[knowledge/components/dal-query-classes]].
 
 ---
@@ -652,7 +664,7 @@ Where each old item went:
 | Discovered | 2026-10-05 |
 | REQ | REQ-fs-001 |
 | Component | `backend/src/dal/query/AlumniQuery.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** The alumni list query has no `ORDER BY`. PostgreSQL may return the rows in a different order after any row is updated.
@@ -665,6 +677,8 @@ Where each old item went:
 
 **Don't:** Don't rely on the list order in a screen or a pagination scheme. Add `ORDER BY a.id` (or sort in the client) first.
 
+**Update 2026-10-07 (REQ-fs-003):** Every list has a fixed order: alumni newest first (`a.id DESC`), users by `id` ascending, posts newest first (`created_at DESC, id DESC`), all comments newest first, comments of one post oldest first. The direction differs per endpoint; see G39. Confirmed by the owner's runs against the real database (2026-10-07).
+
 **Related:** [[knowledge/gotchas#^g05|G05]].
 
 ---
@@ -676,7 +690,7 @@ Where each old item went:
 | Discovered | 2026-10-05 |
 | REQ | REQ-fs-001 |
 | Component | `backend/src/dal/query/AlumniQuery.ts`, `backend/src/dal/query/CommentQuery.ts`, their controllers |
-| Status | partly fixed by REQ-fs-002 (2026-10-06) |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** `PUT /api/alumni/:id` and `PUT /api/comments/:id` with an id that does not exist return 200 with an empty body. `DELETE /api/comments/:id` reports success whether or not a row was deleted.
@@ -690,6 +704,8 @@ Where each old item went:
 **Don't:** Don't treat a 200 from these endpoints as "saved". Check for an empty body until they return 404.
 
 **Update 2026-10-06 (REQ-fs-002):** `PUT /api/alumni/:id`, `PUT /api/comments/:id` and `DELETE /api/comments/:id` now answer 404 for a missing id, and the Query methods are typed as possibly returning no row ([[knowledge/lessons/LESSON-REQ-fs-002-1]]). Still open: the user and alumni lookups (G16).
+
+**Update 2026-10-07 (REQ-fs-003):** The lookups that were still open (G16) now answer 404 too.
 
 **Related:** [[knowledge/gotchas#^g16|G16]], [[knowledge/gotchas#^g02|G02]].
 
@@ -726,7 +742,7 @@ Where each old item went:
 | Discovered | 2026-10-06 |
 | REQ | REQ-fs-002 |
 | Component | `backend/src/api/controllers/`, `backend/src/api/MiddleWare/`, `backend/src/api/routes/AuthRoutes.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** Controllers answer `{ error: "..." }`. `authMiddleware`, `requireRole` and login answer `{ message: "..." }`. A 403 from the role check and a 403 from an owner check on the same route have different body keys.
@@ -739,6 +755,8 @@ Where each old item went:
 
 **Don't:** Don't read only one key in the frontend's error handling. Read both until B3 settles one shape.
 
+**Update 2026-10-07 (REQ-fs-003):** Every error body is `{ "error": "<message>" }`, from the token check, the role check, login and every controller, through one error middleware (ADR-11). The `message` key is only in three 200 answers (`... deleted successfully`). Confirmed by the owner's runs against the real database (2026-10-07).
+
 **Related:** [[knowledge/components/api-controllers-and-routes]].
 
 ---
@@ -750,7 +768,7 @@ Where each old item went:
 | Discovered | 2026-10-06 |
 | REQ | REQ-fs-002 |
 | Component | `UserController` + `UserQuery`, `PostController` + `PostQuery`, `AlumniController` + `AlumniQuery` |
-| Status | confirmed |
+| Status | confirmed — still open; more copies since REQ-fs-003 |
 | Severity | trap (will bite a normal change) |
 
 **What:** The fields an update may change are listed once in the controller (which keys to pick from the body) and once in the Query class (which columns may appear in the SQL). A column added to only one list is silently dropped and the call still answers 200.
@@ -763,6 +781,8 @@ Where each old item went:
 
 **Don't:** Don't add an updatable column in one place. Change the controller list, the Query list and the type check together. Don't replace the Query's list with one passed in from the controller.
 
+**Update 2026-10-07 (REQ-fs-003):** The alumni lists now have nine fields. They exist in four places that must change together: `UPDATABLE_FIELDS` and `FIELD_RULES` in `AlumniController.ts` (the first also drives create), `UPDATABLE_COLUMNS` in `AlumniQuery.ts`, and the column list of the `INSERT` in `createAlumni`. A mismatch between the controller's keys and the Query's column type is now a compile error, because both sides are typed with `UpdateFields<...>`.
+
 **Related:** [[knowledge/concepts/partial-update-sent-fields]], [[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]] (the next columns to add).
 
 ---
@@ -774,7 +794,7 @@ Where each old item went:
 | Discovered | 2026-10-06 |
 | REQ | REQ-fs-002 |
 | Component | `backend/src/dal/dto/*DTO.ts`, the three update controllers, `UserManager.updateUser` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** DTO fields are typed `string` or `string | undefined`. A nullable column read with `SELECT *` arrives as `null`, and a partial update may send `null` to clear a field. So the controllers cast (`fields as Partial<PostDTO>`, `as Partial<AlumniDTO>`) and `updateUser` takes `Record<string, unknown>`: three shapes for the same thing.
@@ -787,6 +807,8 @@ Where each old item went:
 
 **Don't:** Don't trust a DTO type to tell you a value is not `null`. Don't add a fourth shape: when B3 lands, give the three updates one input type that allows `null`.
 
+**Update 2026-10-07 (REQ-fs-003):** DTO fields follow `db/schema.md`: every nullable column is `T | null`. The three updates take one input type, `UpdateFields<K>` (`dal/query/updateSet.ts`), built by `checkFields` in the controller; the casts are gone (review finding m4 of REQ-fs-002).
+
 **Related:** [[knowledge/gotchas#^g25|G25]], [[knowledge/concepts/partial-update-sent-fields]].
 
 ---
@@ -798,7 +820,7 @@ Where each old item went:
 | Discovered | 2026-10-06 |
 | REQ | REQ-fs-002 |
 | Component | `backend/src/api/controllers/AlumniController.ts`, `backend/src/api/routes/AlumniRoutes.ts` |
-| Status | confirmed |
+| Status | partly fixed by REQ-fs-003 (2026-10-07) |
 | Severity | careful (check before touching) |
 
 **What:** `POST /api/alumni` stores the caller's id as `user_id`. An admin who calls it creates a profile for themself and cannot create one for another user. A user who calls it twice gets two profiles.
@@ -810,6 +832,8 @@ Where each old item went:
 **Why it exists:** ADR-03 chose "created only by that user"; enforcing one-per-user needs a check or a schema change, both outside REQ-fs-002 (review finding m7).
 
 **Don't:** Don't build an admin "create profile for user" screen on this endpoint. Hide "add my profile" once the user has one, until the backend refuses a second.
+
+**Update 2026-10-07 (REQ-fs-003):** A second `POST /api/alumni` by the same user answers 409 `You already have an alumni profile`; the check and the insert run under a per-user database lock, so two requests at once cannot both pass. Still true: an admin creates a profile only for themself; `alumni.user_id` has no UNIQUE constraint; duplicates made before this REQ remain (see G37). Confirmed by the owner's runs against the real database (2026-10-07).
 
 **Related:** [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]], [[knowledge/gotchas#^g19|G19]].
 
@@ -846,7 +870,7 @@ Where each old item went:
 | Discovered | 2026-10-06 |
 | REQ | REQ-fs-002 |
 | Component | `backend/src/api/controllers/*Controller.ts` |
-| Status | confirmed |
+| Status | fixed by REQ-fs-003 (2026-10-07) — kept for history |
 | Severity | careful (check before touching) |
 
 **What:** A non-numeric `:id` (for example `/api/posts/abc`) reaches PostgreSQL as `NaN` and comes back as 400 with the database's own message. So does a sign-up or a user update with an email that is already taken (the message names the constraint `User_email_key`).
@@ -859,4 +883,198 @@ Where each old item went:
 
 **Don't:** Don't change the duplicate-email message without updating whatever screen matches on it. Don't parse these messages in new frontend code; wait for B3's error shape.
 
+**Update 2026-10-07 (REQ-fs-003):** A `:id` that is not a positive whole number (or is above 2147483647) answers 400 `Invalid id` before any query. A taken email on sign-up or user update answers 409 `This email is already registered`. Any other database refusal answers a fixed text (400 `Invalid value in request` or 409 `Request conflicts with existing data`); nothing nobody planned for answers 500 `Internal server error`. The legacy sign-up form's match on `User_email_key` no longer fires; the form shows the server's message instead. Confirmed by the owner's runs against the real database (2026-10-07).
+
 **Related:** [[knowledge/gotchas#^g29|G29]], [[knowledge/gotchas#^g16|G16]].
+
+---
+
+## G35 — `checkFields` passes on only the keys that have a rule, and always says "has the wrong type" ^g35
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `backend/src/api/utils/requestHelpers.ts`, every controller that calls `checkFields` |
+| Status | confirmed |
+| Severity | trap (will bite a normal change) |
+
+**What:** `checkFields(fields, rules)` returns a new object holding only the keys that have an entry in `rules`. A key with no rule is dropped without an error. For a key that fails its rule it always throws `<key> has the wrong type`. Each value comes back typed as the wide `UpdateValue`, whatever rule it passed.
+
+**Where:** `requestHelpers.ts` (`checkFields`); `USER_UPDATE_RULES` in `UserController.ts`; `FIELD_RULES` in `AlumniController.ts`; `PostController.ts`.
+
+**Why it's surprising:** A rule that "can never fail" looks like dead code (review finding m5 said so for `email` and `password`). Deleting it would silently stop email and password changes while the call still answers 200.
+
+**Why it exists:** One function does both jobs: check the types and build the typed update object, so no cast is needed (G31).
+
+**Don't:** Don't delete a rule because an earlier check already covers it. Run a field's own-message check (for example `email must be a non-empty string`) before `checkFields`, or the client gets the generic message. To build a DTO from the result, narrow each value with `typeof`; don't cast.
+
+**Related:** [[knowledge/concepts/partial-update-sent-fields]], [[knowledge/gotchas#^g30|G30]], [[knowledge/gotchas#^g31|G31]].
+
+---
+
+## G36 — Fixed paths must be registered above `/:id` in a router ^g36
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `backend/src/api/routes/AlumniRoutes.ts`, `UserRoutes.ts`, `PostRoutes.ts` |
+| Status | confirmed |
+| Severity | trap (will bite a normal change) |
+
+**What:** Express matches routes in the order they are registered. `GET /api/alumni/filters`, `/me` and `/email/:email` sit above `GET /api/alumni/:id`. A fixed path added below `/:id` would be read as an id and answer 400 `Invalid id`.
+
+**Where:** `AlumniRoutes.ts` (order: `/`, `/filters`, `/me`, `/email/:email`, `/:id`); the same holds for `/email/:email` in `UserRoutes.ts`.
+
+**Why it's surprising:** The new route compiles and its handler is never reached; the 400 looks like a bug in the caller.
+
+**Why it exists:** How Express routers work.
+
+**Don't:** Don't add a new fixed path at the bottom of a route file. Put it above the first `/:id` line.
+
+**Related:** [[knowledge/components/api-controllers-and-routes]].
+
+---
+
+## G37 — Duplicate alumni profiles made before the lock are still there; `/me` returns the lowest `id` ^g37
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `backend/src/dal/query/AlumniQuery.ts` (`createAlumni`, `findAlumniByUserId`) |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `createAlumni` refuses a second profile for a user under `pg_advisory_xact_lock(<namespace>, user_id)`. That stops new duplicates only. `alumni.user_id` has no UNIQUE constraint, so rows made before REQ-fs-003 can still be duplicates, and `GET /api/alumni/me` then returns the one with the lowest `id`. The lock function takes no lock when the key is `null`, so the check is skipped for a profile with no `user_id`.
+
+**Where:** `AlumniQuery.createAlumni`, `findAlumniByUserId`; `AlumniController.createAlumni` always sets `user_id` from the token. The check script itself leaves three test users with profiles per run.
+
+**Why it's surprising:** ADR-03 says one profile per user and the API now answers 409, which reads as "there is never more than one".
+
+**Why it exists:** A UNIQUE constraint is a schema change, which is the owner's decision (ADR-03, open).
+
+**Don't:** Don't assume one row per `user_id` in old data. Don't call `createAlumni` with a `user_id` that can be `null`.
+
+**Related:** [[knowledge/gotchas#^g32|G32]], [[architecture/adr-03-one-alumni-profile-per-user-created-by-that-user|ADR-03]].
+
+---
+
+## G38 — The compiled `.js` / `.d.ts` files in `shared/` are older than the `.ts` sources ^g38
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `shared/types/*.js`, `*.d.ts`, `*.map`; `shared/index.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** REQ-fs-003 changed the `.ts` types (new alumni fields, author fields, string dates, `PublicUser`, `SignUpUserDTO`, `UpdateUserDTO`, list types) and added `shared/index.ts`. The checked-in compiled files beside them were not rebuilt: `alumni.types.d.ts` has no `mentorship_available`, and `list.types.ts` and `index.ts` have no compiled twin at all.
+
+**Where:** `shared/types/`. Nothing imports the compiled files: TypeScript resolves the `.ts` first, and the frontend imports by file path.
+
+**Why it's surprising:** Root `CLAUDE.md` says the compiled output is checked in "alongside the sources", which reads as "kept in step".
+
+**Why it exists:** The owner chose to leave them (REQ-fs-003 review gate, finding M2); deleting or rebuilding them is a later clean-up.
+
+**Don't:** Don't read or edit the `.js` / `.d.ts` files. Edit the `.ts`. In `user.types.ts`, `User` (it has `password`) and `CreateUserDTO` are kept only for the legacy frontend and are not exported from `shared/index.ts`; new code uses `PublicUser`, `SignUpUserDTO` and `UpdateUserDTO`.
+
+**Related:** [[knowledge/gotchas#^g25|G25]].
+
+---
+
+## G39 — List order and filter rules differ per endpoint ^g39
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `AlumniController.ts`, `UserQuery.ts`, `AlumniQuery.ts`, `PostQuery.ts`, `CommentQuery.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** Alumni and posts come newest first; users come by `id` ascending; the comments of one post come oldest first. `mentoring=true` filters; any other value, including `mentoring=false`, is 400, so a switched-off toggle must leave the key out. `department` and `field` match the whole value after outer spaces are stripped (spaces only, the same as SQL `btrim`). A filter sent empty counts as not sent; a key sent twice is 400. A `limit` above 50 is treated as 50 and the answer's `limit` says 50.
+
+**Where:** `AlumniController.getAllAlumni`, `requestHelpers.ts` (`parsePaging`, `queryText`, `queryFilterValue`), the `ORDER BY` of each list query.
+
+**Why it's surprising:** ADR-12 promises "a fixed order", not one direction; and `mentoring=false` looks like a valid way to say "no filter".
+
+**Why it exists:** The owner's request named `mentoring=true` only and "newest first" for alumni and posts; review finding m9 was accepted as is.
+
+**Don't:** Don't send `mentoring=false`. Don't assume one sort direction across lists in the UI.
+
+**Related:** [[architecture/adr-12-list-endpoints-answer-items-total-page-limit|ADR-12]], [[knowledge/concepts/paged-list-query]].
+
+---
+
+## G40 — Importing `@alumni/businesslogic` or the app connects to the database ^g40
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `backend/src/dal/config/db.ts`, `backend/src/businessLogic/index.ts`, `backend/src/api/utils/requestHelpers.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `dal/config/db.ts` loads the root `.env` and opens a connection when it is imported. `businessLogic/index.ts` exports the Managers beside the typed errors, so importing even one error class loads the DAL. `requestHelpers.ts` imports `ValidationError`, so a script that imports a pure helper such as `parseId` also connects to the database.
+
+**Where:** The import chain `requestHelpers.ts` → `@alumni/businesslogic` → `@alumni/dal` → `config/db.ts`. `utils/token.ts` reads `JWT_SECRET` inside its functions for the same reason: `.env` is loaded as a side effect of that chain.
+
+**Why it's surprising:** A helper with no database code cannot be run in a quick check without a database.
+
+**Why it exists:** The typed errors live in `businessLogic` so Managers can throw them (ADR-11); `db.ts` has connected on import since before the pipeline.
+
+**Don't:** Don't import backend files in a script meant to run without a database. To prove a pure expression, run a copy of it alone ([[knowledge/lessons/LESSON-REQ-fs-003-2]]). Don't read `process.env` at the top of a new backend file.
+
+**Related:** [[architecture/adr-11-typed-errors-and-one-error-middleware|ADR-11]], [[knowledge/gotchas#^g28|G28]].
+
+---
+
+## G41 — A DTO built with `new` carries made-up timestamps; `logout` answers an empty 200 ^g41
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `backend/src/dal/dto/*DTO.ts`, `UserController.updateLogoutTime` |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** The DTO constructors stamp `new Date()` into `created_at`, `updated_at`, and for users `login_at` and `logout_at`. Those are not what the database holds. Separately, `PUT /api/users/:id/logout` answers 200 with an empty body, because the Manager returns nothing.
+
+**Where:** `UserDTO.ts`, `PostDTO.ts`, `CommentDTO.ts`, `AlumniDTO.ts` constructors; `UserController.updateLogoutTime`.
+
+**Why it's surprising:** A freshly built `UserDTO` claims a login and a logout time for someone who has done neither. And every other 200 has a JSON body.
+
+**Why it exists:** Both predate the pipeline; left unchanged in REQ-fs-003 (AC12 for logout).
+
+**Don't:** Don't read a timestamp from a DTO you built; read it from the row the database returns. Don't parse the logout answer as JSON.
+
+**Related:** [[knowledge/components/dal-query-classes]].
+
+---
+
+## G42 — Not decided: any logged-in user can read every alumni's email, and a user with no role still gets a token ^g42
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-07 |
+| REQ | REQ-fs-003 |
+| Component | `AlumniQuery.ts` (`ALUMNI_READ`), `AlumniRoutes.ts`, `AuthController.ts` |
+| Status | confirmed — `STATUS: needs verification` that this is what the owner wants |
+| Severity | careful (check before touching) |
+
+**What:** Every alumni answer includes the person's `email`, and the alumni routes ask only for a login, so a student can list every alumni's email. No ADR decides who may see it. Separately, `"User".role` is nullable: a user with no role can log in and gets a token with role `""`, which passes the token check and matches no role check (403 on role-guarded routes). A token whose role is not text is refused with 401.
+
+**Where:** `ALUMNI_READ` (`u.email`); `GET /api/alumni`, `/:id`, `/email/:email`, `/me`; `AuthController.login` (`role ?? ""`); `utils/token.ts`.
+
+**Why it's surprising:** The approved screens show names and tags on cards, not emails; and the review found the 401 for an old no-role token was 403 before (finding m1, accepted).
+
+**Why it exists:** The email has been in the alumni reads since REQ-fs-001; nobody was asked. Sign-up now always sets a role, so a no-role user can only be an old or hand-made row.
+
+**Don't:** Don't show the email on a public-facing card without asking the owner. Don't rely on "no role" meaning "cannot log in".
+
+**Related:** [[knowledge/concepts/user-join-read-shape]], [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]].

@@ -31,7 +31,7 @@ _(Who the real-world audience is — which institution, how many users — is no
 > **STATUS: needs verification** — synthesized from the retired AI-DLC plan (Screens by role) on 2026-10-05. Review and edit; remove this banner when confirmed.
 
 1. Sign up as student or alumni (the form calls the alumni role "Graduate"), log in, and land on a role-based dashboard.
-2. Browse the alumni directory and open an alumni profile; alumni create and edit their own profile. The directory can be filtered by department, graduation year, field and mentoring; field and mentoring need two new `alumni` columns first ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]).
+2. Browse the alumni directory and open an alumni profile; alumni create and edit their own profile. The directory can be filtered by department, graduation year, field and mentoring; the two `alumni` columns for field and mentoring exist since 2026-10-06 ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]).
 3. Read the posts feed and comment on posts; alumni and admins create posts.
 
 ## Stack snapshot
@@ -78,7 +78,7 @@ _(nothing else written down — fill in)_
 - All work goes through the ADLC pipeline. No code is written before the spec and architecture gates are approved.
 - No schema change without the owner's approval. SQL uses the real names in `db/schema.md`.
 - No database migration for deletes: delete behaviour is handled in the backend and the UI, not by changing foreign keys ([[architecture/adr-06-deleting-rows-that-other-rows-reference|ADR-06]]).
-- Screens show only fields that exist in `db/schema.md`. The approved design shows mentoring and field, which need two new `alumni` columns: `mentorship_available` (boolean, default `false`) and `field` (text, nullable). The owner decided to add them ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]) and runs the migration himself in a later REQ; they are not in the database yet, so those parts of the screens wait for it.
+- Screens show only fields that exist in `db/schema.md`. The approved design shows mentoring and field, which need two new `alumni` columns: `mentorship_available` (boolean, default `false`) and `field` (text, nullable). The owner added them on 2026-10-06 ([[architecture/adr-08-mentoring-and-field-stay-two-new-alumni-columns|ADR-08]]); the backend reads and writes them since REQ-fs-003.
 
 ## Status
 
@@ -88,4 +88,4 @@ _(nothing else written down — fill in)_
 | Started | 2026-10-05 |
 | Repo | C:/Users/Lenovo/Alumni_Details_System |
 
-_"Started" is the date this vault was created, not the date the project began. As of 2026-10-06 the design is approved, but building the new frontend has not started: no REQ exists for it yet._
+_"Started" is the date this vault was created, not the date the project began. As of 2026-10-07 the backend is finished for the redesign (REQ-fs-001 to REQ-fs-003, roadmap B1 to B5). Building the new frontend has not started: no REQ exists for it yet._

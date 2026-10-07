@@ -81,3 +81,12 @@ Option 2 for posts and comments, Option 1 for users.
 - Gotchas: [[knowledge/gotchas#^g08|G08]], [[knowledge/gotchas#^g07|G07]], [[knowledge/gotchas#^g23|G23]]
 - Lessons: (none)
 - ADRs: [[architecture/adr-02-admin-deletes-any-post-edits-only-own|ADR-02]]
+
+## Update 2026-10-07 (REQ-fs-003)
+
+Built, with no migration.
+
+- **Where the transaction lives** (open question above): in the Query layer, because SQL lives only there. `PostQuery.deletePost` uses `withTransaction` for its two statements.
+- **Comment delete is one statement, not a transaction.** `CommentQuery.deleteComment` is a single recursive `DELETE` that removes the comment and every reply under it. One statement is all-or-nothing by itself, so the decision's intent holds; only its wording ("in one transaction") differs.
+- **Users:** `DELETE /api/users/:id` answers 409 with the message above when the user has posts, comments or an alumni profile, and deletes nothing. The database's own foreign keys make the refusal; `UserManager` gives it the message.
+- Still open: how an admin removes a user who has content.

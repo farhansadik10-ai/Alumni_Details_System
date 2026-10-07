@@ -3,6 +3,15 @@ export interface UpdateSet {
   values: unknown[];
 }
 
+/** A value an UPDATE may write to one column. `null` clears the column. */
+export type UpdateValue = string | number | boolean | null;
+
+/**
+ * The one input type for a partial UPDATE: the sent fields, keyed by column
+ * name. A key that is absent (or `undefined`) means "not sent".
+ */
+export type UpdateFields<K extends string = string> = Partial<Record<K, UpdateValue>>;
+
 /**
  * Builds the `SET` part of a partial UPDATE from the fields that were sent.
  *
@@ -16,7 +25,7 @@ export interface UpdateSet {
  * id as parameter number `values.length + 1`.
  */
 export function buildUpdateSet(
-  data: Record<string, unknown>,
+  data: UpdateFields,
   columns: readonly string[],
 ): UpdateSet {
   const assignments: string[] = [];
