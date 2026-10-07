@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LOADING_TEXT } from "../../../config/text";
 import styles from "./Skeleton.module.css";
 
 export type SkeletonShape = "line" | "title" | "avatar-sm" | "avatar-md" | "block";
@@ -30,7 +31,7 @@ export type SkeletonGroupProps = {
 export function SkeletonGroup({ layout = "stack", children }: SkeletonGroupProps) {
   return (
     <div className={`${styles.group} ${styles[layout]}`} aria-busy="true">
-      <span className="visuallyHidden">Loading</span>
+      <span className="visuallyHidden">{LOADING_TEXT}</span>
       {children}
     </div>
   );

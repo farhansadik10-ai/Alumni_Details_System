@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { isExpired } from "../lib/token";
+import { isLiveSession } from "../lib/token";
 import { endSessionAtom } from "../store/sessionActions";
 import { authNoticeAtom, sessionAtom, tokenAtom } from "../store/sessionAtoms";
 import { PATHS } from "./paths";
@@ -20,7 +20,7 @@ export function RequireAuth() {
   const location = useLocation();
 
   // The session atom has no clock, so the expiry is judged here, on each render.
-  const isLive = session !== null && !isExpired(session, Date.now());
+  const isLive = isLiveSession(session, Date.now());
   // A token is still stored, but it has run out or cannot be read.
   const isDeadSession = token !== null && !isLive;
 

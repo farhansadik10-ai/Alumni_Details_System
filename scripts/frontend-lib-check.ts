@@ -9,7 +9,9 @@
 // It imports only from frontend/src/lib/. It reads no file and calls no API.
 
 import { initialsOf } from "../frontend/src/lib/initials.ts";
-import { isExpired, readToken } from "../frontend/src/lib/token.ts";
+import { pageRange } from "../frontend/src/lib/pageRange.ts";
+import { readReturnAddress } from "../frontend/src/lib/returnAddress.ts";
+import { isAdmin, isExpired, isLiveSession, readToken } from "../frontend/src/lib/token.ts";
 import {
   validateEmail,
   validateLoginPassword,
@@ -180,6 +182,52 @@ check("initials: null", initialsOf(null), "");
 check("initials: only spaces", initialsOf("   "), "");
 check("initials: lower case, many spaces", initialsOf("nadia    rahman"), "NR");
 check("initials: non-ASCII first letter", initialsOf("åsa öberg"), "ÅÖ");
+
+// ---- Live session and admin ---------------------------------------------
+
+const liveSession = { userId: 1, role: "admin" as const, expiresAt: 5000 };
+check("live: before the expiry", isLiveSession(liveSession, 4999), true);
+check("live: at the expiry moment", isLiveSession(liveSession, 5000), false);
+check("live: after the expiry", isLiveSession(liveSession, 9000), false);
+check("live: no expiry", isLiveSession({ userId: 1, role: null, expiresAt: null }, 9e15), true);
+check("live: no session", isLiveSession(null, 0), false);
+check("admin: role admin", isAdmin({ userId: 1, role: "admin", expiresAt: null }), true);
+check("admin: role alumni", isAdmin({ userId: 1, role: "alumni", expiresAt: null }), false);
+check("admin: role student", isAdmin({ userId: 1, role: "student", expiresAt: null }), false);
+check("admin: unknown role (null)", isAdmin({ userId: 1, role: null, expiresAt: null }), false);
+check("admin: no session", isAdmin(null), false);
+
+// ---- Return address ------------------------------------------------------
+
+check("return: normal address", readReturnAddress({ from: { pathname: "/feed", search: "?x=1", hash: "#a" } }), { pathname: "/feed", search: "?x=1", hash: "#a" });
+check("return: pathname only", readReturnAddress({ from: { pathname: "/feed" } }), { pathname: "/feed", search: "", hash: "" });
+check("return: // is refused", readReturnAddress({ from: { pathname: "//x" } }), null);
+check("return: slash-backslash is refused", readReturnAddress({ from: { pathname: "/\\x" } }), null);
+check("return: no pathname", readReturnAddress({ from: { search: "?x=1" } }), null);
+check("return: pathname not text", readReturnAddress({ from: { pathname: 5 } }), null);
+check("return: pathname without a leading /", readReturnAddress({ from: { pathname: "feed" } }), null);
+check("return: full URL is refused", readReturnAddress({ from: { pathname: "https://evil.example/" } }), null);
+check("return: state is null", readReturnAddress(null), null);
+check("return: state is a string", readReturnAddress("/feed"), null);
+check("return: state without from", readReturnAddress({}), null);
+check("return: from is a string", readReturnAddress({ from: "/feed" }), null);
+check("return: from is null", readReturnAddress({ from: null }), null);
+check("return: search not text", readReturnAddress({ from: { pathname: "/feed", search: 3, hash: "#a" } }), { pathname: "/feed", search: "", hash: "#a" });
+check("return: hash not text", readReturnAddress({ from: { pathname: "/feed", search: "?x=1", hash: {} } }), { pathname: "/feed", search: "?x=1", hash: "" });
+
+// ---- Page range -----------------------------------------------------------
+
+check("pageRange(1, 3)", pageRange(1, 3), [1, 2, 3]);
+check("pageRange(1, 25)", pageRange(1, 25), [1, 2, "gap", 25]);
+check("pageRange(4, 25)", pageRange(4, 25), [1, 2, 3, 4, 5, "gap", 25]);
+check("pageRange(12, 25)", pageRange(12, 25), [1, "gap", 11, 12, 13, "gap", 25]);
+check("pageRange: 7 pages are all shown", pageRange(4, 7), [1, 2, 3, 4, 5, 6, 7]);
+check("pageRange: 0 pages", pageRange(1, 0), []);
+check("pageRange: negative pages", pageRange(1, -3), []);
+check("pageRange: NaN pages", pageRange(1, NaN), []);
+check("pageRange: NaN page counts as 1", pageRange(NaN, 25), [1, 2, "gap", 25]);
+check("pageRange: page above the last counts as the last", pageRange(99, 25), [1, "gap", 24, 25]);
+check("pageRange: page below 1 counts as 1", pageRange(-5, 25), [1, 2, "gap", 25]);
 
 // ---- Result ---------------------------------------------------------------
 

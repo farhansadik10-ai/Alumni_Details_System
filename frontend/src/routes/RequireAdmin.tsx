@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import { lazy } from "react";
 import { Outlet } from "react-router-dom";
+import { isAdmin } from "../lib/token";
 import { sessionAtom } from "../store/sessionAtoms";
 
 const NoAccessPage = lazy(() => import("../pages/NoAccessPage/NoAccessPage"));
@@ -14,7 +15,7 @@ const NoAccessPage = lazy(() => import("../pages/NoAccessPage/NoAccessPage"));
 export function RequireAdmin() {
   const session = useAtomValue(sessionAtom);
 
-  if (session?.role !== "admin") {
+  if (!isAdmin(session)) {
     return <NoAccessPage />;
   }
 

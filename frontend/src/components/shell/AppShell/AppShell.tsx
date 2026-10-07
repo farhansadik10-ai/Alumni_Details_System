@@ -1,7 +1,9 @@
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { PATHS } from "../../../routes/paths";
+import { LOADING_TEXT } from "../../../config/text";
+import { PATHS, isAfterLogIn } from "../../../routes/paths";
 import { loadProfileAtom, profileAtom } from "../../../store/profileAtoms";
 import { sessionAtom } from "../../../store/sessionAtoms";
 import { Card } from "../../ui/Card/Card";
@@ -17,7 +19,7 @@ const MAIN_ID = "main-content";
 /** Shown in place of a page while its code is fetched. The header stays. */
 function PageLoading() {
   return (
-    <PageLayout heading="Loading">
+    <PageLayout heading={LOADING_TEXT}>
       <Card>
         <SkeletonGroup>
           <Skeleton shape="title" />
@@ -30,6 +32,18 @@ function PageLoading() {
 }
 
 /**
+ * Rendered next to the page inside Suspense, so its effect runs only once the
+ * page is really there (a lazy page that is still loading shows the fallback
+ * and commits none of its siblings). Moves focus to the page heading.
+ */
+function FocusHeading({ mainRef }: { mainRef: RefObject<HTMLElement | null> }) {
+  useEffect(() => {
+    mainRef.current?.querySelector("h1")?.focus();
+  }, [mainRef]);
+  return null;
+}
+
+/**
  * The frame around every page a logged-in user sees: skip link, header, the
  * page, footer. It also loads the user's own profile for the header.
  */
@@ -38,7 +52,10 @@ export function AppShell() {
   const profileStatus = useAtomValue(profileAtom).status;
   const loadProfile = useSetAtom(loadProfileAtom);
   const store = useStore();
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
+  // PublicOnly sent the user here after a log in: a new page for them, so
+  // focus goes to its heading, as for an in-app move. Read once, at mount.
+  const [focusAfterLogIn] = useState(() => isAfterLogIn(state));
   const mainRef = useRef<HTMLElement>(null);
   const shownPath = useRef(pathname);
 
@@ -72,6 +89,7 @@ export function AppShell() {
       <main ref={mainRef} id={MAIN_ID} className={styles.main} tabIndex={-1}>
         <Suspense fallback={<PageLoading />}>
           <Outlet />
+          {focusAfterLogIn ? <FocusHeading mainRef={mainRef} /> : null}
         </Suspense>
       </main>
       <Footer />

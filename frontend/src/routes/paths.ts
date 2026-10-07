@@ -16,3 +16,15 @@ export const PATHS = {
 
 // The route pattern for an address that matches no page.
 export const ANY_OTHER_PATH = "*";
+
+// Router state PublicOnly attaches when it sends a user on after a log in, so
+// the shell can move focus to the page heading (an in-app move does that too).
+export const AFTER_LOG_IN_STATE = { afterLogIn: true } as const;
+
+export function isAfterLogIn(state: unknown): boolean {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    (state as { afterLogIn?: unknown }).afterLogIn === true
+  );
+}

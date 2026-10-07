@@ -1,5 +1,5 @@
 import { TOKEN_STORAGE_KEY } from "../config/storageKeys";
-import { isExpired, readToken } from "../lib/token";
+import { isLiveSession, readToken } from "../lib/token";
 import { configureApiClient } from "../services/apiClient";
 import { appStore } from "./appStore";
 import { endSessionAtom, tokenChangedElsewhereAtom } from "./sessionActions";
@@ -13,7 +13,7 @@ function endStoredSessionIfDead(): void {
     return;
   }
   const session = readToken(token);
-  if (session === null || isExpired(session, Date.now())) {
+  if (!isLiveSession(session, Date.now())) {
     appStore.set(endSessionAtom);
   }
 }

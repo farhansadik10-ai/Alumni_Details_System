@@ -70,3 +70,13 @@ export function readToken(token: string): Session | null {
 export function isExpired(session: Session, now: number): boolean {
   return session.expiresAt !== null && now >= session.expiresAt;
 }
+
+/** A session that exists and has not run out on this clock. */
+export function isLiveSession(session: Session | null, now: number): session is Session {
+  return session !== null && !isExpired(session, now);
+}
+
+/** True only for a known admin role. A null session or a null role is not an admin. */
+export function isAdmin(session: Session | null): boolean {
+  return session?.role === "admin";
+}

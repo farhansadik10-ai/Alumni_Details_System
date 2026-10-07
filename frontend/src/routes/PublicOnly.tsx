@@ -1,33 +1,11 @@
 import { useAtomValue } from "jotai";
 import { Suspense } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import type { To } from "react-router-dom";
-import { isExpired } from "../lib/token";
+import { LOADING_TEXT } from "../config/text";
+import { readReturnAddress } from "../lib/returnAddress";
+import { isLiveSession } from "../lib/token";
 import { sessionAtom } from "../store/sessionAtoms";
-import { PATHS } from "./paths";
-
-/**
- * The address RequireAuth handed over, or null. Router state can be anything,
- * so every part is checked. Only an address inside the app is accepted.
- */
-function readReturnAddress(state: unknown): To | null {
-  if (typeof state !== "object" || state === null) {
-    return null;
-  }
-  const from: unknown = (state as { from?: unknown }).from;
-  if (typeof from !== "object" || from === null) {
-    return null;
-  }
-  const { pathname, search, hash } = from as Record<string, unknown>;
-  if (typeof pathname !== "string" || !pathname.startsWith("/") || pathname.startsWith("//")) {
-    return null;
-  }
-  return {
-    pathname,
-    search: typeof search === "string" ? search : "",
-    hash: typeof hash === "string" ? hash : "",
-  };
-}
+import { AFTER_LOG_IN_STATE, PATHS } from "./paths";
 
 /**
  * Log in and sign-up are for visitors. A logged-in user is sent on: to the
@@ -39,14 +17,18 @@ export function PublicOnly() {
   const location = useLocation();
 
   // An expired session is not a session: RequireAuth would send it straight back.
-  const isLive = session !== null && !isExpired(session, Date.now());
-
-  if (isLive) {
-    return <Navigate to={readReturnAddress(location.state) ?? PATHS.dashboard} replace />;
+  if (isLiveSession(session, Date.now())) {
+    return (
+      <Navigate
+        to={readReturnAddress(location.state) ?? PATHS.dashboard}
+        replace
+        state={AFTER_LOG_IN_STATE}
+      />
+    );
   }
 
   return (
-    <Suspense fallback={<p className="visuallyHidden">Loading</p>}>
+    <Suspense fallback={<p className="visuallyHidden">{LOADING_TEXT}</p>}>
       <Outlet />
     </Suspense>
   );

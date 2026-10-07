@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { LOADING_TEXT } from "./config/text";
 import { AppShell } from "./components/shell/AppShell/AppShell";
 import { ToastViewport } from "./components/ui/Toast/ToastViewport";
 import { ANY_OTHER_PATH, PATHS } from "./routes/paths";
@@ -26,7 +27,10 @@ const ComponentsPage = import.meta.env.DEV
   : null;
 
 // The route table. The three guards do all the sending-on (architecture.md,
-// "Routes"): no page navigates after a log in or a log out.
+// "Routes"): after a log in or a log out no page navigates, with one
+// exception: SignUpPage sends the user to log in when the account was created
+// but the log in that follows failed. PublicOnly is the only code that
+// navigates after a successful log in.
 export default function App() {
   return (
     <BrowserRouter>
@@ -41,7 +45,7 @@ export default function App() {
           <Route
             path={PATHS.devComponents}
             element={
-              <Suspense fallback={<p className="visuallyHidden">Loading</p>}>
+              <Suspense fallback={<p className="visuallyHidden">{LOADING_TEXT}</p>}>
                 <ComponentsPage />
               </Suspense>
             }
