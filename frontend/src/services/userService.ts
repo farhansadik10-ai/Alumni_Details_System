@@ -1,4 +1,8 @@
-import type { PublicUser, SignUpUserDTO } from "@alumni/shared";
+import type {
+  PublicUser,
+  SignUpUserDTO,
+  UpdateUserDTO,
+} from "@alumni/shared";
 import { apiClient } from "./apiClient";
 
 const USERS_PATH = "/api/users";
@@ -17,6 +21,15 @@ export async function signUp(body: SignUpUserDTO): Promise<PublicUser> {
 
 export async function getUser(id: number): Promise<PublicUser> {
   const response = await apiClient.get<PublicUser>(`${USERS_PATH}/${id}`);
+  return response.data;
+}
+
+/** Only the fields sent are written. The answer has no password column. */
+export async function updateUser(
+  id: number,
+  body: UpdateUserDTO,
+): Promise<PublicUser> {
+  const response = await apiClient.put<PublicUser>(`${USERS_PATH}/${id}`, body);
   return response.data;
 }
 

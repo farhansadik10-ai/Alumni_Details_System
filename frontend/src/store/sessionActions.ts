@@ -7,6 +7,7 @@ import { toApiFailure } from "../services/apiError";
 import type { ApiFailure } from "../services/apiError";
 import { logIn } from "../services/authService";
 import { logOut, signUp } from "../services/userService";
+import { resetAlumniAtom } from "./alumniAtoms";
 import { IDLE_PROFILE, profileAtom } from "./profileAtoms";
 import {
   adoptStoredTokenAtom,
@@ -48,12 +49,14 @@ const UNREADABLE_ANSWER: ApiFailure = { kind: "network" };
 const clearSessionAtom = atom(null, (_get, set, notice: AuthNotice) => {
   set(tokenAtom, null);
   set(profileAtom, IDLE_PROFILE);
+  set(resetAlumniAtom);
   set(authNoticeAtom, notice);
 });
 
 // The token goes last: setting it is what makes the PublicOnly guard leave.
 const startSessionAtom = atom(null, (_get, set, token: string) => {
   set(profileAtom, IDLE_PROFILE);
+  set(resetAlumniAtom);
   set(authNoticeAtom, null);
   set(tokenAtom, token);
 });
@@ -166,6 +169,9 @@ export const tokenChangedElsewhereAtom = atom(
     set(adoptStoredTokenAtom, token);
     if (get(sessionAtom)?.userId !== userIdBefore) {
       set(profileAtom, IDLE_PROFILE);
+      // ADV-001: otherwise the new user would see, and could save over,
+      // the old user's alumni profile.
+      set(resetAlumniAtom);
     }
   },
 );

@@ -42,3 +42,14 @@ export const loadProfileAtom = atom(null, async (get, set): Promise<void> => {
     }
   }
 });
+
+/**
+ * Stores the user record a save answered with, so the header shows the new
+ * name and photo at once (AC28). A record of anyone but the session's user
+ * is ignored.
+ */
+export const setProfileUserAtom = atom(null, (get, set, user: PublicUser) => {
+  if (get(sessionAtom)?.userId === user.id) {
+    set(profileAtom, { status: "ready", user });
+  }
+});
