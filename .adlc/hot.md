@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-07] implement-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 11 tasks done; build, style check and library check (72 cases) pass; owner checked log in, sign-up, theme, shell and phone menu in a browser; 11 decide items open in check-notes.md
+
 ## [2026-10-07] architect-gate-cleared | REQ-fs-004-frontend-foundation-shell-auth | 11 tasks in 7 tiers; stress-test 0 critical, 1 major, 3 minor (all fixed); owner approved the legacy delete list and snapping picture sizes to the README scale
 ## [2026-10-07] adr-accepted | ADR-14 the session token and the theme choice are kept in the browser's localStorage
 ## [2026-10-07] adr-accepted | ADR-13 frontend structure: four layers, CSS Modules on one token file, own icons, self-hosted font

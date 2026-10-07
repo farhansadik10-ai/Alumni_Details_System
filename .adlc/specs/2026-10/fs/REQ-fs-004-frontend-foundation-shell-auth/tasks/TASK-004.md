@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 2 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-002 |
 | Blocks | TASK-008 |
@@ -45,6 +45,18 @@ The theme choice (light, dark, system) is saved, applied before the first paint,
 - The script in `index.html` is the one place the storage is read outside `lib/browserStorage.ts`; it cannot import anything.
 - The theme store does not depend on TASK-003. If `lib/browserStorage.ts` does not exist yet when this task runs, create it exactly as TASK-003 describes (three functions) and note it; TASK-003 then keeps that file.
 - The focus ring comes from `base.css`. Make sure the pressed button's ring is not clipped by the group's border (`position: relative` and `z-index: 1` on focus is fine; that number is unitless and allowed).
+
+### Implementation notes (TASK-004, 2026-10-07)
+
+- **Where the listeners are added.** The task's file table does not list `main.tsx`, so `themeAtoms.ts` adds its two listeners (system setting, other tabs) itself, once, when the module is first loaded. Every page has a ThemeSwitch, which imports the module. If TASK-008 ever builds a page with no ThemeSwitch in its bundle, that page keeps the theme the head script set but does not follow a live system change until the module loads; importing `store/themeAtoms` from `main.tsx` would close that.
+- **Other tabs.** A change from another tab is taken into memory and applied, never written back (same reason as the token, CAND-014). A cleared storage counts as `system`.
+- **Storage refused.** The choice still applies and lives in memory for the visit.
+- **Hover.** The pictures show no hover for an unpressed theme button. Built as `--sunken`, the same quiet hover the system picture uses for table rows. The pressed button does not change on hover. For the review to confirm.
+- **Text size.** The pictures use 15px for the word buttons; built as 14px (Small), per the size-snapping table. Pressed is weight 700, others 600, as drawn.
+- **Group size.** Each icon button is 36px square including the 1.5px divider on its left, as in the pictures (the divider sits inside the button). The group is 36px plus its own border.
+- **No new token** was needed; `tokens.css` is untouched.
+- **Checks.** `npm run build` exit 0; `node scripts/frontend-style-check.mjs` exit 0 (32 files, no findings). Built `frontend/dist/index.html`: the theme script comes before the module script and the stylesheet link, and the key in it is `ua.theme`. `ThemeSwitch.module.css` has no `[data-theme` selector.
+- **Not seen in a browser.** A scratch script (not shipped) ran the built head script and the theme store against fake `window`, `document` and `localStorage`: 29 cases passed (nothing saved, each saved value, junk, storage refused, `matchMedia` refused, live system change, other tab, cleared storage). The look of the switch, the focus ring and AC13 to AC15 in a real browser are still for the review phase and the owner's checklist.
 
 ## Related
 

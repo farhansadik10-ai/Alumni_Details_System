@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 6 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-009, TASK-010 |
 | Blocks | — |
@@ -41,6 +41,27 @@ The patterns used are written down where the next three parts will extend them, 
 - Compiler rules: `import type` for types, no enums, no unused locals or parameters. No barrel `index.ts` files for components.
 - `docs/roadmap.md`, the root `CLAUDE.md` and the vault context pages are updated at wrap-up (AC64), not in this task.
 - Report a failing check as failing. Do not edit a check to make it pass.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+**Written.** `docs/frontend-patterns.md` (22 patterns, each with What it is / Where it lives / Why we chose it, then "How to add to this file", "Checks to run" and "Open points"); `manual-checklist.md` (60 numbered steps in 12 parts, plus a "Not covered" table); `check-notes.md` (final checks with output, the 65-criteria table, what is not proven and by whom, 63 deviations, 18 follow-ups). No file under `frontend/src`, `scripts/`, `backend/`, `shared/` or `db/` was changed. No package added, nothing deleted.
+
+**Checks, all on the final code, all passing.** `npm run build` exit 0; `node scripts/frontend-style-check.mjs` exit 0 (111 files, no findings); `npx tsx scripts/frontend-lib-check.ts` 72 passed, exit 0; the antd search finds nothing; `frontend/dist/assets` has ten page files and the entry holds none of their text; four strings of the components page are in `frontend/src` once and in `frontend/dist` never; `git status --short -- backend shared db` prints nothing; 103 paths named in the patterns file, 0 missing. Commands and output are in `check-notes.md` section 1. No dev server, no browser, no request to port 3000.
+
+**Where this differs from the task text.**
+
+1. **The antd search was run twice.** `git grep -n "antd" -- frontend/src frontend/package.json`, as the task writes it, reads only tracked files, and 106 files in `frontend/src` are new and untracked. It was run again with `--untracked` and all three package names. Both find nothing. The patterns file gives the command with the flag.
+2. **The patterns file has four patterns beyond the task's list**, because the code has them: one way to end a session (10), every address in one object (12), browser storage that never throws (21), the development-only components page (22). "Actions as write-only atoms" and "one Jotai store" are two sections.
+3. **"That the checks can fail" was not shown again.** It would mean writing a probe file under `frontend/src` or editing a script. TASK-002 and TASK-003 recorded both.
+4. **AC9's exact color values were not compared again.** Counted here: 27 tokens in each theme block and `color-scheme` in both. The value-by-value comparison is TASK-002's; the review phase can repeat it.
+
+**How the checklist handles the session cases.** A hand-made token cannot stand in for a live session: any change to the payload breaks the signature, so the first API call answers 401. So: step 49 spoils the signature (a real 401 from the server); step 51 moves `exp` into the past (found at load, before any call); step 50, "the token runs out while the page is open", needs the real wait of an hour. The two console snippets were run in Node against `lib/token.ts` first: after the first the token is readable and not expired, after the second readable and expired. Step 13 is the one built to fail if the code were wrong in a likely way: a password that ends in a space must not log in without the space.
+
+**Not verified by me.** Step 58 assumes `vite preview` passes `/api` on to the backend the way the dev server does (Vite's documented default is that preview uses the dev proxy settings). Not run, because it would send requests to port 3000. The step says what to do if it does not. Step 49 assumes the backend answers 401 to a token with a bad signature; `authMiddleware` is on `GET /api/users/:id` (read in `backend/src/api/routes/UserRoutes.ts`), but the answer itself was not seen.
+
+**Found on the way** (also in `check-notes.md` section 6): a stale comment in `frontend/src/store/themeAtoms.ts` lines 73 to 74; six task files whose status still says `pending`; Log out has no home on a wide screen once part 3 replaces the My profile page.
+
+**Follow-ups, not done here.** None of this task's own. The 18 left by earlier tasks are listed in `check-notes.md` section 5.
 
 ## Related
 

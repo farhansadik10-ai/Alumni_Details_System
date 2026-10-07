@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 0 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | — |
 | Blocks | TASK-002, TASK-003 |
@@ -17,7 +17,7 @@ The legacy Ant Design code is gone, the packages are changed, and a minimal new 
 
 | Path | Action |
 |---|---|
-| `frontend/src/** (the 57 legacy files listed in architecture.md, "Legacy files")` | delete |
+| `frontend/src/** (the 51 legacy files listed in architecture.md, "Legacy files")` | delete |
 | `frontend/public/icons.svg` | delete |
 | `frontend/public/favicon.svg` | replace |
 | `frontend/package.json` | edit |
@@ -55,6 +55,21 @@ The legacy Ant Design code is gone, the packages are changed, and a minimal new 
 - Compiler rules: `import type` for types, no enums, no unused locals or parameters. No barrel `index.ts` files for components.
 - If importing `src/config/*.ts` from `vite.config.ts` breaks `tsc -b` for the node project, use the fallback in architecture.md "Risks" and say so in the notes.
 - `npm install` may rewrite many lines of `package-lock.json`; that is expected.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+- **The count "57" is wrong; the real number is 51.** `git ls-files frontend/src` gave 51 files before the delete, and the names under architecture.md "Legacy files" also add up to 51. The two sets are the same, name for name. Nothing untracked or ignored was in `frontend/src`. Deleted: those 51 plus `frontend/public/icons.svg` = 52 files. Nothing else. architecture.md (lines 12 and 18) and this task's table still say 57; they need a one-word fix.
+- `git status` shows 50 deletions, not 52, because `App.tsx` and `main.tsx` were deleted and then written new at the same path, so git shows them as modified.
+- Empty folders under `frontend/src` were removed with `rmdir` (only empty ones).
+- `npm view @fontsource-variable/hanken-grotesk version` answered 5.3.0; `npm install` added 1 package and removed 66. `package-lock.json`: 5 lines added, 977 removed.
+- The font package is installed but not imported yet. TASK-002 imports it in `main.tsx`.
+- `vite.config.ts` imports `./src/config/app.ts` and `./src/config/storageKeys.ts` with the `.ts` ending. `tsc -b` passes for the node project, so the fallback in architecture.md "Risks" was not needed.
+- The plugin HTML-escapes the app name (`&`, `<`, `>`) before it goes into `<title>`, so a buyer's name such as "Smith & Sons" stays valid HTML. The storage key is written as it is.
+- The marker for TASK-004 in `index.html` is the comment that starts with `THEME-SCRIPT:`. The comment does not hold the text `%THEME_STORAGE_KEY%`, because the plugin would replace it there too.
+- `vite-env.d.ts` was not created: nothing imports CSS yet, and `tsconfig.app.json` already has `types: ["vite/client"]`.
+- `main.tsx` mounts only when `#root` exists, instead of a non-null `!`.
+- Checks run: `npm run build` exit 0; the `git grep` of AC1 finds nothing; `frontend/dist/index.html` has `<title>University Alumni</title>`; the text is in `frontend/src` only in `config/app.ts`; `git status` shows nothing under `backend/`, `shared/`, `db/`.
+- Not part of this task: `npm install` reports 7 known vulnerabilities (4 moderate, 2 high, 1 critical) in packages that were already there. `npm audit fix` was not run.
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 5 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-008 |
 | Blocks | TASK-011 |
@@ -41,6 +41,45 @@ In development, `/dev/components` shows every base component and state so each c
 - The color swatches must read the tokens through classes in the module stylesheet (`background: var(--ground)`), so the page itself passes the style check. No inline `style` with a color.
 - Only this task edits `App.tsx` in tier 5. TASK-009 does not touch it: the routes already point at the page files.
 - This page is where the review compares components with the pictures; lay it out plainly.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+**Built.** `pages/dev/ComponentsPage/ComponentsPage.tsx` + `.module.css`; one edit in `App.tsx` (the lazy import behind `import.meta.env.DEV`, and the route, outside the guards, with its own `Suspense` because it is not under `PublicOnly` or the shell). No token added to `tokens.css`. No other file changed.
+
+**Checks.** `node scripts/frontend-style-check.mjs` exit 0 (no findings); `npm run build` exit 0 (the first run failed on TASK-009's half-written `LoginPage.tsx`; it passed on the retry, nothing of theirs was touched).
+
+**Left out of the production build (AC31).** After the build, from the repo root:
+`grep -rlF "Compare each section with" frontend/dist | wc -l` gives **0**; the same search on `frontend/src` gives **1** (so the string is right). Same result, 0 in dist and 1 in src, for `Danger soft text`, `no-such-photo` and `Show a toast`. No file in `frontend/dist/assets` has "component" in its name.
+
+**How it was looked at.** Headless Chrome over the debugging port with real Tab, Enter and Escape keys, against a Vite dev server on port 5310 started with a temporary config that sent `/api` to a port where nothing listens. The network log of every run: 0 requests to `/api`, one host only (`127.0.0.1:5310`). No console error or warning. Port 3000 was never asked for anything. The server, Chrome, the temporary config, its cache folder, the driver script, the browser profile and all screenshots are gone.
+
+**Seen.**
+- Light and dark at 1440px and 360px, plus 768px and 640px (640px is what 200% zoom on a 1280px window gives): every section renders, one `<h1>`, tab title "Components · University Alumni". No sideways scroll and no element past the page edge at 1440, 768, 640, 360 and 345px (AC57).
+- Avatars: the three with a working link show the picture; the three with a broken link show initials (after they scroll into view: the image is `loading="lazy"`).
+- **Tab, pressed for real, 1440px light and 360px dark: 68 stops, every one with the 3px `--focus` ring at 2px** (`:focus-visible` true). That includes what earlier tasks could not prove: Button (all variants and sizes, and the busy ones, which stay focusable), Link, Checkbox, the radio, the table's Delete buttons, Pagination's Previous / Next and page numbers, Select, Textarea, the Show button, both theme switches. Disabled controls are skipped. The radio group is one stop. Pictures of the ring on a link, a checkbox, a radio, a page number and a table Delete showed it whole in both themes: the table's `overflow: hidden` does not cut it.
+- Dialog by keyboard: Enter on "Delete post" opens it, focus on Cancel; Tab goes Cancel, Delete post, the browser's own UI, Cancel; Escape closes it and focus is back on the opener. Confirm closes it and shows a toast. 440px wide and centered at 1440px; full width minus the gutters with stacked buttons at 360px.
+- Toast: two at once; both gone after 5.6 seconds.
+- Pagination: starts "1 2* 3" and "1 … 5 6* 7 … 25"; Enter on page 3 disables Next, Enter on page 1 of 25 disables Previous and gives "1* 2 … 25".
+- Theme: Enter on Dark sets `data-theme="dark"` and stores it; the whole page follows.
+
+**Not seen.** Hover (no real mouse), a screen reader, Firefox, Safari, a real phone, the production build in a browser.
+
+**Choices the task left open.**
+- The Color section shows all 27 color tokens with the token name, not a hex value: the value changes with the theme, and a hex in the page would fail the style check. `system.html` draws 16.
+- Buttons grid columns are Default, Disabled, Busy. The picture's Hover and Focus columns cannot be held still on a live page: hover with the mouse, press Tab.
+- Added beyond the list, because AC29 and AC30 ask for them: a Links row, and all eight icons in their three sizes. Also `fullWidth` on a button, the `lg` input, error and disabled looks of PasswordInput, Select and Textarea, a disabled Checkbox, EmptyState with no button, and the Card with 32px padding.
+- Both sample photo links point at the dev server itself (`/favicon.svg`, and a path that is not a picture), so the page asks no outside host for anything.
+- The table's Delete buttons carry `aria-label="Delete <name>"` and open the same confirm dialog.
+- Sizes snapped (architecture table): page padding 56 to 48 (phone: the gutter), section top padding and gaps 20 to 24, swatch height 56 to 48, shape boxes 72 to 64, label gaps 6 to 8. The page does not cap its width at 1200px, to match the 1440px pictures.
+
+**Differences from the pictures, in the components (not changed here; for the review to decide).**
+1. `Table`, phone: a long email breaks inside a word ("nadia.rahman@example.c / om") because the value column is two thirds of a 360px card and uses `overflow-wrap: anywhere`. Nothing is cut off. A wider value column or a stacked label would avoid it.
+2. `Pagination`, 360px: the row wraps. "Previous 1 2 3" on one line and "Next" alone on the next; with 25 pages the numbers split over two lines. It works and nothing overflows; it is not drawn at this width in the pictures.
+3. `Pagination` shows "Page 2 of 3" after the buttons; `system.html` does not draw it (AC24 asks for it).
+4. `Tag` Student: `--sunken` with a 1px `--line` border everywhere; the picture draws it plain `--sunken` in "Tags" and outlined only in the sunken table row (TASK-006 chose this on purpose).
+5. `Table`: the picture gives the second row a `--sunken` fill (it shows a hovered row); the page shows none until the pointer is on a row.
+6. `Select` is a real `<select>`, the picture a button; `ThemeSwitch` text buttons have no icon beside the word, the picture's have one; avatar text 13 / 16px for 12 / 15px; card padding 24px for 20px. All four are in the architecture's size-snapping table or the README.
+7. Loading box: the picture's is `1.5px --line`. `Skeleton` has no box of its own, so the page draws that border itself.
 
 ## Related
 

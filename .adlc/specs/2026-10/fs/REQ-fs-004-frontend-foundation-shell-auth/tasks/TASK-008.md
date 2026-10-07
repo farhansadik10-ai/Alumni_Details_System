@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 4 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-003, TASK-004, TASK-005, TASK-006, TASK-007 |
 | Blocks | TASK-009, TASK-010 |
@@ -74,6 +74,62 @@ A logged-in user sees the shell (header, band, footer, phone menu) on every page
 - No real backend may be available. To see the shell, put a hand-made token in `localStorage` under `ua.token` (three base64url parts; payload `{"sub":1,"role":"admin","exp":<a time in the future>}`). The profile call will then fail, which is exactly the AC41 error path. Say in the notes what was and was not seen in a browser.
 - The design draws the nav marker and the phone menu marker with `box-shadow: inset`. The rule is "no shadows", so draw the same line another way.
 - `--accent` is used here as a marker beside dark text on a light surface, never as text and never as the only border.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+**Checks.** `npm run build` exit 0; `node scripts/frontend-style-check.mjs` exit 0 (105 files, no findings); `npx tsx scripts/frontend-lib-check.ts` 72 passed, exit 0. No token was added to `tokens.css`.
+
+**AC6, the listing.** `frontend/dist/assets` after the build: `LoginPage-*.js`, `SignUpPage-*.js`, `DashboardPage-*.js`, `DirectoryPage-*.js`, `AlumniProfilePage-*.js`, `FeedPage-*.js`, `MyProfilePage-*.js`, `UsersPage-*.js`, `NotFoundPage-*.js`, `NoAccessPage-*.js` (ten page files, each 0.16 to 0.34 kB), plus two shared pieces, `BeingBuilt-*.js` and `Link-*.js`, and the entry `index-*.js` (265 kB). `grep -c "This page is being built"` on the entry file gives 0; the text is only in `BeingBuilt-*.js`.
+
+**How it was looked at.** Headless Chrome, driven over the debugging port with real Tab, Enter and Escape keys, against the Vite dev server. Something was already listening on port 3000 when this task started (a Node process that answers `/api/health`; this task did not start it and did not touch it). So that no request of this look could reach it, the dev server ran with a temporary config that sent `/api` to a port where nothing listens. A second pass answered `GET /api/users/1` inside the browser to show the loading and the ready header. The temporary config, the driver scripts, the screenshots and the browser profile are deleted; the dev server and Chrome are stopped. A "session appears" was made the way another tab makes one: the hand-made token written to `localStorage` plus a `storage` event.
+
+**Seen in the browser** (1280px light and dark, 800px, 360px; no console error or warning in either pass):
+
+- AC37, case 1: logged out, `/feed?x=1` → `/login` with `state.from` = `/feed?x=1`; a session appears → `/feed?x=1`.
+- AC37, case 2, and AC43: Log out on `/profile` → one `PUT /api/users/1/logout` (it failed, nothing listens) → `/login`, router state `null`, token gone; next session → `/dashboard`. Same from the phone menu's Log out.
+- AC38: `/login` and `/signup` while logged in → `/dashboard`. `/` → `/dashboard`.
+- AC39: a student at `/users` sees the heading "Users" and "You do not have access to this page" inside the shell; the only request is `GET /api/users/1` (the header's own); no Users link in the header or the menu. An admin sees the Users link and the being-built page.
+- AC40, AC62: each of the six pages, Page not found and the no-access page has exactly one `<h1>` and its own tab title ("Feed · University Alumni").
+- AC32, AC34, AC35, measured: header 72px (60px phone); band heading 60px (36px phone); accent bar 72×8 on both; card overlaps the band by 56px (52px phone); the current link is weight 700 with a 4px `--accent` line drawn by `::after`, `box-shadow: none`; footer holds the app name and no link.
+- AC41: while the call waits, a skeleton in the header and in the menu; when it answers, initials and the name; when it fails or the user has no name, a plain avatar and "My profile". One profile request per load. A very long name is cut with "…" in the header and wraps in the menu; no sideways scroll.
+- AC42: a token already expired at load → `/login`, token removed. A token that runs out while the page is open: the next click on a header link → `/login`, token removed, `state.from` = the page that was asked for. An unreadable token written by another tab → `/login`, token removed.
+- AC36 and the keyboard pass, 1280px: Tab order is Skip to content, app name, Dashboard, Directory, Feed, Users, the three theme buttons, My profile. Enter on the skip link puts focus on `<main>`; the address keeps no `#`.
+- A new page moves focus to its `<h1>` (by click and by Enter on a link); not on first load.
+- AC33 and the keyboard pass, 360px: Tab order is Skip to content, app name, Open menu. Enter opens the menu: a modal dialog named "Menu", 360×740, focus on Close menu. Tab goes through the five links, Light, Dark, System, Log out, the browser's own UI, and back to Close menu; never the page behind. Escape and the close button close it and focus returns to the menu button (`aria-expanded` back to false). Choosing a link closes it and focus lands on the new heading; choosing the current page closes it; widening the window to 1024px closes it. On a 420px-high screen the menu scrolls inside itself. No sideways scroll at 360px or 800px.
+
+**Only reasoned about, not seen.**
+
+- A real log in, and the words "Your session has ended. Log in again." (the log-in page is a stub until TASK-009; the notice atom is set by `endSessionAtom`, which the three expiry cases above reached).
+- The production build in a browser (the dev server was used), Firefox, Safari, a real screen reader, a real mouse, a touch screen.
+- 200% zoom as such. At 1280px it is the same layout as a 640px window, which is the phone layout seen at 360px.
+- A slow network between two pages. The router wraps a navigation in a React transition (checked in `react-router` 7.18.3), so the old page stays until the new file has arrived and the skeleton page shows only on first load.
+
+**Choices the task text left open.** Say so if any should change.
+
+1. **`BeingBuilt.module.css` was not created.** The task lists it, but Page not found and the no-access page need the same card (a statement, a line, a link), and their rows in the file table have no stylesheet. So the card is one small component, `PageNote`, in `PageLayout.tsx` with its styles in `PageLayout.module.css`; `BeingBuilt` is `PageLayout` + `PageNote` and has nothing of its own to style.
+2. **`ANY_OTHER_PATH = "*"`** sits in `paths.ts` beside `PATHS`, so the route table holds no address text at all.
+3. **`RequireAuth` also ends a stored token that cannot be read**, not only an expired one (the architecture lists both as a dead session). **`PublicOnly` also checks expiry**, or an expired session would bounce between the two guards for one render.
+4. **`PublicOnly` accepts a return address only when it is a path inside the app** (starts with one `/`); anything else goes to the Dashboard.
+5. **Pages are default exports** (`React.lazy` wants one); components stay named exports. `NoAccessPage` is loaded lazily by `RequireAdmin`.
+6. **`ToastViewport` comes after the routes in the document**, not before: otherwise a toast's Dismiss button would be the first Tab stop, ahead of the skip link. It is fixed to the corner, so nothing moves on screen.
+7. **The skip link moves focus by script** (`preventDefault`, then `focus()` on `<main>`): the address keeps no `#main-content`, and the link works a second time on the same page.
+8. **Focus does not move when the user arrives from `/`**, which only sends them on to the Dashboard; that is a first load, not a page change. After a log in the shell is new too, so focus is on the page body and the first Tab is the skip link.
+9. **Two focus rings are drawn inside the edge** (`outline-offset` minus the ring width): `<main>` and the phone menu links. Both are as wide as the screen, so an outside ring would be cut off at the sides. Width and color are untouched. The band heading is as wide as its words (`align-self: flex-start`) so its ring hugs them.
+10. **Phone menu marker is 8px (`--bar-h`)**, drawn 6px; the table snaps 6 to 8 and the band's bar is the same thickness. The header marker is `--nav-marker`, 4px.
+11. **Phone menu, profile failed:** the avatar row is left out and Log out stays. A user with no name shows a plain avatar and the email.
+12. **The header is not sticky**, as in the pictures. `--z-header` is used only by the skip link.
+13. **"Directory" stays marked as current on `/directory/:id`** (the router's default for a link whose address starts the current one).
+14. **The header link's name for a screen reader** is "Tanvir Ahmed, My profile" (the last two words are hidden text), and "My profile Loading" while it loads.
+15. **`PhoneMenu` gets `links` and `profile` from `Header`**, so the list of main links is written once. The visible word "Theme" in the menu is hidden from screen readers because the switch already names itself "Theme".
+16. **Loading a page for the first time** shows a `PageLayout` with the heading "Loading", so the tab title is "Loading · University Alumni" for that moment.
+17. **Profile load** runs whenever there is a session and the profile is `idle` (the session actions reset it to `idle` on every change of user). The status is read from the store inside the effect, so development's double effect run sends one request, not two.
+18. **Sizes snapped** (architecture table): band top padding 56 → 48 (phone 28 → 24), bottom is the overlap plus the same; band gaps 14 and 10 → 12; phone band sub text 16px; app name to nav gap 40 → 48; nav link padding 14 → 12; user link gap 10 → 8; footer padding 20 → 24; page bottom padding 72 → 64 (phone 24).
+
+**Follow-ups, not done here.**
+
+- `PhoneMenu.tsx` repeats about 40 lines of `ui/Dialog/Dialog.tsx` (open / close, Escape, the browser's own close, close before unmount). A shared hook such as `hooks/useModalDialog.ts` would hold them once; it is a file no task names and it means editing TASK-007's Dialog, so it was left.
+- Log out waits for the server before the session is cleared (TASK-003's follow-up: no timeout on the API client). Until then the button shows as busy.
+- Something is listening on port 3000 on this machine. Anyone who runs `npm run dev:frontend` with a hand-made token will send its requests there.
 
 ## Related
 

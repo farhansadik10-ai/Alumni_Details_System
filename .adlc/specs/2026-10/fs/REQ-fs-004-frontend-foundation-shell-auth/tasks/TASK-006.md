@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 3 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-005 |
 | Blocks | TASK-008, TASK-010 |
@@ -50,6 +50,25 @@ The display components of the design system exist and match `system.html` in bot
 - ErrorState uses the primary button as `system.html` draws it. On a page that already has a primary button the caller can pass `retryVariant="secondary"` (one primary per view).
 - The page-range logic of Pagination is a pure function; export it so the components page can show both a short and a long range.
 - The CSS `content: attr(data-label)` text is read by some screen readers and not others; that is acceptable here because the cell value itself is always real text.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+Checks: `node scripts/frontend-style-check.mjs` exit 0 (75 files, no findings); `npm run build` exit 0. Looked at in headless Chrome through a throwaway page (removed): light and dark at 1440px, the phone layout at 500px, and measured at exactly 360px in a frame. At 360px no part of Table, Pagination, the skeletons or the two state boxes reaches past the page edge. Not checked: hover, keyboard focus, a screen reader, 200% zoom. Nothing in the app renders these yet (TASK-010 does).
+
+Things added or decided beyond the task text:
+
+- **Token.** `--table-row-h: 60px` appended to the "Added by later tasks" block in `tokens.css` (the body row height in `system.html`). Nothing else new.
+- **Student tag has a 1px `--line` outline** as well as the `--sunken` fill. Without it the tag disappears on a hovered (`--sunken`) table row. `system.html` itself draws it outlined in its sunken table row. Remove the two lines in `Tag.module.css` (`.roleStudent`) if the owner wants it plain.
+- **Every tag has a 1px border** (transparent unless plain or Student), so all tags are the same height: 4px / 8px padding snapped from 3-4px / 9-10px.
+- **Avatar text sizes** snapped: 13px (sm, as the table says), 16px (md, drawn 15px), 24px (lg). A name of `null` gives an empty square.
+- **Avatar remembers the link that failed**, not a yes/no, so a new `photoUrl` gets its own try. The link is trimmed before `isWebLink`.
+- **Table.** Explicit `role="table"`, `rowgroup`, `row`, `columnheader`, `cell`: the phone stylesheet sets `display: block` / `grid` on table elements, and some browsers then drop the table meaning. Each value is wrapped in one `<div>` because the phone cell is a two-column grid (label 1 part, value 2 parts); without the wrapper, two buttons in one cell would land in two grid cells. The table uses separate borders with `border-spacing: 0` so the 2px radius applies. A right-aligned column reads from the left on a phone. With `rows` empty the table shows its head only; the caller shows `EmptyState` instead.
+- **Pagination.** `pageRange(page, pageCount)` returns numbers and `"gap"`. A gap never stands for one page: that page is shown (page 4 of 25 gives 1 2 3 4 5 … 25). A page outside the range, a fraction or `NaN` is moved to the nearest real page; 23 cases were printed and read. Previous and Next are the `Button` component (secondary, really `disabled`); the page numbers are their own `<button>` with `aria-label="Page N"`. Pressing the current page calls nothing. The buttons are in a `<ul>`; they wrap on a narrow screen.
+- **Skeleton.** Besides `Skeleton` and `SkeletonGroup` there is a `layout` prop on the group (`stack` or `row`) and a small `SkeletonStack` (a silent column for the lines beside an avatar), so a caller can build the `system.html` loading card without its own CSS. `line` is 80% wide and 12px high, `title` 55% and 16px, `block` 128px high.
+- **EmptyState / ErrorState.** `headingAs` (`h2` default, or `h3`) picks the element; the look is always H3 size, weight 700. EmptyState shows its button only when both `actionLabel` and `onAction` are given. 15px text in the pictures is 16px here.
+- **RoleTag** takes the role as plain text (`string | null | undefined`) and uses the `Role` type from `lib/token.ts`.
+
+Follow-ups, not done here: none blocking. TASK-010 should show Table and Pagination at phone width and tab through them.
 
 ## Related
 

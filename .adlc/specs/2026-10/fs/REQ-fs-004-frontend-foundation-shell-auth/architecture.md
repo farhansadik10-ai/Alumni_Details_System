@@ -9,13 +9,13 @@
 
 ## Summary
 
-`frontend/src` is emptied and rebuilt. The legacy Ant Design app (57 files) is deleted, three packages leave `frontend/package.json` (`antd`, `@ant-design/icons`, `@fontsource-variable/inter`) and one arrives (`@fontsource-variable/hanken-grotesk`, the self-hosted font). The new code has four layers that depend one way: pages and components → store (Jotai atoms and actions) → services (one axios client) → the API. Styling is CSS Modules that read CSS custom properties from one token file. The theme is set on `<html data-theme>` by a small script in `index.html` before the first paint. Nothing under `backend/`, `shared/` or `db/` changes.
+`frontend/src` is emptied and rebuilt. The legacy Ant Design app (51 files) is deleted, three packages leave `frontend/package.json` (`antd`, `@ant-design/icons`, `@fontsource-variable/inter`) and one arrives (`@fontsource-variable/hanken-grotesk`, the self-hosted font). The new code has four layers that depend one way: pages and components → store (Jotai atoms and actions) → services (one axios client) → the API. Styling is CSS Modules that read CSS custom properties from one token file. The theme is set on `<html data-theme>` by a small script in `index.html` before the first paint. Nothing under `backend/`, `shared/` or `db/` changes.
 
 ## Blast radius
 
 | Path | Why touched | Risk |
 |---|---|---|
-| `frontend/src/**` (57 legacy files) | deleted; list under "Legacy files" | medium — the owner approved this exact list at the design gate, 2026-10-07 |
+| `frontend/src/**` (51 legacy files) | deleted; list under "Legacy files" | medium — the owner approved this exact list at the design gate, 2026-10-07 |
 | `frontend/src/**` (new, about 95 files) | the new app; layout under "Approach" | medium |
 | `frontend/package.json`, `package-lock.json` | three packages out, one in; `npm install` | medium — needs the network once |
 | `frontend/index.html` | theme script in `<head>`, title placeholder, `lang` | low |

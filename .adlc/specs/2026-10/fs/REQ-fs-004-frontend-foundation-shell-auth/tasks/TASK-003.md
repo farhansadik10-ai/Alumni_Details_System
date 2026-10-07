@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-004 |
 | Tier | 1 |
-| Status | pending |
+| Status | complete |
 | Repo | alumni-details-system |
 | Depends on | TASK-001 |
 | Blocks | TASK-008 |
@@ -64,6 +64,41 @@ Logging in, signing up, loading the current user and logging out work as store a
 - Do not lower-case the email: the database treats letter case as different.
 - `sub` as the string `"12"`: the backend always signs a number, so a string is refused (`null`). The check script expects that.
 - `tsx` is already installed for the backend; do not add it to `frontend/package.json`. If `npx tsx` cannot resolve it from the repo root, say so in the notes and stop.
+
+### Implementation notes (task-implementer, 2026-10-07)
+
+**Checks run.**
+
+- `npx tsx scripts/frontend-lib-check.ts` → `72 passed, 0 failed`, exit 0.
+- Can it fail: changed the expected text to "Use at least 9 characters." → `70 passed, 2 failed`, exit 1. Changed back → `72 passed, 0 failed`, exit 0.
+- `npm run build` from the repo root → exit 0 (TASK-002's files were already there; no retry was needed).
+- `node scripts/frontend-style-check.mjs` (TASK-002's check) → PASS with these files in place.
+- A scratch harness, not shipped (it lives in the session's temp folder), ran the real store and services against a fake `localStorage`, a fake `window` and a fake axios adapter: 69 cases, all passed. It proved the acceptance lines the lib-only script cannot reach: a 401 on a normal call ends the session; a 401 on log in, sign-up or log out does not; a 401 that belongs to an older token does not; a stored expired or unreadable token is ended in `wireApi()` with the notice `sessionEnded`; log in, sign-up, log out and the 401 each reach listeners as one state. Nothing was run against the real backend or a browser.
+
+**Choices the task text left open.** Each is small; say so if any should change.
+
+1. **A 401 on a call sent with no token does nothing.** The task says "remembered token equals `getToken()` now". With nobody logged in both are "nothing", so a visitor would get "Your session has ended". The client only acts when the request really carried a token.
+2. **A 200 log in whose token cannot be read is a failure** (`{ kind: "network" }`), not a session. Example: a proxy answering `/api` with a web page.
+3. **The actions trim, not the pages.** `logInAtom` trims the email. `signUpAtom` takes a `SignUpUserDTO`, trims email, name and photo link, and sends an empty name or photo link as `null`. The password is never trimmed and the email's case is kept. Pages may pass the raw field values.
+4. **Sign-up does not touch the remembered email.** Its log in step shares the request code with `logInAtom` but skips the remember step; the sign-up form has no such checkbox.
+5. **`loadProfileAtom` takes no argument.** It reads the user id from `sessionAtom`. With no session it sets the profile to `idle`.
+6. **Starting a session also resets the profile to `idle`**, in the same update as the notice and the token (token last).
+7. **Other tabs.** `wireApi` dispatches `tokenChangedElsewhereAtom` (in `sessionActions.ts`). It takes the other tab's token without writing storage again, and resets the profile when the user id changed. It does not set a notice. This is the one place besides `endSessionAtom` and `logOutAtom` where the token can become empty: it copies a log out that already happened in another tab, as the architecture asks. A cleared storage (event with no key) counts as logged out.
+8. **Validators.** The new-password rule counts characters, not UTF-16 units (four emoji are four characters). The photo link check ignores letter case (`HTTPS://` passes) and is exported as `isWebLink`, so the Avatar (TASK-006) can use the same rule instead of a second one.
+9. **Token reader.** `exp` that is present but not a number gives `null`. `isExpired` is true from the expiry moment on (`now >= expiresAt`), as the backend's library judges it. A token with no `exp` never expires on the frontend; the server still decides.
+10. **`sessionAtom` does not judge expiry.** An atom has no clock. `wireApi` checks at start-up; `RequireAuth` (TASK-008) must call `isExpired(session, Date.now())` on each render and dispatch `endSessionAtom`.
+
+**For later tasks.**
+
+- TASK-008: `RequireAuth` and `PublicOnly` read `sessionAtom` and `authNoticeAtom`; both change in one update, so the guard can trust what it sees. Log out's "go to log in" is the guard's redirect; `logOutAtom` does not navigate.
+- TASK-009: after `signUpAtom` answers `{ ok: true, loggedIn: true }` the page is already being replaced; push the "Account created" toast through the store, not page state. For `loggedIn: false` the page shows the success message on log in. Read the remembered email with `readStored(REMEMBERED_EMAIL_STORAGE_KEY)`.
+
+**Follow-ups, not done here.**
+
+- The API client has no timeout. Log out waits for the server before it clears the session, so a server that never answers leaves the user logged in until the browser gives up. A timeout constant in `apiClient.ts` would bound it. Needs a decision.
+- A device clock more than an hour ahead makes every fresh token look expired. Not handled; the server's clock is not known to the frontend.
+- The store checks above live in a scratch file. Shipping them as `scripts/frontend-store-check.ts` would need its own task (the lib check may import only from `lib/`).
+- ESLint is not installed, so the one `eslint-disable` line in `apiClient.ts` (for the `any` that axios's own type parameters force) is untested.
 
 ## Related
 
