@@ -1,0 +1,74 @@
+/*
+ * Base styles: reset, body, headings, links, the one focus ring, reduced motion.
+ * Every value is a token from tokens.css. No color and no px / em literal here.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font-family);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-regular);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--text);
+}
+
+a:hover {
+  color: var(--accent-soft-text);
+}
+
+/* The only focus ring in the app. Components do not write their own. */
+:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Text for screen readers only. Global on purpose: use className="visuallyHidden". */
+.visuallyHidden {
+  position: absolute;
+  width: var(--hidden-size);
+  height: var(--hidden-size);
+  margin: calc(-1 * var(--hidden-size));
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
