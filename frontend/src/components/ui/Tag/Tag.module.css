@@ -1,0 +1,39 @@
+/* Every tag has a 1px border, so all variants are the same height. */
+.tag {
+  display: inline-block;
+  max-width: 100%;
+  padding: calc(var(--space-1) - var(--border-line)) var(--space-2);
+  border: var(--border-line) solid transparent;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.plain {
+  border-color: var(--line);
+  font-weight: var(--weight-regular);
+}
+
+.mentoring {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+/* The outline keeps the tag visible on a --sunken table row (system.html, "Table"). */
+.roleStudent {
+  border-color: var(--line);
+  background: var(--sunken);
+}
+
+.roleAlumni {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.roleAdmin {
+  background: var(--action);
+  color: var(--on-action);
+}

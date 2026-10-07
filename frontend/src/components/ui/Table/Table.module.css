@@ -1,0 +1,119 @@
+.table {
+  width: 100%;
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  /* Separate borders, so the corner radius applies; no space between cells. */
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  background: var(--surface);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.headRow {
+  background: var(--sunken);
+}
+
+.headCell {
+  height: var(--control-h);
+  padding: 0 var(--space-4);
+  border-bottom: var(--border-edge) solid var(--edge);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-bold);
+  text-align: left;
+}
+
+.row:hover {
+  background: var(--sunken);
+}
+
+.cell {
+  height: var(--table-row-h);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-line) solid var(--line);
+  text-align: left;
+}
+
+.row:last-child .cell {
+  border-bottom: 0;
+}
+
+.right {
+  text-align: right;
+}
+
+.value {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Phone: no head row; each row is a card and each cell shows its column name. */
+@media (max-width: 767.98px) {
+  .table {
+    display: block;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  /* Hidden from the eye only: a screen reader still reads the column names. */
+  .head {
+    position: absolute;
+    width: var(--hidden-size);
+    height: var(--hidden-size);
+    margin: calc(-1 * var(--hidden-size));
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .row {
+    display: block;
+    padding: var(--space-2) var(--space-4);
+    border: var(--border-edge) solid var(--edge);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  /* Written after .right, so a right-aligned column reads from the left here. */
+  .cell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    align-items: center;
+    gap: var(--space-3);
+    height: auto;
+    padding: var(--space-2) 0;
+    text-align: left;
+  }
+
+  .cell::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: var(--weight-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  /* Every card divides its own cells, the last card too. */
+  .row:last-child .cell {
+    border-bottom: var(--border-line) solid var(--line);
+  }
+
+  .row .cell:last-child {
+    border-bottom: 0;
+  }
+
+  .value {
+    overflow-wrap: anywhere;
+  }
+}

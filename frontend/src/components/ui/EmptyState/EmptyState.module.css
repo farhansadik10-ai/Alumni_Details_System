@@ -1,0 +1,25 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  border: var(--border-line) dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.heading {
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+}
+
+.text {
+  margin: 0;
+  color: var(--muted);
+}
+
+.action {
+  padding-top: var(--space-2);
+}
