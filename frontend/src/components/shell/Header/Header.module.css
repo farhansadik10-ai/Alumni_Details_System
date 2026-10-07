@@ -7,10 +7,10 @@
   background: var(--surface);
 }
 
-/* Wraps to a second row when the links and the user do not fit side by side. */
+/* One row at every width from the phone breakpoint up. What gives way is the
+   name beside the avatar (see .userName): it is cut with "…". */
 .inner {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0 var(--space-5);
@@ -22,10 +22,9 @@
 
 .start {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0 var(--space-7);
-  min-width: 0;
+  flex-shrink: 0;
 }
 
 .appName {
@@ -40,6 +39,7 @@
 .nav {
   display: flex;
   gap: var(--space-1);
+  flex-shrink: 0;
 }
 
 .navLink {
@@ -54,6 +54,12 @@
   font-weight: var(--weight-medium);
   text-decoration: none;
   white-space: nowrap;
+}
+
+/* The ring sits inside the 72px link, clear of the window top and of the
+   marker below: the ring width plus the marker height, in from every side. */
+.navLink:focus-visible {
+  outline-offset: calc(-1 * (var(--focus-width) + var(--nav-marker)));
 }
 
 .navLink[aria-current="page"] {
@@ -78,6 +84,7 @@
   align-items: center;
   gap: var(--space-4);
   min-height: var(--header-h);
+  min-width: 0;
 }
 
 /* The link to My profile: avatar and name. */
@@ -87,6 +94,7 @@
   gap: var(--space-2);
   min-height: var(--control-h);
   padding: 0 var(--space-2);
+  min-width: 0;
   border-radius: var(--radius);
   color: var(--text);
   font-size: var(--text-small);
@@ -95,8 +103,10 @@
   text-decoration: none;
 }
 
-/* A long name is cut with "…", so the header keeps its shape. */
+/* A long name is cut with "…", so the header keeps its shape. It is the one
+   thing that shrinks when the row is tight. */
 .userName {
+  min-width: 0;
   max-width: calc(var(--space-8) * 3);
   overflow: hidden;
   text-overflow: ellipsis;
