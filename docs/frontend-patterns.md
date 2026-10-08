@@ -60,7 +60,7 @@ A page or a component never imports `axios` and never imports anything from `ser
 
 - Pages: `frontend/src/pages/`. Components: `frontend/src/components/`. Guards: `frontend/src/routes/`.
 - Store: `frontend/src/store/`. Services: `frontend/src/services/`. Pure functions: `frontend/src/lib/`.
-- The guard: rule d of `scripts/frontend-style-check.mjs` fails the check when a file under `components/`, `pages/`, `routes/`, `hooks/` or `icons/` imports `axios` or `services/`.
+- The guard: rule d of `scripts/frontend-style-check.mjs` fails the check when a file under `components/`, `pages/`, `routes/`, `hooks/` or `icons/` imports `axios` or `services/`. Rule k fails it when a file under `lib/` imports React, the router, `services/` or `store/`.
 - An example of the rule being followed: `frontend/src/pages/SignUpPage/SignUpPage.tsx` takes its failure type through the result of an action in `frontend/src/store/sessionActions.ts`, not from `services/`.
 
 **Why we chose it.** A screen that calls the API itself has to deal with the token, the 401 and the error words on its own, and soon two screens do it in two ways. With layers, that work is written once. It also mirrors the backend (routes, controllers, Managers, Query classes), so there is one idea to learn.
@@ -114,7 +114,7 @@ When two stylesheets need the same block, one owns it and the other takes it wit
 
 - An ordinary pair: `frontend/src/components/ui/Button/Button.tsx` and `frontend/src/components/ui/Button/Button.module.css`.
 - `composes` in use: `frontend/src/components/ui/TextInput/TextInput.module.css` takes the shared control box from `frontend/src/components/ui/Field/Field.module.css`. `frontend/src/pages/LoginPage/LoginPage.module.css` takes the shared form styles from `frontend/src/components/auth/AuthLayout/AuthLayout.module.css`.
-- The guard: `scripts/frontend-style-check.mjs`. It has ten rules, a to j:
+- The guard: `scripts/frontend-style-check.mjs`. It has eleven rules, a to k:
   - a: no color literal outside `tokens.css`
   - b: no `px`, `em` or `rem` number in a module stylesheet or in `base.css`
   - c: no import of `antd`, `@ant-design` or `@fontsource-variable/inter`
@@ -125,6 +125,7 @@ When two stylesheets need the same block, one owns it and the other takes it wit
   - h: no `box-shadow`, no gradient, no `outline: none`
   - i: no address from `routes/paths.ts` and no storage key (`ua.…`) written as a string outside their config files
   - j: every `@media (max-width: …)` line in a stylesheet equals the phone query in `config/layout.ts`
+  - k: no import of `react`, `react-dom`, `react-router-dom`, `services/` or `store/` from `lib/` (pattern 1; type imports of `@alumni/shared` are fine)
 
 **Why we chose it.** "All values come from tokens" is easy to agree on and easy to break by accident. A script that fails makes the rule real. CSS Modules come with Vite, so they cost no package.
 
@@ -277,7 +278,7 @@ The server's own error text is never shown. Each screen picks its words from `ki
 **Where it lives.**
 
 - `frontend/src/services/apiError.ts` (`ApiFailure`, `toApiFailure`, and `isCancelled`: a call this app cancelled is not a failure and shows nothing, pattern 23)
-- From part 2, two shared word rules: `frontend/src/lib/loadFailure.ts` (a failed load) and `frontend/src/components/profile/saveFailureText.ts` (a failed save; each card passes its own words)
+- From part 2, two shared word rules, both pure and both with cases in `scripts/frontend-lib-check.ts`: `frontend/src/lib/loadFailure.ts` (a failed load; it also owns the failure shape `CallFailure` and the status numbers 403, 404, 409 and 500) and `frontend/src/lib/saveFailure.ts` (a failed save: `saveFailureReason` and `saveFailureText`; each card passes its own words)
 - Turned into results in `frontend/src/store/sessionActions.ts`
 - Words chosen in `frontend/src/pages/LoginPage/LoginPage.tsx` and `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 
@@ -574,17 +575,20 @@ The state also says whose it is. The directory state keeps the address it was lo
 
 When a session starts or ends, `resetAlumniAtom` cancels all four loaders and empties the atoms, so one user's data is never shown to the next.
 
+When a page closes, it clears its own atom: the directory calls `clearDirectoryAtom`, a profile calls `clearViewedAlumniAtom` and My profile calls `clearMyAlumniAtom`, each from the cleanup of an effect. Each cancels its loader and puts the atom back to idle, so the next visit never shows the last visit's error or data for a frame. My profile clears only on close, never while open: the band's "See my public profile" link reads the saved profile from the atom.
+
 **Where it lives.**
 
 - The helper: `frontend/src/store/latestRequest.ts`
 - The atoms and loaders: `frontend/src/store/alumniAtoms.ts` (`directoryAtom`, `filtersAtom`, `viewedAlumniAtom`, `myAlumniAtom`)
 - The reset: `frontend/src/store/sessionActions.ts`
 - `isCancelled`: `frontend/src/services/apiError.ts`
-- Readers: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`
+- Readers: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
+- The clear on close: `clearDirectoryAtom`, `clearViewedAlumniAtom`, `clearMyAlumniAtom` in `frontend/src/store/alumniAtoms.ts`
 
 **Why we chose it.** A search box fires several calls in a row, and the network does not answer in order. Without a ticket, a slow answer for "ab" can arrive after the answer for "abc" and replace it. React's StrictMode also starts every effect twice in development, which starts two calls. The ticket makes both harmless, and the abort saves the server the work.
 
-We did not add a data-fetching library (it would be a new package and a second place for state), and we did not keep the list in the page's `useState` (it would be lost when the user opens a profile and comes back). We did not rely on the abort alone: `getMyAlumni` takes no signal, so for it only the ticket protects.
+We did not add a data-fetching library (it would be a new package and a second place for state), and we did not keep the list in the page's `useState` (the list, its status and its failure are read by the page, the count line and the retry together, and the store's reset on logout and on a user switch reaches an atom but not a component's state). The atom is cleared when the page closes, so a new visit never shows the last visit's list. We did not rely on the abort alone: `getMyAlumni` takes no signal, so for it only the ticket protects.
 
 ---
 
@@ -686,7 +690,7 @@ We did not put the directory query into the profile's address (it would make eve
 
 The validators are shared the same way: sign-up and the two My profile cards use the same `validateName` and `validatePhotoLink` from `frontend/src/lib/validation.ts`. Validator messages stay there as exported constants (pattern 16); page words are in `frontend/src/config/text.ts`, grouped by page.
 
-**Where it lives.** `frontend/src/lib/` and `scripts/frontend-lib-check.ts`. The one shared rule that is not in `lib/` is `frontend/src/components/profile/saveFailureText.ts`, because it takes its failure type from the store.
+**Where it lives.** `frontend/src/lib/` and `scripts/frontend-lib-check.ts`. The rule for a failed save is there too: `saveFailureText` in `frontend/src/lib/saveFailure.ts`. It reads the failure shape `CallFailure` declared in `frontend/src/lib/loadFailure.ts`, not the store's type, so it needs nothing outside `lib/` and the library check covers it.
 
 **Why we chose it.** Two copies of a rule drift apart, and only one gets the fix. A function in `lib/` can be checked from the command line, which a rule inside a component cannot.
 
@@ -714,7 +718,7 @@ Run all four from the repo root before you say a piece of work is done. All must
 | Command | What it proves |
 |---|---|
 | `npm run build` | The code compiles (type errors fail it) and the production build works. |
-| `node scripts/frontend-style-check.mjs` | The ten style and layer rules of pattern 3. |
+| `node scripts/frontend-style-check.mjs` | The eleven style and layer rules of pattern 3. |
 | `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers. |
 | `git grep -n --untracked "antd" -- frontend/src frontend/package.json` | Prints nothing: the old UI library is gone. Keep `--untracked`; without it git skips files that are not committed yet. |
 
