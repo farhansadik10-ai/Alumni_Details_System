@@ -1,0 +1,14 @@
+/* The words of the delete dialog and its failure message. A long name
+   breaks inside the dialog. Tokens only. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
