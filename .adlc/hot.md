@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] req-archived | REQ-fs-005-frontend-directory-and-profiles
+
+## [2026-10-08] req-merged | REQ-fs-005-frontend-directory-and-profiles | merge commit ca693ce2 on redesign (the feature branch was deleted by the owner)
+
 ## [2026-10-08] ship-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | roadmap F6 and F7 marked Done; root CLAUDE.md frontend line, docs/frontend-patterns.md (patterns 25 and 28, counts, open points) and the vault pages (frontend-app, design-system, project-overview) brought up to date
 
 ## [2026-10-08] req-ready-to-merge | REQ-fs-005-frontend-directory-and-profiles | frontend part 2 (roadmap F6 and F7): alumni directory, alumni profile, My profile; 2 review rounds of 5 reviewers; build, style check (11 rules) and library check (333 cases) pass; browser-checked on a mock API only, not yet against the real backend

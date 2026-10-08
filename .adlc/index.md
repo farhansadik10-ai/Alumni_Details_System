@@ -20,7 +20,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ-fs-002 | Close the security and data-loss gaps in the backend | merged | `specs/_archive/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
 | REQ-fs-003 | Finish the backend API: class controllers, shared errors, alumni search, feed data | merged | `specs/_archive/2026-10/fs/REQ-fs-003-finish-backend-api` |
 | REQ-fs-004 | New frontend part 1 of 4: foundation, theme, base components, app shell, log in and sign-up | merged | `specs/_archive/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth` |
-| REQ-fs-005 | New frontend part 2 of 4: alumni directory, alumni profile and My profile | ready to merge | `specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles` |
+| REQ-fs-005 | New frontend part 2 of 4: alumni directory, alumni profile and My profile | merged | `specs/_archive/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles` |
 
 ## ADRs
 
