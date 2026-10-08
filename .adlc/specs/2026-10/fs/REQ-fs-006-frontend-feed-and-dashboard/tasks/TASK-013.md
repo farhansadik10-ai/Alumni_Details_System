@@ -38,6 +38,14 @@ The new patterns are written down from the code that works, and what no script c
 
 Plain words, short sentences, the reader is the owner.
 
+### Implementation notes (2026-10-08, task-implementer)
+
+- **Checks:** `npm run build` exit 0; `node scripts/frontend-style-check.mjs` PASS; `npx tsx scripts/frontend-lib-check.ts` 434 passed, 0 failed. No code changed.
+- **Paths:** every backticked `frontend/`, `scripts/`, `docs/`, `backend/` path in `docs/frontend-patterns.md` was tested with `[ -e ]`; none missing.
+- **Doc edits:** Contents 29 to 33; new sections 29 (feed paging), 30 (one open thread, patching, count from the list), 31 (owner rule), 32 (PostForm / CommentForm, `FormResult`), 33 (blocks with their own states, one atom per kind with a key). "Where it lives" extended in 7 (postActions), 8 (three services, alumni `limit`), 9 (`lib/writeFailure.ts`), 14 (Feed and Dashboard are real; `UsersPage` is now the being-built example; `ButtonLink`, `EmptyState.actionTo`), 22 (`NoRequests`, states drawn from parts), 23 (postAtoms, reset). Pattern 16 and the checks table give the case count 434. "Likely new sections" line rewritten for part 4. Open points: the gaps the dispatch named.
+- **Small additions beyond the dispatch:** pattern 9 got the `writeFailure.ts` line (it is a failure-words rule); Open points also name `COMMENTS_LOADING_TEXT` and `POST_IMAGE_ALT` as unused (grep shows them only in `config/text.ts`). Note: `ComponentsPage.tsx` has a local const also called `PEOPLE_LOADING` (a block state), not the text word.
+- **Checklist:** `manual-checklist.md` in this folder. The real-backend steps are marked as the owner's; it names the existing test rows (`docs/roadmap.md`, Later) and says new posts and comments are more test rows. `GET /api/posts` needs a token (`authMiddleware`), so the real call is through Postman with a bearer header.
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-006-frontend-feed-and-dashboard/architecture]]

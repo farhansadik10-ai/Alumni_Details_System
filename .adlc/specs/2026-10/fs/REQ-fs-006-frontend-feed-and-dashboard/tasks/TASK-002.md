@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-006 |
 | Tier | 0 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-005, TASK-006 |
@@ -44,6 +44,19 @@ Every rule the feed and dashboard need that is not a component is one pure funct
 ## Notes
 
 `created_at` can be `null` in the type: sort `null` last, and treat it as the oldest. Use the existing `presentText` for "visible character" instead of a new trim helper.
+
+### Implementation notes (2026-10-08, task-implementer)
+
+- Checks: `npx tsx scripts/frontend-lib-check.ts` exit 0, "420 passed, 0 failed" (85 new cases). `node scripts/frontend-style-check.mjs` exit 0 (rule k 0). `npm run build` exit 0 (tsc -b covers all of `frontend/src`, so the new lib files are type-checked though nothing imports them yet).
+- Proof it can fail: a copy in the session scratchpad (`lib-check-fail-copy.ts`, outside the repo), its 21 `../frontend/src/` imports rewritten to full paths, and "count: 2" expecting "2 comment". Run from `frontend/`: printed `FAIL  count: 2` and "419 passed, 1 failed", exit 1. Nothing left in `scripts/`.
+- Comment-count words: kept in `lib/postDisplay.ts` as `COMMENT_COUNT_NONE_TEXT`, `COMMENT_COUNT_ONE_TEXT`, `COMMENT_COUNT_MANY_SUFFIX` (dispatch decision). TASK-004 did not duplicate them in `config/text.ts`; it left a comment pointing here.
+- `Session` in `lib/token.ts` has `userId` (not `sub` as the Approach says); the owner rule compares `session.userId`.
+- Missing `created_at`: the note above says both "last" and "oldest", which disagree for the oldest-first comment list. I chose **last in both lists** (matches Postgres ASC order for comments). Change `oldestFirst` in `commentThread.ts` if the reviewer prefers "oldest".
+- `createdTime(iso)` in `postDisplay.ts` is the one date parser (dateText, thread order, feed order). It refuses text that does not start with `YYYY-MM-DD`, because V8 reads `"1"` as 2001.
+- `removeWithReplies(items, id)` also removes comments that point to an id not held (the server removed them with it); an id nobody points to changes nothing. Both are cases.
+- A parent loop (1 -> 2 -> 1) does not hang: each comment in the loop shows as top level.
+- `appendComment` with an id already held replaces it, so no id shows twice.
+- Follow-up, not done (TASK-004's file): `postDeleteBody` in `config/text.ts` spells its own "its 1 comment" / "its N comments" plural. It's a second small copy of the count wording; the reviewer may want it to reuse `commentCountText` or stay as is (the sentence is different).
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-006 |
 | Tier | 1 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-002, TASK-003 |
 | Blocks | TASK-007, TASK-008 |
@@ -36,14 +36,23 @@ All feed, comment, recent-post, people and stats state lives in atoms with loade
 
 ## Acceptance
 
-- [ ] `npm run build` and `node scripts/frontend-style-check.mjs` exit 0 (no UI code imports `services/`; the store may).
-- [ ] A throwaway check **outside the repo** (fake services, a plain jotai store; see G48, G50) shows: an old answer never replaces a newer one for feed, comments and recent posts; a cancelled call stores no error; `loadMoreFeed` after a delete asks for the aligned page and never shows an id twice; a late write answer after `resetPostsAtom` changes nothing; deleting a comment with replies leaves a count equal to the list length; a 404 on delete removes the item. Record the result in the task note.
-- [ ] The same throwaway check shows: a comment written while another post's thread is open still changes the right post's count; a delete that finishes while a load more is running leaves no ghost.
-- [ ] `grep -n resetAlumniAtom frontend/src/store/sessionActions.ts` and `grep -n resetPostsAtom ...` list the same number of call sites.
+- [x] `npm run build` and `node scripts/frontend-style-check.mjs` exit 0 (no UI code imports `services/`; the store may).
+- [x] A throwaway check **outside the repo** (fake services, a plain jotai store; see G48, G50) shows: an old answer never replaces a newer one for feed, comments and recent posts; a cancelled call stores no error; `loadMoreFeed` after a delete asks for the aligned page and never shows an id twice; a late write answer after `resetPostsAtom` changes nothing; deleting a comment with replies leaves a count equal to the list length; a 404 on delete removes the item. Record the result in the task note.
+- [x] The same throwaway check shows: a comment written while another post's thread is open still changes the right post's count; a delete that finishes while a load more is running leaves no ghost.
+- [x] `grep -n resetAlumniAtom frontend/src/store/sessionActions.ts` and `grep -n resetPostsAtom ...` list the same number of call sites.
 
 ## Notes
 
 Keep each atom's idle state with empty items, and a key (`authorId`, `kind`, `postId`) that a page can compare (pattern 23). The comments loader takes the post id as the key, so `commentsAtom.postId !== post.id` means "not this post's".
+
+### Implementation notes (2026-10-08, task-implementer)
+
+- **Checks:** `npm run build` exit 0; style check PASS (rule d 0: the store imports services/, no UI file does); lib check 420 passed, 0 failed. `set(resetAlumniAtom)` and `set(resetPostsAtom)` in sessionActions.ts: 3 and 3 (lines 54/55, 62/63, 178/179).
+- **Store check (outside the repo, scratchpad `storecheck/`): 44 passed, 0 failed, exit 0.** A copy with one wrong expectation printed FAIL and exited 1. Covers every acceptance item: old answers dropped for feed, comments, recent posts, people; cancelled calls store no error; load more after a delete asks page 1 (held 11, limit 12), then page 2, 24 posts, no id twice, none skipped; late publish/delete after resetPostsAtom changes nothing but still returns ok; another user's late write patches nothing; deleting a comment with two nested replies leaves count = list length; a comment on post 29 while 30's thread is open moves 29's count only; a delete after the thread closed drops 1 + replies; a delete during load more and during load leaves no ghost and corrects total; 404 on delete/save of a post or comment removes it locally; 404 on the comments load gives status error with 404; endSessionAtom resets every posts atom and aborts loaders.
+- **Safety, said plainly:** my first two runs used only an ESM resolve hook. The repo has no `"type": "module"`, so tsx loads the store as CommonJS and its imports bypassed the hook: the real services and axios were loaded and one `listPosts` was started in each run. Network was blocked in the same process (`net.Socket.prototype.connect` and `fetch` patched to throw before anything loaded), and `apiClient` has no baseURL, so in Node the call would have aimed at localhost:80, never port 3000 (the Vite proxy does not exist in Node). I then hooked the CommonJS resolver too (fakes for all 8 service files, axios/backend/pg/dotenv refused) and proved with a probe that `require.cache` holds no axios and no real service before the real run. No .env, database or backend code was touched.
+- **Design choices:** `FeedState` has `moreFailure` (load more's own failure) and `removedIds` (kept across `loadFeedAtom`, emptied by clear and reset). A load's answer drops removed ids and takes the dropped count off `total`. `removePostLocallyAtom` lives in postAtoms.ts (it must cancel the comments loader); an idle feed is left alone, a loading or error feed only remembers the id. Writes check the same user **and** the same visit (`currentPostsVisit()`, bumped by `clearFeedAtom` and `resetPostsAtom`), so a +1 count never lands twice after a reload; publish adds only an id not held. Comment writes go through one inner atom (`patchCommentsAtom`, G48) that patches the thread and the count in one update. `saveCommentAtom`/`deleteCommentAtom` read the comment's post and reply count when they start (`locateComment`); a comment not in the open thread patches nothing (its post is unknown).
+- **For TASK-007/009:** a 400 on `addCommentAtom` with `parent_id` is returned as is; the panel maps it (ADV-005). On a comments-load 404 the page calls `removePostLocallyAtom(postId)`. Writes with no session return `{ kind: "network" }` without a call. Small lists send `page: 1, limit: 3`; the feed sends `page` only (server default size).
+- **Shell slip (harmless):** one note-writing command had backticks inside double quotes, so bash tried to run fragments; the only real command among them was `npm run build"`, which npm refused ("Missing script"). `git status` shows no new files from it.
 
 ## Related
 

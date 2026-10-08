@@ -33,13 +33,20 @@ Every call the feed and dashboard make is one function in `frontend/src/services
 
 ## Acceptance
 
-- [ ] `npm run build` and `node scripts/frontend-style-check.mjs` exit 0.
-- [ ] No path is written twice; no service imports the store; no absolute URL.
-- [ ] The directory page still sends no `limit` (its params are unchanged).
+- [x] `npm run build` and `node scripts/frontend-style-check.mjs` exit 0.
+- [x] No path is written twice; no service imports the store; no absolute URL.
+- [x] The directory page still sends no `limit` (its params are unchanged).
 
 ## Notes
 
 The comment-create body uses `posts_id`, not `post_id` (root `CLAUDE.md`). Check the response shape of create/update in `CommentController` and `PostController` before typing the return values (both answer the joined read).
+
+**Implementation (2026-10-08):**
+- Checked: `PostQuery.createPost/updatePost` return `findPostById` (joined read with `comment_count`, `name`, `photo_url`); `CommentQuery.createComment/updateComment` return `COMMENT_READ`. So create/update are typed `Post` / `Comment`. Deletes answer `{ message }`, which no caller needs, so `deletePost` / `deleteComment` return `void`.
+- `postService` exports `POSTS_PATH`; `commentService` imports it for `GET /api/posts/:id/comments`, so `/api/posts` is written once in the frontend. Small deviation from "one path constant per file": the comment file has its own `COMMENTS_PATH` plus the imported one.
+- `PostListParams` is an exported interface (named like `AlumniListParams`) rather than an inline type; same keys as the task asked.
+- The directory's params come from `lib/directoryQuery.ts`, which sets no `limit`; unchanged. Its comment "`limit` is never sent" (line 106) is still true for the directory and was left alone (not a file this task names).
+- Checks: `npm run build` exit 0 (`tsc -b` covers all of `src`), style check PASS, lib check 333 passed / 0 failed.
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-006 |
 | Tier | 0 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-006 |
@@ -37,6 +37,14 @@ Every word the feed, the dashboard and the profile's recent posts show is a name
 ## Notes
 
 Validator messages (caption and comment) are NOT here; they live in `lib/validation.ts` (pattern 16, TASK-002).
+
+Implementation notes (2026-10-08, task-implementer):
+- Comment-count words are NOT here; they are in `lib/postDisplay.ts` (`commentCountText`, TASK-002), per the orchestrator's decision.
+- Generic action words `EDIT_LABEL`, `DELETE_LABEL`, `SAVE_LABEL`, `CANCEL_LABEL`, `SAVING_LABEL`, `DELETING_LABEL` and the shared write-failure words `WRITE_FAILED_*` sit in a "Shared words: post and comment actions" group, since posts and comments both use them.
+- `POST_SAVE_FAILURE_WORDS` / `COMMENT_SAVE_FAILURE_WORDS` are plain objects shaped like `SaveFailureWords` (no import; text.ts stays import-free). Their `gone` is a fallback only: `saveFailureText` maps 403 and 404 to the same reason, so pages must check the status first and use `POST_CHANGE_FORBIDDEN_TEXT` / `POST_NOT_FOUND_TEXT` (and the COMMENT_ versions, plus `COMMENT_POST_GONE_TEXT` for a 404 on adding a comment). `POST_WHO_CAN_POST` is the 403 sentence on publish.
+- Reused by alias, not retyped: `OPEN_TO_MENTORING`, `OPTIONAL_MARK`, `ACCOUNT_PHOTO_PLACEHOLDER`, `ALUMNI_LOAD_ERROR_HEADING`; "Recent posts", "Write a post", "No posts yet" and "Open the feed" are each defined once and aliased across groups.
+- Added beyond the list (needed for states): `DASHBOARD_COUNTS_HEADING` (visually hidden), busy words (`POST_PUBLISH_BUSY`, `COMMENT_SUBMIT_BUSY`, `FEED_LOAD_MORE_BUSY`), `POST_IMAGE_ALT`, loading words per block, `FEED_EMPTY_WRITER_ACTION`.
+- Checks: `npm run build` exit 0; `node scripts/frontend-style-check.mjs` PASS. Duplicate-value grep shows only pre-existing directory/profile labels, no new duplicates.
 
 ## Related
 

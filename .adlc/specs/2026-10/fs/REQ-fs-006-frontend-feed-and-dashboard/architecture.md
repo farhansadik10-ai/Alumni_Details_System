@@ -244,3 +244,7 @@ There is no test runner (conventions). The checks are:
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-002-3-new-helper-convert-every-sibling]], [[knowledge/lessons/LESSON-REQ-fs-003-1-write-the-check-from-the-spec-not-the-code]], [[knowledge/lessons/LESSON-REQ-fs-004-4-check-focus-for-real]], [[knowledge/lessons/LESSON-REQ-fs-004-5-find-out-what-listens-on-the-api-port]], [[knowledge/lessons/LESSON-REQ-fs-005-1-disable-until-changed-has-three-traps]], [[knowledge/lessons/LESSON-REQ-fs-005-2-store-state-outlives-the-page]], [[knowledge/lessons/LESSON-REQ-fs-005-5-does-the-reused-part-carry-what-the-design-needs]]
 - Gotchas: G11 (comment count is counted live), G33 (no `GET /api/posts/:id` route), G36, G38, G48, G50, G55
 - ADRs: ADR-02, ADR-05, ADR-06, ADR-07, ADR-09, ADR-11, ADR-12, ADR-13, ADR-14
+
+## Added during implement
+
+- `TASK-014` (tier 3, depends on TASK-007, blocks TASK-009): one shared rule for a failed write in `lib/writeFailure.ts`, because TASK-007 wrote the same mapping twice and TASK-009 would have made a third copy. The owner agreed on 2026-10-08. It adds one file and edits two TASK-007 files and the library check.

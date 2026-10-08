@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-006 |
 | Tier | 1 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-002, TASK-004 |
 | Blocks | TASK-007, TASK-008 |
@@ -44,6 +44,19 @@ The building blocks that more than one place needs exist once, each with its sty
 ## Notes
 
 `PostForm` and `CommentForm` get no API access: they receive an `onSubmit` that returns a result. They are shown in every state on the dev page (TASK-012).
+
+### Implementation notes (2026-10-08, task-implementer)
+
+- Checks: `npm run build` exit 0; `node scripts/frontend-style-check.mjs` PASS (163 files); `npx tsx scripts/frontend-lib-check.ts` 420 passed. Nothing imports the new parts yet, so Vite did not bundle their CSS; a scratch Vite lib build outside the repo (session scratchpad `t006build/`, no server, no network) built all six and showed `link = "_link_… _button_…"`, so every `composes` resolves.
+- **Real Tab-key focus check NOT done.** I did not drive a browser (no safe mock page exists yet). `ButtonLink` is a plain router `<a>`, sets no outline, and gets the one global `:focus-visible` ring from base.css. Left for TASK-012's dev page / the review (LESSON-REQ-fs-004-4).
+- `FormResult` is exported from `PostForm.tsx` (`{ ok: true; reset?: boolean } | { ok: false; text: string }`); `CommentForm` imports it. TASK-007/009 build it from the action result: check the status for 403/404 first (TASK-004 note), then `saveFailureText`.
+- Values reach `onSubmit` as typed; the forms do not trim (the action does, one trim rule). On `reset`, a field is emptied only if it still holds what was sent, so typing during the request is kept (as in AccountCard).
+- Both forms forward a ref to their text field (`useImperativeHandle`), for "focus back to the caption / comment field" (C11). A form failure uses `useFormError`, so focus moves to the `Message`; it sits above the button row.
+- Additions beyond the task text, each small: `PostForm` `primary` (default true) so an edit form can be secondary while the composer's "Publish post" is on screen; both forms take `busyLabel`; `PostByline` takes `children` drawn beside the avatar under the name, so a comment's text and buttons indent as in feed.html (LESSON-REQ-fs-005-5); `PostText` has `size` sm/md. `clamp` is a boolean (3 lines), not a number, so no inline style is needed.
+- `PostText` shows `presentText(text)` (trimmed, nothing for blank) with `white-space: pre-line`. Sizes: post name and text `--text-body` (design 16/17), comment name and text `--text-small` (design 15).
+- `EmptyState`: `actionTo` wins if both `actionTo` and `onAction` are given.
+- Known look: in the two rows (image link + buttons, comment field + buttons) `align-items: flex-end` as drawn, so when a field shows its message the button lines up with the message, not the field. The image link basis is `calc(var(--space-8) * 3.75)` = 240px (precedent: MyProfilePage).
+- No word added to `config/text.ts`.
 
 ## Related
 

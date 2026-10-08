@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-006 |
 | Tier | 0 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | none |
 | Blocks | TASK-011 |
@@ -39,6 +39,15 @@
 ## Notes
 
 The post read already names its columns, so no `password` can come along. The stored `posts.comment_count` is never read (G11). There is no Postman collection in the repo (`postman/collections` is empty), so no example is added; say so in the task note.
+
+### Implementation notes (TASK-001, 2026-10-08)
+
+- `PostQuery.listPosts(page, filter = {})` builds `conditions`/`values` like `AlumniQuery.listAlumni`; `PostListFilter` is exported from `PostQuery.ts` (not re-exported from `dal/index.ts`; the manager uses `Parameters<PostQuery["listPosts"]>[1]`).
+- No Postman example added: `postman/collections` is empty.
+- Unfiltered SQL differs from before only by the alias: `SELECT COUNT(*)::int AS total FROM posts p` (was `FROM posts`). Same result.
+- Throwaway check (scratchpad `task001/`, outside the repo): Node loader hook redirects `@alumni/businesslogic` (stub re-exporting the real `errors.ts`), `@alumni/dal`, every `config/db` import, and `pg`/`dotenv` (throw on load). Result: absent -> manager filter `undefined`; `"7"` -> `{ user_id: 7 }`; `""`, `"abc"`, `["1","2"]`, `"0"` -> `ValidationError` 400 "Invalid user_id". Printed SQL: count `... FROM posts p WHERE p.user_id = $1` [7]; rows `... WHERE p.user_id = $1 ORDER BY p.created_at DESC, p.id DESC LIMIT $2 OFFSET $3` [7,3,0]; unfiltered pair has no `p.user_id` condition and `LIMIT $1 OFFSET $2`.
+- **Incident:** the first run of the script stubbed `config/db` only when imported from `PostQuery.ts`. The real `db.ts` was still loaded (via another dal import), which read the root `.env` through dotenv (db.ts printed DB_HOST/DB_NAME and "password loaded: true", not the password) and the two `listPosts` calls ran on the real pool: 4 read-only SELECTs (2 COUNT, 2 page reads, LIMIT 3) against the local `alumni_db`. Nothing was written. The fixed harness blocks `pg` and `dotenv` outright.
+- Checks: `npm run build` exit 0; style check PASS; lib check 333 passed, 0 failed.
 
 ## Related
 

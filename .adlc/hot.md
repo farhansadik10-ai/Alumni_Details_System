@@ -17,6 +17,16 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] implement-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 14 tasks, build/style/library checks pass (434 cases); isWriter x4 and mentoring address x2 left for review; browser checks left to review
+
+## [2026-10-08] tier-complete | REQ-fs-006 TASK-007, 008, 010, 011 and the owner-approved TASK-014 (lib/writeFailure.ts) done; build, style check and library check (434 cases) pass; TASK-009 and 012 next
+
+## [2026-10-08] tier-complete | REQ-fs-006 tier 1 (TASK-005 store, TASK-006 shared components) done; build, style check and library check (420 cases) pass
+## [2026-10-08] near-miss | REQ-fs-006 TASK-005 store check first loaded real axios and started one listPosts call per run; sockets and fetch were patched to throw first so nothing left the machine; harness fixed (CommonJS resolver hooked too)
+
+## [2026-10-08] rule-break | REQ-fs-006 TASK-001 test script loaded the root .env through dotenv (printed DB_HOST/DB_NAME, not the password) and ran 4 read-only SELECTs on the local database; nothing written; owner chose to continue with tighter rules (no script may import backend code or load pg/dotenv)
+## [2026-10-08] tier-complete | REQ-fs-006 tier 0 (TASK-001 to 004) done; build, style check and library check (420 cases) pass
+
 ## [2026-10-08] architect-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 13 tasks in 5 stages, no ADR; stress-test 0 critical (ADV-001 accepted: other-user delete can hide a post in Load more); AC30 and the Postman example amended
 
 ## [2026-10-08] work-path-set | REQ-fs-006-frontend-feed-and-dashboard | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-006-frontend-feed-and-dashboard, off redesign)
