@@ -1,0 +1,27 @@
+/*
+ * The two columns of the Dashboard under the counts (dashboard.html). Tokens only.
+ * Recent posts is the wide column and the aside the narrow one, side by side
+ * while both fit (480 and 320 at the least; the design draws 300), one under
+ * the other when they do not: no breakpoint decides it. The design's gap is
+ * 40px by 56px; the nearest steps are 32 and 48. min-width: 0 lets a column
+ * be narrower than its widest word on a 360px phone.
+ */
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6) var(--space-7);
+}
+
+.main {
+  flex: 2 1 calc(var(--space-8) * 7.5);
+  min-width: 0;
+}
+
+.side {
+  flex: 1 1 calc(var(--space-8) * 5);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}

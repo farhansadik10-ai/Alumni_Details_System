@@ -2,6 +2,10 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useId, useRef } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import type { Alumni } from "@alumni/shared";
+import {
+  RecentPostsBlock,
+  type RecentPostsBlockState,
+} from "../../components/dashboard/RecentPostsBlock/RecentPostsBlock";
 import { PageLayout, PageNote } from "../../components/shell/PageLayout/PageLayout";
 import {
   ProfileBand,
@@ -34,8 +38,12 @@ import {
   PROFILE_NOT_FOUND_HEADING,
   PROFILE_NOT_FOUND_LINK,
   PROFILE_NOT_FOUND_TEXT,
+  PROFILE_POSTS_EMPTY_TEXT,
+  PROFILE_POSTS_ERROR_HEADING,
+  PROFILE_POSTS_HEADING,
   PROFILE_YEAR_LABEL,
   profileEmailLink,
+  profilePostsEmptyHeading,
 } from "../../config/text";
 import {
   classLabel,
@@ -56,6 +64,11 @@ import {
   loadAlumniAtom,
   viewedAlumniAtom,
 } from "../../store/alumniAtoms";
+import {
+  clearRecentPostsAtom,
+  loadRecentPostsAtom,
+  recentPostsAtom,
+} from "../../store/postAtoms";
 import styles from "./AlumniProfilePage.module.css";
 
 // How many lines the Details skeleton draws: one per row of the card.
@@ -66,7 +79,8 @@ type PageStatus = "loading" | "ready" | "notFound" | "error";
 /**
  * One person's public profile (AC15 to AC20). The band is drawn in every
  * status at the same place, so its <h1> stays the same element when the data
- * arrives and keyboard focus on it is not lost.
+ * arrives and keyboard focus on it is not lost. "Recent posts", left out in
+ * part 2, is now under About (AC27, AC28, REQ-fs-006).
  */
 export default function AlumniProfilePage() {
   const { id: rawId } = useParams();
@@ -212,16 +226,19 @@ function ProfileContent({ alumni }: { alumni: Alumni }) {
 
   return (
     <div className={styles.columns}>
-      <Card as="section" aria-labelledby={aboutId}>
-        <div className={styles.cardBody}>
-          <h2 id={aboutId} className={styles.cardHeading}>
-            {PROFILE_ABOUT_HEADING}
-          </h2>
-          <p className={bio !== null ? styles.bio : `${styles.bio} ${styles.muted}`}>
-            {bio ?? NOT_GIVEN}
-          </p>
-        </div>
-      </Card>
+      <div className={styles.mainColumn}>
+        <Card as="section" aria-labelledby={aboutId}>
+          <div className={styles.cardBody}>
+            <h2 id={aboutId} className={styles.cardHeading}>
+              {PROFILE_ABOUT_HEADING}
+            </h2>
+            <p className={bio !== null ? styles.bio : `${styles.bio} ${styles.muted}`}>
+              {bio ?? NOT_GIVEN}
+            </p>
+          </div>
+        </Card>
+        <ProfileRecentPosts alumni={alumni} />
+      </div>
       <Card as="section" aria-labelledby={detailsId}>
         <div className={styles.cardBody}>
           <h2 id={detailsId} className={styles.cardHeading}>
@@ -253,6 +270,58 @@ function ProfileContent({ alumni }: { alumni: Alumni }) {
         </div>
       </Card>
     </div>
+  );
+}
+
+// A person with no user account has no posts: the empty state, no request.
+const NO_AUTHOR_STATE: RecentPostsBlockState = { status: "ready", items: [], failure: null };
+
+/**
+ * This person's newest posts, under About (AC27). It loads on its own: its
+ * loading, empty and error states never change the rest of the profile. It is
+ * drawn only for a loaded profile, so it starts and clears with that profile.
+ */
+function ProfileRecentPosts({ alumni }: { alumni: Alumni }) {
+  const recent = useAtomValue(recentPostsAtom);
+  const loadRecentPosts = useSetAtom(loadRecentPostsAtom);
+  const clearRecentPosts = useSetAtom(clearRecentPostsAtom);
+  const authorId = alumni.user_id;
+
+  useEffect(() => {
+    if (typeof authorId !== "number") {
+      return undefined;
+    }
+    void loadRecentPosts({ authorId });
+    // Leaving this profile forgets its posts, so the next profile never
+    // starts from them (AC28).
+    return () => clearRecentPosts();
+  }, [authorId, loadRecentPosts, clearRecentPosts]);
+
+  // The atom may hold another person's posts, or the Dashboard's: they count
+  // only when the key is this person's id (pattern 23).
+  let state: RecentPostsBlockState;
+  if (typeof authorId !== "number") {
+    state = NO_AUTHOR_STATE;
+  } else if (recent.authorId !== authorId || recent.status === "idle" || recent.status === "loading") {
+    state = { status: "loading", items: [], failure: null };
+  } else {
+    state = { status: recent.status, items: recent.items, failure: recent.failure };
+  }
+
+  return (
+    <RecentPostsBlock
+      heading={PROFILE_POSTS_HEADING}
+      state={state}
+      showAuthor={false}
+      emptyHeading={profilePostsEmptyHeading(firstName(alumni.name))}
+      emptyText={PROFILE_POSTS_EMPTY_TEXT}
+      errorHeading={PROFILE_POSTS_ERROR_HEADING}
+      onRetry={() => {
+        if (typeof authorId === "number") {
+          void loadRecentPosts({ authorId });
+        }
+      }}
+    />
   );
 }
 
