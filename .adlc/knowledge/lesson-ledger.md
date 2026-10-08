@@ -39,3 +39,8 @@ One row per lesson file. Title is the H1 without its `^L…` anchor. Superseded 
 | LESSON-REQ-fs-005-3 | Build a mailto: or other link from stored text only after checking and encoding it | security, links, frontend, input | guideline (a rule to follow) | REQ-fs-005 |
 | LESSON-REQ-fs-005-4 | A layer check must encode every sentence of the layer rule, and a rule moved into lib/ brings its cases | layers, checks, lib, frontend | guideline (a rule to follow) | REQ-fs-005 |
 | LESSON-REQ-fs-005-5 | Before the architecture says "no change needed" to a reused part, check it can carry everything the design asks | architecture, reuse, components, exploration | guideline (a rule to follow) | REQ-fs-005 |
+| LESSON-REQ-fs-006-1 | A guard that refuses before any call must return its own result kind, never a borrowed HTTP status | store, errors, frontend, guards | guideline (a rule to follow) | REQ-fs-006 |
+| LESSON-REQ-fs-006-2 | An async answer may only change the state it was sent from, and every branch of the answer has to check | state, async, focus, frontend, dialogs | trap (cost real time before) | REQ-fs-006 |
+| LESSON-REQ-fs-006-3 | A list total that is patched locally and also reloaded needs a log of the local changes | store, paging, state, frontend | guideline (a rule to follow) | REQ-fs-006 |
+| LESSON-REQ-fs-006-4 | When a fix moves or removes a rule, grep the docs and the header comments for the old wording in the same round | docs, review, process, comments | guideline (a rule to follow) | REQ-fs-006 |
+| LESSON-REQ-fs-006-5 | Build a component so the dev page can show every state without copying it | dev-page, components, css, frontend | guideline (a rule to follow) | REQ-fs-006 |

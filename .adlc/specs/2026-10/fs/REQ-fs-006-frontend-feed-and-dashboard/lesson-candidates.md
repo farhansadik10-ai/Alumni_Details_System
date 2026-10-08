@@ -218,7 +218,7 @@
 **Saw it in:** `frontend/src/components/ui/Button/Button.tsx` (aria-disabled after `{...buttonProps}`)
 **Context:** Making Cancel inert during a save (REFL-002); `busy` also sets `aria-busy` on Cancel, which is the price.
 
-## CAND-043 [implement-task]
+## CAND-058 [implement-task]
 **Claim:** When folding a null check into a shared helper, keep the `x !== null &&` part if later JSX reads `x.field`; TypeScript narrows only on the inline check.
 **Saw it in:** `frontend/src/pages/MyProfilePage/MyProfilePage.tsx:44`
 **Context:** canWritePosts(role) alone broke the build at `session.userId` (TS18047), though the behaviour was the same.
@@ -248,12 +248,12 @@
 **Saw it in:** `frontend/src/config/text.ts:4-9`, `frontend/src/lib/postDisplay.ts:7`
 **Context:** ARCH-005: `loadFailure -> text -> postDisplay` is acyclic today by convention only.
 
-## CAND-048 [review-reflect]
+## CAND-059 [review-reflect]
 **Claim:** When a fix covers a lesson's trap, list every control that can change the same state during the call, not only the one the finding named.
 **Saw it in:** `frontend/src/components/posts/CommentItem/CommentItem.tsx:178` (Reply/Edit live while a save runs)
 **Context:** m5 made Cancel busy; other comments' Reply/Edit still replace the open edit, and the answer then clears it.
 
-## CAND-049 [review-reflect]
+## CAND-060 [review-reflect]
 **Claim:** A pure mapper that must sit in store/ for a type should get its input shape declared in lib/, or it has no check cases.
 **Saw it in:** `frontend/src/store/peopleBlockState.ts:12`
 **Context:** Same as LESSON-REQ-fs-005-4; the merge of the two copies (m1) moved the rule to where the check script cannot reach.
@@ -268,12 +268,12 @@
 **Saw it in:** `frontend/src/store/postActions.ts:75`
 **Context:** HTTP_BAD_REQUEST was added for one rule while a second file wrote 400 again.
 
-## CAND-050 [review-corr]
+## CAND-061 [review-corr]
 **Claim:** "Skip a logged change when the answer already holds that item" only works if the answer's page can hold the item; for a later page, a write made during the call stays ambiguous.
 **Saw it in:** `frontend/src/store/postAtoms.ts:170`
 **Context:** CORR-004: page-1 posts never appear in a page-2 answer.
 
-## CAND-051 [review-corr]
+## CAND-062 [review-corr]
 **Claim:** A sentinel status used by a store guard (400 for blank text) is read by later code as the server's meaning of that status; give guards their own kind.
 **Saw it in:** `frontend/src/store/postActions.ts:75`, `frontend/src/lib/writeFailure.ts:50`
 **Context:** CORR-005.
@@ -307,3 +307,72 @@
 **Claim:** When a fix guards the success branch of an async answer against newer user state, guard every branch that has a side effect (focus request, toast, close), not only the one the review named.
 **Saw it in:** `frontend/src/components/posts/CommentItem/CommentItem.tsx` (handleSave 404 branch calls `onRemoved`)
 **Context:** REFL-009: round 3 fixed ok-path close/focus; the 404 path still moves focus.
+
+## Candidate verdicts
+
+62 candidates considered (2026-10-08). Cross-branch dedup: `origin/redesign`, fetched about 7 hours ago, holds the same 27 earlier lessons and none from this REQ. The duplicated numbers in this file were renumbered before the verdicts: the second CAND-043 is now CAND-058, the second 048 is CAND-059, the second 049 is CAND-060, the second 050 is CAND-061 and the second 051 is CAND-062.
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 | discard | one path constant, visible in the code |
+| CAND-002 | discard | one line of how the build works, already in conventions (tsc -b) |
+| CAND-003 | demote-to-gotcha | ^g56 |
+| CAND-004 | discard | trivial test-writing slip |
+| CAND-005 | demote-to-gotcha | ^g56 |
+| CAND-006 | demote-to-gotcha | ^g58 |
+| CAND-007 | demote-to-gotcha | ^g58 |
+| CAND-008 | demote-to-gotcha | ^g58 |
+| CAND-009 | discard | fixture detail, kept in the check script |
+| CAND-010 | discard | trivial |
+| CAND-011 | discard | explained in the check script's comments |
+| CAND-012 | demote-to-gotcha | ^g57 |
+| CAND-013 | demote-to-gotcha | ^g57 |
+| CAND-014 | demote-to-gotcha | ^g56 |
+| CAND-015 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-016 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-017 | demote-to-gotcha | ^g57 |
+| CAND-018 | demote-to-gotcha | ^g57 |
+| CAND-019 | discard | fixed (m10): the unused words were deleted |
+| CAND-020 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-021 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-022 | discard | added as the sixth sighting to LESSON-REQ-fs-002-3 |
+| CAND-023 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-024 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-025 | discard | added as the sixth sighting to LESSON-REQ-fs-002-3 |
+| CAND-026 | discard | recorded in code comments and patterns 29 to 33 |
+| CAND-027 | discard | added as the sixth sighting to LESSON-REQ-fs-002-3 |
+| CAND-028 | promote | LESSON-REQ-fs-006-5 |
+| CAND-029 | promote | LESSON-REQ-fs-006-5 |
+| CAND-030 | promote | LESSON-REQ-fs-006-5 |
+| CAND-031 | promote | LESSON-REQ-fs-006-4 |
+| CAND-032 | discard | still open as m14 (the owner's call); revisit if taken |
+| CAND-033 | discard | added as the sixth sighting to LESSON-REQ-fs-002-3 |
+| CAND-034 | promote | LESSON-REQ-fs-006-5 |
+| CAND-035 | discard | fixed (m10) |
+| CAND-036 | discard | fixed (m11) |
+| CAND-037 | promote | LESSON-REQ-fs-006-3 |
+| CAND-038 | promote | LESSON-REQ-fs-006-2 |
+| CAND-039 | discard | fixed (m7); specific |
+| CAND-040 | discard | still open as m6 (the owner's call) |
+| CAND-041 | discard | fixed (m8); specific |
+| CAND-042 | discard | one-off tooling note for the browser review |
+| CAND-043 | promote | LESSON-REQ-fs-006-2 |
+| CAND-044 | demote-to-gotcha | ^g57 |
+| CAND-045 | promote | LESSON-REQ-fs-006-5 |
+| CAND-046 | promote | LESSON-REQ-fs-006-3 |
+| CAND-047 | demote-to-gotcha | ^g56 |
+| CAND-048 | discard | still open as m14 and n6 (the owner's calls) |
+| CAND-049 | demote-to-gotcha | ^g58 |
+| CAND-050 | promote | LESSON-REQ-fs-006-4 |
+| CAND-051 | discard | duplicate of LESSON-REQ-fs-002-3 (replace every copy in the same fix) |
+| CAND-052 | promote | LESSON-REQ-fs-006-3 |
+| CAND-053 | discard | one-off technique, in the review log |
+| CAND-054 | promote | LESSON-REQ-fs-006-2 |
+| CAND-055 | promote | LESSON-REQ-fs-006-1 |
+| CAND-056 | promote | LESSON-REQ-fs-006-4 |
+| CAND-057 | promote | LESSON-REQ-fs-006-2 |
+| CAND-058 | discard | trivial TypeScript narrowing note |
+| CAND-059 | promote | LESSON-REQ-fs-006-2 |
+| CAND-060 | discard | still open as n6 (the owner's call) |
+| CAND-061 | promote | LESSON-REQ-fs-006-3 |
+| CAND-062 | promote | LESSON-REQ-fs-006-1 |

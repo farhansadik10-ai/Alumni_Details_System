@@ -25,3 +25,8 @@ A screen that loads data from several requests in a row (typing in a search box,
 - Gotchas: [[knowledge/gotchas#^g48|G48]]
 - Components: [[knowledge/components/frontend-app]]
 - Concepts: [[knowledge/concepts/address-as-state]], [[knowledge/concepts/paged-list-query]]
+
+## Added by REQ-fs-006
+
+- The post store follows the same rule (`store/postAtoms.ts`: feed, one open comment thread, recent posts, people lists, stats), with a **visit counter** that clearing or resetting the feed bumps, so a write that finishes after the page was left, or after a user change, patches nothing and a +1 comment count cannot land twice after a reload.
+- A section that loads its own data (the profile's Recent posts) is started in a child drawn only when the parent data is ready, so the child's cleanup clears the old person's posts before the next person's are asked for.
