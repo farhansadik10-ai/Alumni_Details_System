@@ -53,7 +53,13 @@ export class PostController {
 
   public async getAllPosts(req: Request, res: Response): Promise<void> {
     const { page, limit, offset } = parsePaging(req.query);
-    const { rows, total } = await this.postManager.listPosts({ limit, offset });
+    // Optional author filter; a bad value is a 400 from parseId.
+    const sent = req.query.user_id;
+    const user_id = sent === undefined ? undefined : parseId(sent, "user_id");
+    const { rows, total } = await this.postManager.listPosts(
+      { limit, offset },
+      user_id === undefined ? undefined : { user_id },
+    );
     res.status(200).json({ items: rows, total, page, limit });
   }
 
