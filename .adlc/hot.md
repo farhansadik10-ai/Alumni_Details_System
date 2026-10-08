@@ -17,6 +17,12 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] architect-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 13 tasks in 5 stages, no ADR; stress-test 0 critical (ADV-001 accepted: other-user delete can hide a post in Load more); AC30 and the Postman example amended
+
+## [2026-10-08] work-path-set | REQ-fs-006-frontend-feed-and-dashboard | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-006-frontend-feed-and-dashboard, off redesign)
+
+## [2026-10-08] spec-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | owner chose to add the user_id filter on GET /api/posts for profile Recent posts (AC26-28 stay)
+
 ## [2026-10-08] req-archived | REQ-fs-005-frontend-directory-and-profiles
 
 ## [2026-10-08] req-merged | REQ-fs-005-frontend-directory-and-profiles | merge commit ca693ce2 on redesign (the feature branch was deleted by the owner)
