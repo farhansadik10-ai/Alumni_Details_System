@@ -27,6 +27,7 @@ import {
   SAVING_LABEL,
   commentDeleteBody,
 } from "../../../config/text";
+import { sameText } from "../../../lib/alumniDisplay";
 import { canDeleteContent, canEditContent } from "../../../lib/contentOwner";
 import type { Session } from "../../../lib/token";
 import { COMMENT_REQUIRED_MESSAGE } from "../../../lib/validation";
@@ -108,6 +109,14 @@ export function CommentItem({
   }
 
   async function handleSave(content: string): Promise<FormResult> {
+    // Nothing changed (trimmed): close the form with no request and no toast,
+    // because nothing was saved (REQ-fs-007 A7).
+    if (sameText(content, comment.content ?? "")) {
+      if (editingRef.current) {
+        closeEdit();
+      }
+      return { ok: true };
+    }
     const result = await saveComment({ id: comment.id, content });
     if (result.ok) {
       if (editingRef.current) {

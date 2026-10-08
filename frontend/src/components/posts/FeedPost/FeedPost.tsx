@@ -1,6 +1,6 @@
 import { useSetAtom } from "jotai";
 import type { Post } from "@alumni/shared";
-import { useEffect, useId, useRef, useState } from "react";
+import { memo, useEffect, useId, useRef, useState } from "react";
 import { Button } from "../../ui/Button/Button";
 import { Card } from "../../ui/Card/Card";
 import { ConfirmDialog } from "../../ui/Dialog/ConfirmDialog";
@@ -28,7 +28,7 @@ import {
   postDeleteBody,
   postImageAlt,
 } from "../../../config/text";
-import { displayName } from "../../../lib/alumniDisplay";
+import { displayName, sameText } from "../../../lib/alumniDisplay";
 import { canDeleteContent, canEditContent } from "../../../lib/contentOwner";
 import { commentCountText } from "../../../lib/postDisplay";
 import type { Session } from "../../../lib/token";
@@ -45,6 +45,12 @@ const POST_WRITE_FAILURE_WORDS: WriteFailureWords = {
   notFound: POST_NOT_FOUND_TEXT,
   save: POST_SAVE_FAILURE_WORDS,
 };
+
+// The picture's width and height attributes say only the shape of its box,
+// 4:3, the same as the stylesheet's fixed aspect-ratio (AC25). The stylesheet
+// sets the real size.
+const IMAGE_SHAPE_WIDTH = 4;
+const IMAGE_SHAPE_HEIGHT = 3;
 
 export type FeedPostProps = {
   post: Post;
@@ -64,8 +70,12 @@ export type FeedPostProps = {
 /**
  * One post of the feed: byline, text, image, the comments button, and Edit
  * and Delete for those allowed (ADR-02). The open thread is drawn inside.
+ *
+ * memo: a post draws again only when its own props change, not when another
+ * post opens its thread or "Load more" adds posts (AC26, performance.md). It
+ * works because FeedPage passes stable handlers; keep them stable.
  */
-export function FeedPost({
+export const FeedPost = memo(function FeedPost({
   post,
   session,
   open,
@@ -112,6 +122,15 @@ export function FeedPost({
   }
 
   async function handleSave(values: PostFormValues): Promise<FormResult> {
+    // Nothing changed (trimmed; no image link equals an empty one): close the
+    // form with no request and no toast, because nothing was saved (REQ-fs-007 A7).
+    if (
+      sameText(values.caption, post.caption ?? "") &&
+      sameText(values.mediaUrl, post.media_url ?? "")
+    ) {
+      closeEdit();
+      return { ok: true };
+    }
     const result = await savePost({
       id: post.id,
       caption: values.caption,
@@ -197,7 +216,10 @@ export function FeedPost({
                 className={styles.image}
                 src={imageUrl}
                 alt={postImageAlt(authorName)}
+                width={IMAGE_SHAPE_WIDTH}
+                height={IMAGE_SHAPE_HEIGHT}
                 loading="lazy"
+                decoding="async"
                 onError={() => setFailedImage(imageUrl)}
               />
             ) : null}
@@ -260,4 +282,4 @@ export function FeedPost({
       </ConfirmDialog>
     </Card>
   );
-}
+});
