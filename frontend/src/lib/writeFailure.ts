@@ -3,7 +3,7 @@
 // the same "gone" words, and here the user needs to know which (AC18). The
 // rule is here once; the words come from the caller (LESSON-REQ-fs-002-3).
 
-import { HTTP_BAD_REQUEST, HTTP_FORBIDDEN, HTTP_NOT_FOUND } from "./loadFailure";
+import { HTTP_BAD_REQUEST, HTTP_CONFLICT, HTTP_FORBIDDEN, HTTP_NOT_FOUND } from "./loadFailure";
 import type { CallFailure } from "./loadFailure";
 import { saveFailureText } from "./saveFailure";
 import type { SaveFailureWords } from "./saveFailure";
@@ -29,6 +29,20 @@ export function writeFailureText(failure: CallFailure, words: WriteFailureWords)
     return words.notFound;
   }
   return saveFailureText(failure, words.save);
+}
+
+/** The words for a failed user delete: the write words plus a 409. */
+export interface UserDeleteFailureWords extends WriteFailureWords {
+  // 409: the server refused the delete (the user still has things that block it).
+  blocked: string;
+}
+
+/** 409 → blocked; anything else → writeFailureText. */
+export function userDeleteFailureText(failure: CallFailure, words: UserDeleteFailureWords): string {
+  if (failure.kind === "http" && failure.status === HTTP_CONFLICT) {
+    return words.blocked;
+  }
+  return writeFailureText(failure, words);
 }
 
 /** The words for a failed new comment or reply. */

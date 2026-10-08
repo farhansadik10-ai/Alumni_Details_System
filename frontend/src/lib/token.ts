@@ -12,7 +12,8 @@ export interface Session {
   expiresAt: number | null;
 }
 
-const ROLES: readonly Role[] = ["student", "alumni", "admin"];
+/** The three role words, defined once (the Users filter reads them too). */
+export const ROLES: readonly Role[] = ["student", "alumni", "admin"];
 const TOKEN_PART_COUNT = 3;
 const PAYLOAD_PART_INDEX = 1;
 const BASE64_BLOCK_LENGTH = 4;

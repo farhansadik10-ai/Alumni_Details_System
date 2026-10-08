@@ -55,3 +55,11 @@ export function clampPage(page: number, last: number): number {
   }
   return Math.min(Math.max(Math.floor(page), 1), last);
 }
+
+/** The last page number; at least 1, also for an empty list or a bad page size. */
+export function lastPage(total: number, limit: number): number {
+  if (!Number.isFinite(total) || !Number.isFinite(limit) || limit <= 0) {
+    return 1;
+  }
+  return Math.max(1, Math.ceil(total / limit));
+}
