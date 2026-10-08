@@ -42,6 +42,11 @@ Two decision records hold the longer reasoning: `.adlc/architecture/adr-13-front
 26. [The person band](#26-the-person-band)
 27. [The profile address and the "came from the directory" state](#27-the-profile-address-and-the-came-from-the-directory-state)
 28. [One rule, one function in lib](#28-one-rule-one-function-in-lib)
+29. [A feed that loads more by the aligned page and merges by id](#29-a-feed-that-loads-more-by-the-aligned-page-and-merges-by-id)
+30. [One open comment thread, patched from the server's answers](#30-one-open-comment-thread-patched-from-the-servers-answers)
+31. [One owner rule for posts and comments](#31-one-owner-rule-for-posts-and-comments)
+32. [Shared forms for create and edit: PostForm and CommentForm](#32-shared-forms-for-create-and-edit-postform-and-commentform)
+33. [Small blocks that fail on their own, one atom per kind with a key](#33-small-blocks-that-fail-on-their-own-one-atom-per-kind-with-a-key)
 
 ---
 
@@ -228,6 +233,7 @@ Trimming happens twice, on purpose. The pages trim the email, name and photo lin
 - `frontend/src/store/profileAtoms.ts` (`loadProfileAtom`)
 - `frontend/src/store/toastAtoms.ts` (`showToastAtom`, `dismissToastAtom`)
 - A caller: `frontend/src/pages/LoginPage/LoginPage.tsx`
+- From part 3, the writes of the feed: `frontend/src/store/postActions.ts` (`publishPostAtom`, `savePostAtom`, `deletePostAtom`, `addCommentAtom`, `saveCommentAtom`, `deleteCommentAtom`). Each returns `{ ok: true }` or `{ ok: false, failure }`. The page or the component shows the toast and moves focus; the action does neither. A write remembers the user and the visit when it starts, and patches nothing if either changed before the answer came (pattern 30).
 
 **Why we chose it.** When a log in works, the log-in page may be gone before the action returns. Work that must happen (save the remembered email, set the token) is therefore inside the action, not in the page. A result object makes every outcome visible in the type, so a screen cannot forget one.
 
@@ -250,7 +256,8 @@ Each service file is a thin list of calls: one function per endpoint, relative `
 
 - The client: `frontend/src/services/apiClient.ts`
 - The hand-over, called once before the first render: `frontend/src/store/wireApi.ts`
-- Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`, `frontend/src/services/alumniService.ts` (part 2; the three loaders that can be cancelled take a `signal`, see pattern 23)
+- Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`, `frontend/src/services/alumniService.ts` (part 2; the three loaders that can be cancelled take a `signal`, see pattern 23; from part 3 its list takes an optional `limit`, so the small lists ask for 3)
+- From part 3: `frontend/src/services/postService.ts` (list, create, edit, delete a post; it owns `POSTS_PATH`), `frontend/src/services/commentService.ts` (a post's comments, create, edit, delete; it imports `POSTS_PATH` for `/api/posts/:id/comments`), `frontend/src/services/statsService.ts` (`GET /api/stats`). The list loaders take a `signal`; the deletes return nothing.
 - The dev proxy that sends `/api` to the backend: `frontend/vite.config.ts`
 
 **Why we chose it.** If the client imported the store, and the store imports the services, the two would import each other. Handing the functions in keeps the arrow pointing one way (pattern 1) and lets the client be tried with a fake token and a fake handler.
@@ -279,6 +286,7 @@ The server's own error text is never shown. Each screen picks its words from `ki
 
 - `frontend/src/services/apiError.ts` (`ApiFailure`, `toApiFailure`, and `isCancelled`: a call this app cancelled is not a failure and shows nothing, pattern 23)
 - From part 2, two shared word rules, both pure and both with cases in `scripts/frontend-lib-check.ts`: `frontend/src/lib/loadFailure.ts` (a failed load; it also owns the failure shape `CallFailure` and the status numbers 403, 404, 409 and 500) and `frontend/src/lib/saveFailure.ts` (a failed save: `saveFailureReason` and `saveFailureText`; each card passes its own words)
+- From part 3, a third word rule: `frontend/src/lib/writeFailure.ts` (a failed edit, delete or publish in the feed). `writeFailureText` checks 403 first, then 404, then hands the rest to `saveFailureText`; `isGone` is the one "the server said 404" test. The caller passes its own words. Callers: `FeedPost`, `CommentItem`, `CommentsPanel`, `FeedPage` and `frontend/src/store/postActions.ts`.
 - Turned into results in `frontend/src/store/sessionActions.ts`
 - Words chosen in `frontend/src/pages/LoginPage/LoginPage.tsx` and `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 
@@ -394,7 +402,9 @@ Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel
 - `frontend/src/components/shell/PageLayout/PageLayout.tsx` (holds both `PageLayout` and `PageNote`) and `frontend/src/components/shell/PageLayout/PageLayout.module.css`
 - `frontend/src/components/shell/Band/Band.tsx`, `frontend/src/components/shell/Header/Header.tsx`, `frontend/src/components/shell/Footer/Footer.tsx`, `frontend/src/components/shell/SkipLink/SkipLink.tsx`, `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx`
 - `frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx`
-- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`, `frontend/src/pages/DashboardPage/DashboardPage.tsx` (being built)
+- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`, `frontend/src/pages/UsersPage/UsersPage.tsx` (still being built after part 3)
+- Real pages built in part 3 on the same frame: `frontend/src/pages/FeedPage/FeedPage.tsx` and `frontend/src/pages/DashboardPage/DashboardPage.tsx`. Both put one row as the frame's first child, so the row overlaps the band.
+- A link drawn as a button, for "Write a post" and the empty states: `frontend/src/components/ui/ButtonLink/ButtonLink.tsx` (takes its look from `Button.module.css` with `composes`). `frontend/src/components/ui/EmptyState/EmptyState.tsx` takes an optional `actionTo` that it draws with `ButtonLink`, so an empty state can lead to another page without a button that navigates.
 - A page that replaces the band with its own: `PageLayout`'s `band` slot, used with `ProfileBand` (pattern 26)
 - `frontend/src/components/auth/AuthLayout/AuthLayout.tsx`
 
@@ -435,7 +445,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2, 434 after part 3; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -561,7 +571,14 @@ It exists only in development, at `/dev/components`. In `App.tsx` its import sit
 
 **Why we chose it.** There is no test runner and no Storybook. A plain page costs no package and shows the real components with the real tokens.
 
+- From part 3, the page's own styles: `frontend/src/pages/dev/ComponentsPage/ComponentsPage.module.css`
+
 **To add a component in parts 2 to 4:** add a section for it to this page, in every state it has. Part 2 added the alumni card and its loading card, the directory search and filters, and the profile band.
+
+Part 3 added button links, the post byline and text, the post and comment forms, feed posts, comments, the people lists, recent posts, counts and "Your profile". Two things about those sections:
+
+- **No request can start from them.** A small wrapper on the page, `NoRequests`, stops every click, middle click and submit in the capture phase, before it reaches a post, a comment or a block's link or retry. The keyboard is stopped too, because Enter and Space on a button fire a click. The two form samples are not wrapped: their submit is a function on the page that only shows a toast or a fixed failure.
+- **Some states are drawn from parts, not from the live component.** `FeedPost` keeps its editing state and its delete dialog in its own `useState`, so a prop cannot switch them on. The page draws them from the same parts (card, byline, `PostForm`, `ConfirmDialog` with FeedPost's words). `CommentsPanel` reads the comment thread from the store, so it is not rendered at all; its loading, error, empty and thread states are drawn from `CommentItem`, `CommentForm` and `buildThreads`. The thread's look is copied into the page's stylesheet for that (see "Open points").
 
 ---
 
@@ -585,6 +602,7 @@ When a page closes, it clears its own atom: the directory calls `clearDirectoryA
 - `isCancelled`: `frontend/src/services/apiError.ts`
 - Readers: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
 - The clear on close: `clearDirectoryAtom`, `clearViewedAlumniAtom`, `clearMyAlumniAtom` in `frontend/src/store/alumniAtoms.ts`
+- From part 3: `frontend/src/store/postAtoms.ts` holds five more atoms with their own loaders and clears (`feedAtom`, `commentsAtom`, `recentPostsAtom`, `peopleAtom`, `statsAtom`), each with its own `createLatestRequest()`. Its `resetPostsAtom` is called in the same three places as `resetAlumniAtom` in `frontend/src/store/sessionActions.ts`. The keys are `postId` (comments), `authorId` (recent posts) and `kind` (people); see patterns 30 and 33.
 
 **Why we chose it.** A search box fires several calls in a row, and the network does not answer in order. Without a ticket, a slow answer for "ab" can arrive after the answer for "abc" and replace it. React's StrictMode also starts every effect twice in development, which starts two calls. The ticket makes both harmless, and the abort saves the server the work.
 
@@ -701,6 +719,142 @@ We did not make a general "utils" file (a file named for no rule grows without l
 
 ---
 
+## 29. A feed that loads more by the aligned page and merges by id
+
+**What it is.** The feed shows the newest posts and a "Load more" button. The API pages by number, but this browser's own writes move posts between pages: a delete pulls every later post up by one, a new post pushes them down by one. Asking for "the page after the last one" would then skip or repeat a post.
+
+So the next page is worked out from how many posts the feed holds: `nextFeedPage(held, limit)` is `floor(held / limit) + 1`. The answer is merged into the list with `mergePosts`: newest first, no id twice, and for an id in both lists the new copy wins. `total` is taken from each answer. "Load more" shows while the feed holds fewer posts than `total`.
+
+With no writes this is plain "page + 1". After one delete (11 held, limit 12) it asks for page 1 again and gets the one post it did not have; the next press is aligned again. After one new post (13 held) it asks for page 2 and drops the one post it already holds.
+
+Three more rules in the store:
+
+- Page 1 and "Load more" share one latest-request ticket, so a retry or leaving the page cancels a "Load more", and the other way round.
+- A failed "Load more" keeps the posts already shown. The same button then reads "Try again", so keyboard focus stays on it.
+- The posts this browser deleted during the visit are remembered (`removedIds`). A load that was already running when the delete finished drops them, and takes them off `total`.
+
+A visually hidden status line above the list says "Showing N of M posts" after a load, a "Load more", a publish and a delete.
+
+**Where it lives.**
+
+- The rule: `frontend/src/lib/feedPaging.ts` (`nextFeedPage`, `mergePosts`), with cases in `scripts/frontend-lib-check.ts`
+- The state and the two loaders: `feedAtom`, `loadFeedAtom`, `loadMoreFeedAtom`, `removePostLocallyAtom` and `clearFeedAtom` in `frontend/src/store/postAtoms.ts`
+- The page: `frontend/src/pages/FeedPage/FeedPage.tsx`
+
+**Why we chose it.** The rule is two lines, has cases, and gives the right list after any of this browser's own writes. It needs no change to the API.
+
+We did not ask for "page + 1" (a delete skips a post for good). We did not reload page 1 after every write (the user loses their place). We did not ask the backend for a cursor ("posts older than this one"): that would be a new API shape, and the spec allowed only one small backend change.
+
+The known limit: a post that **another user** deletes while this feed is open is not seen. The list keeps it, and one post can be missed by "Load more" until the page is opened again. This was accepted at the architecture gate (ADV-001). A real fix needs two requests per press and still leaves the deleted post on screen.
+
+---
+
+## 30. One open comment thread, patched from the server's answers
+
+**What it is.** Only one post's comments are open at a time, so there is one atom for them, `commentsAtom`, with the post id as its key. A post whose id is not the key treats its thread as closed. Opening another post's comments closes the first. The toggle button carries `aria-expanded`, and focus stays on it.
+
+After a write, the list is patched from what the server answered. Nothing is loaded again:
+
+- a new post goes on top and `total` goes up by one; an edited post replaces its copy; a deleted post is taken out and `total` goes down by one;
+- a new comment is added at the end; an edited one replaces its copy; a deleted one is taken out **with all its replies**.
+
+Then the post's comment count is set to the length of the comment list. The count is never worked out a second way, so the number on the toggle and the list cannot disagree. When the write ends and that post's thread is no longer the open one, the count moves by the number added or removed (for a delete, the comment and its replies, counted when the delete started).
+
+A comment write changes the thread and the count in one store update (`patchCommentsAtom`), so React never draws one without the other. A 404 on an edit or a delete removes the post or comment on this screen, because the server says it is gone.
+
+A write only patches if the same user and the same visit are still there when the answer comes. Leaving the feed or logging out starts a new visit, so a late answer patches nothing.
+
+Threads are shaped by pure functions. `buildThreads` returns the top-level comments, oldest first, each with all its replies flat under it, oldest first. A comment whose parent is not in the list is shown as top level, so it can never be hidden. A reply to a reply is sent with that reply's id and drawn under the top-level comment.
+
+**Where it lives.**
+
+- The thread rules: `frontend/src/lib/commentThread.ts` (`buildThreads`, `appendComment`, `replaceComment`, `removeWithReplies`, `countReplies`), with cases in the library check
+- The date and count words: `frontend/src/lib/postDisplay.ts` (`dateText`, `commentCountText`)
+- The state: `commentsAtom`, `openCommentsAtom`, `closeCommentsAtom` in `frontend/src/store/postAtoms.ts`
+- The writes and the patching: `frontend/src/store/postActions.ts`
+- The parts: `frontend/src/components/posts/FeedPost/FeedPost.tsx` (the toggle), `frontend/src/components/posts/CommentsPanel/CommentsPanel.tsx` (the open thread; one reply or edit at a time), `frontend/src/components/posts/CommentItem/CommentItem.tsx`
+
+**Why we chose it.** One open thread means one request at a time, one latest-request ticket, and no answers for two posts that arrive in the wrong order. Patching from the answer is quick and keeps the user's place. Taking the count from the list means the count is right after every add and delete, also when replies go with a comment.
+
+We did not keep a thread per post (more state, more answers to keep apart, and the design opens one). We did not reload the post or its thread after a write (slower, and there is no `GET /api/posts/:id` route, G33). We did not trust the stored `posts.comment_count` column (G11).
+
+---
+
+## 31. One owner rule for posts and comments
+
+**What it is.** Two pure functions decide which buttons a post or a comment shows:
+
+- `canEditContent(session, userId)`: true only for the author.
+- `canDeleteContent(session, userId)`: true for the author or an admin (ADR-02).
+
+No session, or content with no author, gives false. Posts and comments both call them; nothing else asks "is this mine". The server still decides. When it refuses (403), the user reads words for that, chosen by `writeFailureText` (pattern 9).
+
+**Where it lives.**
+
+- `frontend/src/lib/contentOwner.ts`, with cases for the author, another user, an admin, a student and no session in the library check
+- Callers: `frontend/src/components/posts/FeedPost/FeedPost.tsx`, `frontend/src/components/posts/CommentItem/CommentItem.tsx`
+
+**Why we chose it.** The rule is small, but it is easy to write slightly differently in two places (for example, letting an admin edit in one). One function with cases means both lists follow the same rule.
+
+We did not show every button and let the server refuse (a user should not be offered what they cannot do). We did not put the rule in the store (it decides what to draw, not what to save).
+
+---
+
+## 32. Shared forms for create and edit: PostForm and CommentForm
+
+**What it is.** One `PostForm` serves "Write a post" and "Edit post" (caption, image link, submit, an optional Cancel). One `CommentForm` serves a new comment, a reply and an edit. Both follow pattern 16: values in `useState`, the validators from `lib/validation.ts`, messages under the field through `Field`, focus to the first field with a message, a busy button, and an early return against a double submit.
+
+The forms do not know the API. The caller gives them an `onSubmit` that answers a `FormResult`: `{ ok: true }`, `{ ok: true, reset: true }` (empty the form after a new post or comment) or `{ ok: false, text }` (show these words). On a reset a field is emptied only if it still holds what was sent, so text typed during the request is kept. A failure keeps what was typed, and its message takes focus.
+
+Each form hands its text field to the caller through a ref, so the caller can move focus back there after a publish or a comment.
+
+Edit has no "Save stays off until something changed" rule: a post is never new, and the form closes on Save or Cancel, so none of the three traps of LESSON-REQ-fs-005-1 arises.
+
+The validators: `validateCaption` (a visible character, at most 2000) and `validateComment` (a visible character, at most 1000). The image link uses the existing `validatePhotoLink`.
+
+**Where it lives.**
+
+- `frontend/src/components/posts/PostForm/PostForm.tsx` (it exports `FormResult`) and `frontend/src/components/posts/CommentForm/CommentForm.tsx`
+- The validators: `frontend/src/lib/validation.ts`
+- The callers: `frontend/src/pages/FeedPage/FeedPage.tsx` (publish), `frontend/src/components/posts/FeedPost/FeedPost.tsx` (edit post), `frontend/src/components/posts/CommentsPanel/CommentsPanel.tsx` (add and reply), `frontend/src/components/posts/CommentItem/CommentItem.tsx` (edit comment)
+- The words of a failure: `frontend/src/lib/writeFailure.ts` (pattern 9)
+
+**Why we chose it.** Create and edit have the same fields and the same rules. One form keeps them the same and means one place to fix. Leaving the API to the caller keeps the forms in the components layer (pattern 1) and lets the dev page show them with a fake submit.
+
+We did not build separate create and edit forms, and we did not add a form library (pattern 16).
+
+---
+
+## 33. Small blocks that fail on their own, one atom per kind with a key
+
+**What it is.** The Dashboard is four blocks: counts, recent posts, "New in the directory" and "Your profile". The Feed has a side list ("Open to mentoring"), and an alumni profile has "Recent posts". Each block has its own loading, empty, error and ready states and its own "Try again". One block that fails never hides another.
+
+The blocks take props only; none reads an atom. Each exports its own state type with the status `loading`, `ready` or `error`. The page maps the atom to it.
+
+Lists of the same kind share one atom, with a key that says whose it is:
+
+- `recentPostsAtom` with `authorId`: `null` for everyone's newest (the Dashboard), a user id for one person (the profile).
+- `peopleAtom` with `kind`: `"newest"` (Dashboard) or `"mentoring"` (Feed).
+
+As in pattern 23, a page that finds `idle` or another key treats the state as loading, so one page never shows the other's list for a frame. The small lists ask for 3 items.
+
+The page starts its loads in one effect keyed on the user and clears them in the cleanup. "Your profile" chooses by role: a student gets a prompt and sends **no** request; alumni and admin load the existing `myAlumniAtom`.
+
+The retry buttons in the blocks are secondary, so a page with several failed blocks still has one primary action.
+
+**Where it lives.**
+
+- The blocks: `frontend/src/components/alumni/PeopleBlock/PeopleBlock.tsx`, `frontend/src/components/dashboard/CountsBlock/CountsBlock.tsx`, `frontend/src/components/dashboard/RecentPostsBlock/RecentPostsBlock.tsx`, `frontend/src/components/dashboard/YourProfileBlock/YourProfileBlock.tsx`, and the card inside the recent posts list, `frontend/src/components/posts/PostSummaryCard/PostSummaryCard.tsx`
+- The atoms and loaders: `recentPostsAtom`, `peopleAtom`, `statsAtom` and their loaders and clears in `frontend/src/store/postAtoms.ts`
+- The mapping from atom to block state: `toCountsState`, `toRecentPostsState`, `toPeopleState` in `frontend/src/pages/DashboardPage/DashboardPage.tsx`; the same idea in `frontend/src/pages/FeedPage/FeedPage.tsx` and `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`
+- The backend filter the profile uses: `GET /api/posts?user_id=<id>&limit=3`, in `backend/src/dal/query/PostQuery.ts` and `backend/src/api/controllers/PostController.ts`
+
+**Why we chose it.** A dashboard that waits for four calls, and fails when one fails, is slow and fragile. Blocks that take props can be shown in every state on the dev page without the store. One atom per kind with a key keeps the store small, and the key rule is already known from pattern 23.
+
+We did not load the dashboard in one request (there is no such endpoint, and the backend change was kept to one filter). We did not give each page its own copy of the same atom (more state to reset on log out). We did not let the blocks read atoms themselves (then the dev page could not show them).
+
+---
+
 ## How to add to this file
 
 For parts 2 to 4 (directory and profiles, My profile, feed, dashboard, users):
@@ -712,7 +866,7 @@ For parts 2 to 4 (directory and profiles, My profile, feed, dashboard, users):
 5. **Say what you did not choose.** That sentence is what stops the next person from trying it again.
 6. **Plain words, short sentences.** The reader is the owner and whoever builds the next part.
 
-Likely new sections, so nobody is surprised: the owner check (only you or an admin may edit); dates written as "3 October 2026". Part 2 wrote sections 23 to 28.
+Part 2 wrote sections 23 to 28. Part 3 (the feed and the dashboard) wrote sections 29 to 33; the owner check expected here became pattern 31, and dates written as "3 October 2026" are `dateText` in `frontend/src/lib/postDisplay.ts` (pattern 30). Likely new sections in part 4 (the users page), so nobody is surprised: an admin-only list with role changes.
 
 ## Checks to run
 
@@ -722,7 +876,7 @@ Run all four from the repo root before you say a piece of work is done. All must
 |---|---|
 | `npm run build` | The code compiles (type errors fail it) and the production build works. |
 | `node scripts/frontend-style-check.mjs` | The eleven style and layer rules of pattern 3. |
-| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers. |
+| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers (434 cases after part 3). |
 | `git grep -n --untracked "antd" -- frontend/src frontend/package.json` | Prints nothing: the old UI library is gone. Keep `--untracked`; without it git skips files that are not committed yet. |
 
 After the build, two looks at the output:
@@ -736,7 +890,7 @@ The build type-checks `frontend/src` only. The library check runs through `tsx`,
 
 Screens are checked in a browser against a mock API: a throwaway script outside the repo, and a throwaway Vite config that points the `/api` proxy at it. Before you start, find out what listens on port 3000; it may be the real backend on a real database. Never point anything at it for a review.
 
-What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault; part 2's is in the REQ-fs-005 folder.
+What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault; part 2's is in the REQ-fs-005 folder; part 3's is in the REQ-fs-006 folder.
 
 ## Files added in review round 1
 
@@ -750,3 +904,10 @@ Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-
 - The checks on the store (401 handling, start-up check, and in part 2 the latest-request and save actions) were run from scratch files and are not in `scripts/`.
 - ESLint is not installed, so nothing lints the code.
 - Part 2: `ProfileBand` takes no heading ref, so the profile page reaches its `<h1>` through a wrapper element. After a 409 on create the focused Save button switches off with no focus move. Other review items left open are listed in the REQ-fs-005 `verification.md`.
+- Part 3 (REQ-fs-006), known gaps after the implement phase:
+  - "May this user write posts?" (alumni or admin) is written in four places: `FeedPage`, `DashboardPage`, `YourProfileBlock` and `MyProfilePage`. The address of the directory with the mentoring filter on is built in two: `FeedPage` and `CountsBlock`. Each should become one function (pattern 28).
+  - Five CSS rules of `CommentsPanel` (`.commentPanel`, `.threads`, `.replies`, `.reply` and the phone indent) are copied into `frontend/src/pages/dev/ComponentsPage/ComponentsPage.module.css`, because the dev page cannot render the live panel (pattern 22). A change to the thread's look must be made in both files.
+  - Five loading words in `frontend/src/config/text.ts` are unused: `PEOPLE_LOADING`, `DASHBOARD_COUNTS_LOADING`, `DASHBOARD_RECENT_LOADING`, `DASHBOARD_PROFILE_LOADING` and `PROFILE_POSTS_LOADING`. `SkeletonGroup` reads out the one `LOADING_TEXT` and takes no label. `COMMENTS_LOADING_TEXT` and `POST_IMAGE_ALT` are unused for the same kind of reason. Either drop them or give `SkeletonGroup` a label.
+  - Saving or deleting a comment that is not in the open thread patches nothing on this screen: the store cannot tell which post it belongs to. Today a comment's buttons are only shown inside the open thread, so this cannot happen from the screen.
+  - The browser checks were not done in the implement phase: focus rings by a real Tab key, 360px and 200% zoom, and screenshots in both themes. They are left to the review phase.
+  - ADV-001: a post that another user deletes while the feed is open can make "Load more" miss one post until the page is opened again (pattern 29).
