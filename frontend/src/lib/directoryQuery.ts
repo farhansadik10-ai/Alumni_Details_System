@@ -103,6 +103,19 @@ export function writeDirectoryQuery(query: DirectoryQuery): URLSearchParams {
   return params;
 }
 
+/**
+ * The directory with only "open to mentoring" on, for the "See all" links on
+ * the Feed and the Dashboard. Written by writeDirectoryQuery, so it is always
+ * the address the directory itself would write. The caller passes the
+ * directory's path (lib/ does not import routes/).
+ */
+export function mentoringDirectoryAddress(directoryPath: string): { pathname: string; search: string } {
+  return {
+    pathname: directoryPath,
+    search: `?${writeDirectoryQuery({ ...DEFAULT_DIRECTORY_QUERY, mentoring: true }).toString()}`,
+  };
+}
+
 /** The request query for the list. `limit` is never sent (the server's page size is used). */
 export function toListParams(query: DirectoryQuery): DirectoryListParams {
   const params: DirectoryListParams = {};

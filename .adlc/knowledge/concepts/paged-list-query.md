@@ -33,7 +33,7 @@ Every paged list answers `{ items, total, page, limit }`. `page` starts at 1 and
 
 - `UserQuery.listUsers` — `q` on name or email, `role`; ordered by `id`.
 - `AlumniQuery.listAlumni` — `q` on name, company, job title; `department`, `field`, `graduation_year`, mentoring; newest first.
-- `PostQuery.listPosts` — no filter; newest first.
+- `PostQuery.listPosts` — optional `user_id` filter since REQ-fs-006 (one condition list builds both the count and the page query, with the alias `p` on both); newest first.
 
 The three methods each write the pattern out; there is no shared builder (review finding m10, accepted). `GET /api/comments` is not paged.
 

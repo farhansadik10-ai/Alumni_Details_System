@@ -21,6 +21,11 @@ const POST_READ = `
          (SELECT COUNT(*)::int FROM comment c WHERE c.posts_id = p.id) AS comment_count
   FROM posts p LEFT JOIN "User" u ON u.id = p.user_id`;
 
+/** Optional narrowing for `listPosts`. Absent fields filter nothing. */
+export interface PostListFilter {
+  user_id?: number;
+}
+
 export class PostQuery {
   constructor() {}
 
@@ -34,13 +39,35 @@ export class PostQuery {
     return this.findPostById(result.rows[0].id);
   }
 
-  /** One page of posts, newest first, and how many posts there are in all. */
-  public async listPosts(page: PageRequest): Promise<PageRows<PostDTO>> {
-    const count = await pool.query(`SELECT COUNT(*)::int AS total FROM posts`);
+  /**
+   * One page of posts, newest first, and how many posts match in all.
+   * With `filter.user_id`, only that author's posts are counted and listed.
+   */
+  public async listPosts(
+    page: PageRequest,
+    filter: PostListFilter = {},
+  ): Promise<PageRows<PostDTO>> {
+    const conditions: string[] = [];
+    const values: number[] = [];
+
+    // Each push adds one value, so values.length is that value's $n.
+    if (filter.user_id !== undefined) {
+      values.push(filter.user_id);
+      conditions.push(`p.user_id = $${values.length}`);
+    }
+
+    const where =
+      conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+
+    // Both queries use the alias `p`, so the shared WHERE is valid in each.
+    const count = await pool.query(
+      `SELECT COUNT(*)::int AS total FROM posts p${where}`,
+      values,
+    );
     const result = await pool.query(
-      `${POST_READ}
-      ORDER BY p.created_at DESC, p.id DESC LIMIT $1 OFFSET $2`,
-      [page.limit, page.offset],
+      `${POST_READ}${where}
+      ORDER BY p.created_at DESC, p.id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+      [...values, page.limit, page.offset],
     );
     return { rows: result.rows, total: count.rows[0].total };
   }

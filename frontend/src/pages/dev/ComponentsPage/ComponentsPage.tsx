@@ -1,16 +1,31 @@
 import { useSetAtom } from "jotai";
 import { useState } from "react";
-import type { ComponentType } from "react";
-import type { Alumni, AlumniFilters } from "@alumni/shared";
+import type { ComponentType, ReactNode, SyntheticEvent } from "react";
+import type { Alumni, AlumniFilters, Comment, Post, Stats } from "@alumni/shared";
 import { AlumniCard } from "../../../components/alumni/AlumniCard/AlumniCard";
 import { AlumniCardSkeleton } from "../../../components/alumni/AlumniCard/AlumniCardSkeleton";
 import { DirectoryFilters } from "../../../components/alumni/DirectoryFilters/DirectoryFilters";
 import type { DirectoryFilterPatch } from "../../../components/alumni/DirectoryFilters/DirectoryFilters";
+import { PeopleBlock } from "../../../components/alumni/PeopleBlock/PeopleBlock";
+import type { PeopleBlockState } from "../../../components/alumni/PeopleBlock/PeopleBlock";
+import { CountsBlock } from "../../../components/dashboard/CountsBlock/CountsBlock";
+import type { CountsBlockState } from "../../../components/dashboard/CountsBlock/CountsBlock";
+import { RecentPostsBlock } from "../../../components/dashboard/RecentPostsBlock/RecentPostsBlock";
+import type { RecentPostsBlockState } from "../../../components/dashboard/RecentPostsBlock/RecentPostsBlock";
+import { YourProfileBlock } from "../../../components/dashboard/YourProfileBlock/YourProfileBlock";
+import { CommentForm } from "../../../components/posts/CommentForm/CommentForm";
+import { CommentItem } from "../../../components/posts/CommentItem/CommentItem";
+import { FeedPost } from "../../../components/posts/FeedPost/FeedPost";
+import { PostByline } from "../../../components/posts/PostByline/PostByline";
+import { PostForm } from "../../../components/posts/PostForm/PostForm";
+import type { FormResult } from "../../../components/posts/PostForm/PostForm";
+import { PostText } from "../../../components/posts/PostText/PostText";
 import { ProfileBand, ProfileBandAction } from "../../../components/shell/ProfileBand/ProfileBand";
 import { ThemeSwitch } from "../../../components/shell/ThemeSwitch/ThemeSwitch";
 import { Avatar } from "../../../components/ui/Avatar/Avatar";
 import { Button } from "../../../components/ui/Button/Button";
 import type { ButtonProps } from "../../../components/ui/Button/Button";
+import { ButtonLink } from "../../../components/ui/ButtonLink/ButtonLink";
 import { Card } from "../../../components/ui/Card/Card";
 import { Checkbox } from "../../../components/ui/Checkbox/Checkbox";
 import { ConfirmDialog } from "../../../components/ui/Dialog/ConfirmDialog";
@@ -31,19 +46,63 @@ import { Textarea } from "../../../components/ui/Textarea/Textarea";
 import { TextInput } from "../../../components/ui/TextInput/TextInput";
 import { APP_NAME } from "../../../config/app";
 import {
+  CANCEL_LABEL,
+  COMMENTS_EMPTY_HEADING,
+  COMMENTS_EMPTY_TEXT,
+  COMMENTS_ERROR_HEADING,
+  COMMENT_EDIT_LABEL,
+  COMMENT_FIELD_LABEL,
+  COMMENT_SAVE_FAILURE_WORDS,
+  COMMENT_SUBMIT_BUSY,
+  COMMENT_SUBMIT_BUTTON,
+  DASHBOARD_PROFILE_EDIT_LINK,
+  DASHBOARD_RECENT_EMPTY_HEADING,
+  DASHBOARD_RECENT_EMPTY_LINK,
+  DASHBOARD_RECENT_EMPTY_WRITER_TEXT,
+  DASHBOARD_RECENT_ERROR_HEADING,
+  DASHBOARD_RECENT_HEADING,
+  DASHBOARD_WRITE_POST_LINK,
   MY_PROFILE_HEADING,
   MY_PROFILE_PUBLIC_LINK,
   OPEN_TO_MENTORING,
   OPENS_IN_NEW_TAB,
+  PEOPLE_DIRECTORY_LINK,
+  PEOPLE_ERROR_HEADING,
+  PEOPLE_MENTORING_EMPTY_HEADING,
+  PEOPLE_MENTORING_EMPTY_TEXT,
+  PEOPLE_MENTORING_HEADING,
+  PEOPLE_NEW_EMPTY_HEADING,
+  PEOPLE_NEW_EMPTY_TEXT,
+  PEOPLE_NEW_HEADING,
+  POST_CHANGE_FORBIDDEN_TEXT,
+  POST_DELETE_CONFIRM,
+  POST_DELETE_TITLE,
+  POST_EDIT_LABEL,
+  POST_FORM_HEADING,
+  POST_PUBLISH_BUSY,
+  POST_PUBLISH_BUTTON,
+  POST_SAVE_FAILURE_WORDS,
   PROFILE_BACK_LINK,
   PROFILE_HEADING,
   PROFILE_LINKEDIN_LINK,
+  PROFILE_POSTS_EMPTY_TEXT,
+  PROFILE_POSTS_ERROR_HEADING,
+  PROFILE_POSTS_HEADING,
+  SAVE_LABEL,
+  SAVING_LABEL,
   myProfileSub,
+  postDeleteBody,
   profileEmailLink,
+  profilePostsEmptyHeading,
 } from "../../../config/text";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
+import { buildThreads, countReplies } from "../../../lib/commentThread";
 import { DEFAULT_DIRECTORY_QUERY } from "../../../lib/directoryQuery";
 import type { DirectoryQuery } from "../../../lib/directoryQuery";
+import { loadFailureText } from "../../../lib/loadFailure";
+import { commentCountText } from "../../../lib/postDisplay";
+import { saveFailureText } from "../../../lib/saveFailure";
+import type { Session } from "../../../lib/token";
 import { AlertIcon } from "../../../icons/AlertIcon";
 import { CheckIcon } from "../../../icons/CheckIcon";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
@@ -54,6 +113,8 @@ import { MonitorIcon } from "../../../icons/MonitorIcon";
 import { MoonIcon } from "../../../icons/MoonIcon";
 import { SunIcon } from "../../../icons/SunIcon";
 import { PATHS, alumniProfilePath } from "../../../routes/paths";
+import type { MyAlumniState } from "../../../store/alumniAtoms";
+import type { ApiFailure } from "../../../store/postAtoms";
 import { showToastAtom } from "../../../store/toastAtoms";
 import styles from "./ComponentsPage.module.css";
 
@@ -254,6 +315,142 @@ const QUERY_WITH_OLD_VALUE: DirectoryQuery = {
 
 const SAMPLE_DIRECTORY_SEARCH = "?q=nadia";
 
+// ----- Posts, comments and the dashboard blocks (REQ-fs-006) -----
+
+// Shown when a sample form "sends": its onSubmit is a function on this page.
+const NOTHING_SENT = "Nothing was sent: this page calls no API";
+
+// How long the "busy" sample forms wait before they answer.
+const SLOW_ANSWER_MS = 4000;
+
+const SAMPLE_DATE = "2026-10-03T09:30:00.000Z";
+const LATER_DATE = "2026-10-05T14:10:00.000Z";
+
+// Nadia (user 1, alumni) wrote the sample post. Each viewer sees other buttons.
+const AUTHOR_SESSION: Session = { userId: 1, role: "alumni", expiresAt: null };
+const OTHER_ALUMNI_SESSION: Session = { userId: 7, role: "alumni", expiresAt: null };
+const ADMIN_SESSION: Session = { userId: 3, role: "admin", expiresAt: null };
+const STUDENT_SESSION: Session = { userId: 2, role: "student", expiresAt: null };
+
+const LONG_TEXT =
+  "We are hiring two junior backend engineers in Dhaka. The team builds payment systems for " +
+  "small shops across the country, and we mentor every new engineer for their first six " +
+  "months. Message me if you graduated in the last two years; I will gladly look at your " +
+  "projects and tell you more about the work, the team and the interview.";
+const LINE_BREAK_TEXT =
+  "Alumni meetup on Friday 17 October.\nCampus library, room 204, at six.\n\nBring a friend.";
+const UNBROKEN_TEXT = `https://example.com/careers/${"backend-engineer-dhaka-".repeat(6)}apply`;
+
+const BASE_POST: Post = {
+  id: 101,
+  user_id: 1,
+  caption: "We are hiring two junior backend engineers in Dhaka.\nMessage me if you graduated in the last two years.",
+  media_url: null,
+  comment_count: 4,
+  created_at: SAMPLE_DATE,
+  updated_at: null,
+  name: SAMPLE_NAME,
+  photo_url: null,
+};
+
+// A post with no author name, no date and an image link that fails.
+const BARE_POST: Post = {
+  ...BASE_POST,
+  id: 102,
+  user_id: null,
+  caption: UNBROKEN_TEXT,
+  comment_count: 1,
+  created_at: null,
+  name: null,
+};
+
+const SUMMARY_POSTS: Post[] = [
+  BASE_POST,
+  {
+    ...BASE_POST,
+    id: 103,
+    user_id: 2,
+    name: "Erik Lindqvist",
+    caption: LONG_TEXT,
+    comment_count: 0,
+    created_at: LATER_DATE,
+  },
+  { ...BASE_POST, id: 104, caption: LINE_BREAK_TEXT, comment_count: 1 },
+];
+
+function sampleComment(fields: Partial<Comment> & Pick<Comment, "id">): Comment {
+  return {
+    user_id: null,
+    posts_id: BASE_POST.id,
+    parent_id: null,
+    content: null,
+    created_at: SAMPLE_DATE,
+    updated_at: null,
+    name: null,
+    photo_url: null,
+    ...fields,
+  };
+}
+
+// Two threads: the first has a reply and a reply to that reply (drawn at the
+// same level, C3); the second comment has no author name.
+const SAMPLE_COMMENTS: Comment[] = [
+  sampleComment({
+    id: 201,
+    user_id: 2,
+    name: "Erik Lindqvist",
+    content: "Is this open to graduates from Electrical Engineering too?",
+  }),
+  sampleComment({
+    id: 202,
+    user_id: 1,
+    parent_id: 201,
+    name: SAMPLE_NAME,
+    content: "Yes. Send me your projects and I will pass them on.",
+    created_at: LATER_DATE,
+  }),
+  sampleComment({
+    id: 203,
+    user_id: 3,
+    parent_id: 202,
+    name: "Amira Haddad",
+    content: UNBROKEN_TEXT,
+    created_at: LATER_DATE,
+  }),
+  sampleComment({ id: 204, content: LINE_BREAK_TEXT }),
+];
+
+const NETWORK_FAILURE: ApiFailure = { kind: "network" };
+const SERVER_FAILURE: ApiFailure = { kind: "http", status: 500 };
+
+const PEOPLE_LOADING: PeopleBlockState = { status: "loading", items: [], failure: null };
+const PEOPLE_EMPTY: PeopleBlockState = { status: "ready", items: [], failure: null };
+const PEOPLE_ERROR: PeopleBlockState = { status: "error", items: [], failure: NETWORK_FAILURE };
+const PEOPLE_READY: PeopleBlockState = {
+  status: "ready",
+  items: [FULL_ALUMNI, SOME_ALUMNI, NO_NAME_ALUMNI],
+  failure: null,
+};
+
+const RECENT_LOADING: RecentPostsBlockState = { status: "loading", items: [], failure: null };
+const RECENT_EMPTY: RecentPostsBlockState = { status: "ready", items: [], failure: null };
+const RECENT_ERROR: RecentPostsBlockState = { status: "error", items: [], failure: SERVER_FAILURE };
+const RECENT_READY: RecentPostsBlockState = { status: "ready", items: SUMMARY_POSTS, failure: null };
+
+const SAMPLE_STATS: Stats = { alumni: 128, students: 40, posts: 56, mentoring: 23 };
+const ZERO_STATS: Stats = { alumni: 0, students: 0, posts: 0, mentoring: 0 };
+
+const COUNTS_LOADING: CountsBlockState = { status: "loading", stats: null, failure: null };
+const COUNTS_ERROR: CountsBlockState = { status: "error", stats: null, failure: NETWORK_FAILURE };
+const COUNTS_READY: CountsBlockState = { status: "ready", stats: SAMPLE_STATS, failure: null };
+const COUNTS_ZERO: CountsBlockState = { status: "ready", stats: ZERO_STATS, failure: null };
+
+const MY_ALUMNI_IDLE: MyAlumniState = { status: "idle", alumni: null, failure: null };
+const MY_ALUMNI_LOADING: MyAlumniState = { status: "loading", alumni: null, failure: null };
+const MY_ALUMNI_READY: MyAlumniState = { status: "ready", alumni: FULL_ALUMNI, failure: null };
+const MY_ALUMNI_NONE: MyAlumniState = { status: "none", alumni: null, failure: null };
+const MY_ALUMNI_ERROR: MyAlumniState = { status: "error", alumni: null, failure: SERVER_FAILURE };
+
 export default function ComponentsPage() {
   useDocumentTitle(PAGE_TITLE);
 
@@ -311,7 +508,8 @@ export default function ComponentsPage() {
         <div className={styles.titles}>
           <h1 className={styles.title}>{APP_NAME} components</h1>
           <p className={styles.sub}>
-            Development only. Compare each section with system.html and system-dark.html.
+            Development only. Compare each section with system.html and system-dark.html; the
+            post, comment and dashboard sections with feed.html, dashboard.html and profile.html.
           </p>
         </div>
         <ThemeSwitch variant="icons" />
@@ -906,6 +1104,13 @@ export default function ComponentsPage() {
         </div>
       </section>
 
+      <LinkSamples />
+      <PostPartSamples />
+      <FormSamples />
+      <FeedPostSamples />
+      <CommentSamples />
+      <DashboardBlockSamples />
+
       <ConfirmDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -961,5 +1166,656 @@ function ButtonStates({ row }: { row: ButtonRow }) {
         {row.word}
       </Button>
     </>
+  );
+}
+
+// ----- Posts, comments and the dashboard blocks (REQ-fs-006) -----
+
+function stopPress(event: SyntheticEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+/**
+ * Stops every press inside before it reaches the component. FeedPost and
+ * CommentItem call the store's write actions (a real request), and the links
+ * of the blocks open pages that load data; this page calls no API. Tab still
+ * reaches every control, so focus rings can be checked. It draws no box.
+ */
+function NoRequests({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={styles.noRequests}
+      onClickCapture={stopPress}
+      onAuxClickCapture={stopPress}
+      onSubmitCapture={stopPress}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** A caption over one sample. */
+function Sample({ caption, children }: { caption: string; children: ReactNode }) {
+  return (
+    <div className={styles.block}>
+      <p className={styles.caption}>{caption}</p>
+      {children}
+    </div>
+  );
+}
+
+function LinkSamples() {
+  return (
+    <section className={styles.section} aria-labelledby="dev-button-links">
+      <h2 id="dev-button-links" className={styles.sectionTitle}>
+        Button links
+      </h2>
+      <NoRequests>
+        <div className={styles.blocks}>
+          <Sample caption="A link that looks like a button: primary and secondary">
+            <div className={styles.wrapRow}>
+              <ButtonLink to={PATHS.feed} variant="primary">
+                {DASHBOARD_WRITE_POST_LINK}
+              </ButtonLink>
+              <ButtonLink to={PATHS.myProfile}>{DASHBOARD_PROFILE_EDIT_LINK}</ButtonLink>
+            </div>
+          </Sample>
+          <Sample caption="Small">
+            <div className={styles.wrapRow}>
+              <ButtonLink to={PATHS.feed} variant="primary" size="sm">
+                {DASHBOARD_WRITE_POST_LINK}
+              </ButtonLink>
+              <ButtonLink to={PATHS.myProfile} size="sm">
+                {DASHBOARD_PROFILE_EDIT_LINK}
+              </ButtonLink>
+            </div>
+          </Sample>
+          <Sample caption="Empty, with a link to another page as the next step">
+            <EmptyState
+              headingAs="h3"
+              heading={DASHBOARD_RECENT_EMPTY_HEADING}
+              text={DASHBOARD_RECENT_EMPTY_WRITER_TEXT}
+              actionLabel={DASHBOARD_RECENT_EMPTY_LINK}
+              actionTo={PATHS.feed}
+            />
+          </Sample>
+        </div>
+      </NoRequests>
+      <p className={styles.note}>
+        Presses on these links are stopped here, since the pages they open load data. Tab still
+        reaches them.
+      </p>
+    </section>
+  );
+}
+
+function PostPartSamples() {
+  const origin = window.location.origin;
+
+  return (
+    <section className={styles.section} aria-labelledby="dev-post-parts">
+      <h2 id="dev-post-parts" className={styles.sectionTitle}>
+        Post byline and text
+      </h2>
+      <div className={styles.pair}>
+        <div className={styles.stack}>
+          <Sample caption="Post size: name over the date, with a photo">
+            <PostByline
+              name={SAMPLE_NAME}
+              photoUrl={`${origin}${WORKING_PHOTO_PATH}`}
+              createdAt={SAMPLE_DATE}
+            />
+          </Sample>
+          <Sample caption="Post size: no date and no photo">
+            <PostByline name="Erik Lindqvist" createdAt={null} />
+          </Sample>
+          <Sample caption="Comment size: one row, a photo link that fails">
+            <PostByline
+              name="Amira Haddad"
+              photoUrl={`${origin}${BROKEN_PHOTO_PATH}`}
+              createdAt={LATER_DATE}
+              size="sm"
+            />
+          </Sample>
+          <Sample caption="Comment size: no name, no date">
+            <PostByline name={null} createdAt={null} size="sm" />
+          </Sample>
+        </div>
+        <div className={styles.stack}>
+          <Sample caption="Long text">
+            <PostText text={LONG_TEXT} />
+          </Sample>
+          <Sample caption="Line breaks are kept">
+            <PostText text={LINE_BREAK_TEXT} />
+          </Sample>
+          <Sample caption="One unbroken string wraps instead of widening the page">
+            <PostText text={UNBROKEN_TEXT} />
+          </Sample>
+          <Sample caption="Cut to three lines (summary card)">
+            <PostText text={LONG_TEXT} clamp />
+          </Sample>
+          <Sample caption="Comment size">
+            <PostText text={LINE_BREAK_TEXT} size="sm" />
+          </Sample>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FormSamples() {
+  const showToast = useSetAtom(showToastAtom);
+
+  // Each answer below comes from this page; nothing is sent.
+  async function answerSent(): Promise<FormResult> {
+    showToast(NOTHING_SENT);
+    return { ok: true, reset: true };
+  }
+
+  function answerSlowly(): Promise<FormResult> {
+    return new Promise((resolve) => {
+      window.setTimeout(() => resolve({ ok: true }), SLOW_ANSWER_MS);
+    });
+  }
+
+  async function answerPostFailure(): Promise<FormResult> {
+    return { ok: false, text: saveFailureText(NETWORK_FAILURE, POST_SAVE_FAILURE_WORDS) };
+  }
+
+  async function answerCommentFailure(): Promise<FormResult> {
+    return { ok: false, text: saveFailureText(SERVER_FAILURE, COMMENT_SAVE_FAILURE_WORDS) };
+  }
+
+  return (
+    <section className={styles.section} aria-labelledby="dev-post-forms">
+      <h2 id="dev-post-forms" className={styles.sectionTitle}>
+        Post and comment forms
+      </h2>
+      <p className={styles.note}>
+        Every answer comes from this page: nothing is sent. Press the button with an empty field
+        to see the field error.
+      </p>
+      <div className={styles.pair}>
+        <div className={styles.stack}>
+          <Sample caption="Write a post: empty">
+            <PostForm
+              captionLabel={POST_FORM_HEADING}
+              submitLabel={POST_PUBLISH_BUTTON}
+              busyLabel={POST_PUBLISH_BUSY}
+              onSubmit={answerSent}
+            />
+          </Sample>
+          <Sample caption="With errors: press Publish post (no caption, an image link that is not a link)">
+            <PostForm
+              initialMediaUrl="photo of the meetup"
+              captionLabel={POST_FORM_HEADING}
+              submitLabel={POST_PUBLISH_BUTTON}
+              busyLabel={POST_PUBLISH_BUSY}
+              onSubmit={answerSent}
+            />
+          </Sample>
+          <Sample caption="Failed to send: press Publish post">
+            <PostForm
+              initialCaption={LINE_BREAK_TEXT}
+              captionLabel={POST_FORM_HEADING}
+              submitLabel={POST_PUBLISH_BUTTON}
+              busyLabel={POST_PUBLISH_BUSY}
+              onSubmit={answerPostFailure}
+            />
+          </Sample>
+          <Sample caption="Busy: press Publish post, the answer takes four seconds">
+            <PostForm
+              initialCaption={LINE_BREAK_TEXT}
+              captionLabel={POST_FORM_HEADING}
+              submitLabel={POST_PUBLISH_BUTTON}
+              busyLabel={POST_PUBLISH_BUSY}
+              onSubmit={answerSlowly}
+            />
+          </Sample>
+          <Sample caption="Edit post: secondary Save, and Cancel">
+            <PostForm
+              initialCaption={BASE_POST.caption ?? ""}
+              initialMediaUrl={`${window.location.origin}${WORKING_PHOTO_PATH}`}
+              captionLabel={POST_EDIT_LABEL}
+              submitLabel={SAVE_LABEL}
+              busyLabel={SAVING_LABEL}
+              primary={false}
+              onSubmit={answerSlowly}
+              onCancel={() => showToast(CANCEL_LABEL)}
+            />
+          </Sample>
+        </div>
+        <div className={styles.stack}>
+          <Sample caption="Add a comment">
+            <CommentForm
+              label={COMMENT_FIELD_LABEL}
+              submitLabel={COMMENT_SUBMIT_BUTTON}
+              busyLabel={COMMENT_SUBMIT_BUSY}
+              onSubmit={answerSent}
+            />
+          </Sample>
+          <Sample caption="Reply: who is answered, and Cancel">
+            <CommentForm
+              label={COMMENT_FIELD_LABEL}
+              submitLabel={COMMENT_SUBMIT_BUTTON}
+              busyLabel={COMMENT_SUBMIT_BUSY}
+              replyingTo="Erik Lindqvist"
+              onCancel={() => showToast(CANCEL_LABEL)}
+              onSubmit={answerSlowly}
+            />
+          </Sample>
+          <Sample caption="Edit a comment">
+            <CommentForm
+              label={COMMENT_EDIT_LABEL}
+              initialValue={SAMPLE_COMMENTS[1].content ?? ""}
+              submitLabel={SAVE_LABEL}
+              busyLabel={SAVING_LABEL}
+              onCancel={() => showToast(CANCEL_LABEL)}
+              onSubmit={answerSlowly}
+            />
+          </Sample>
+          <Sample caption="Failed to send: press Comment">
+            <CommentForm
+              label={COMMENT_FIELD_LABEL}
+              initialValue="Count me in."
+              submitLabel={COMMENT_SUBMIT_BUTTON}
+              busyLabel={COMMENT_SUBMIT_BUSY}
+              onSubmit={answerCommentFailure}
+            />
+          </Sample>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeedPostSamples() {
+  const showToast = useSetAtom(showToastAtom);
+  // The delete dialog of a post, drawn here with FeedPost's words: FeedPost's
+  // own dialog would send the delete.
+  const [deleteDialog, setDeleteDialog] = useState<"closed" | "open" | "failed">("closed");
+
+  const origin = window.location.origin;
+  const imagePost: Post = {
+    ...BASE_POST,
+    id: 105,
+    caption: LINE_BREAK_TEXT,
+    media_url: `${origin}${WORKING_PHOTO_PATH}`,
+    comment_count: 0,
+  };
+  const brokenImagePost: Post = { ...BARE_POST, media_url: `${origin}${BROKEN_PHOTO_PATH}` };
+
+  const samples: { caption: string; post: Post; session: Session | null }[] = [
+    {
+      caption: "Plain, seen by another alumnus: no Edit, no Delete",
+      post: BASE_POST,
+      session: OTHER_ALUMNI_SESSION,
+    },
+    { caption: "With an image", post: imagePost, session: OTHER_ALUMNI_SESSION },
+    { caption: "Seen by its author: Edit and Delete", post: BASE_POST, session: AUTHOR_SESSION },
+    { caption: "Seen by an admin: Delete only", post: BASE_POST, session: ADMIN_SESSION },
+    { caption: "Seen by a student: read and comment", post: BASE_POST, session: STUDENT_SESSION },
+    { caption: "Seen by a visitor with no session", post: BASE_POST, session: null },
+    {
+      caption: "No name, no date, one unbroken string, an image link that fails (hidden)",
+      post: brokenImagePost,
+      session: STUDENT_SESSION,
+    },
+  ];
+
+  return (
+    <section className={styles.section} aria-labelledby="dev-feed-posts">
+      <h2 id="dev-feed-posts" className={styles.sectionTitle}>
+        Feed posts
+      </h2>
+      <p className={styles.note}>
+        Presses on these posts are stopped here: Save and Delete would send a request. The editing
+        and delete states below are drawn from the same parts with the same words.
+      </p>
+      <div className={styles.posts}>
+        <NoRequests>
+          {samples.map((sample) => (
+            <Sample key={sample.caption} caption={sample.caption}>
+              <FeedPost
+                post={sample.post}
+                session={sample.session}
+                open={false}
+                onToggleComments={() => undefined}
+                onDeleted={() => undefined}
+                onPostGone={() => undefined}
+              />
+            </Sample>
+          ))}
+        </NoRequests>
+        <Sample caption="Editing: the post's text becomes the edit form (from the parts)">
+          <Card as="article">
+            <div className={styles.cardBody}>
+              <PostByline name={BASE_POST.name} createdAt={BASE_POST.created_at} />
+              <PostForm
+                initialCaption={BASE_POST.caption ?? ""}
+                captionLabel={POST_EDIT_LABEL}
+                submitLabel={SAVE_LABEL}
+                busyLabel={SAVING_LABEL}
+                primary={false}
+                onSubmit={async () => {
+                  showToast(NOTHING_SENT);
+                  return { ok: true };
+                }}
+                onCancel={() => showToast(CANCEL_LABEL)}
+              />
+              <div className={styles.cardFoot}>
+                <Button variant="quiet" onClick={() => showToast(NOTHING_SENT)}>
+                  {commentCountText(BASE_POST.comment_count)}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </Sample>
+        <Sample caption="Delete: the confirm dialog, and the dialog with a failure">
+          <div className={styles.wrapRow}>
+            <Button variant="quiet" tone="danger" onClick={() => setDeleteDialog("open")}>
+              Open the delete dialog
+            </Button>
+            <Button variant="quiet" tone="danger" onClick={() => setDeleteDialog("failed")}>
+              Open it with a failure
+            </Button>
+          </div>
+        </Sample>
+      </div>
+
+      <ConfirmDialog
+        open={deleteDialog !== "closed"}
+        onClose={() => setDeleteDialog("closed")}
+        onConfirm={() => {
+          setDeleteDialog("closed");
+          showToast(NOTHING_SENT);
+        }}
+        title={POST_DELETE_TITLE}
+        confirmLabel={POST_DELETE_CONFIRM}
+        cancelLabel={CANCEL_LABEL}
+        danger
+      >
+        <div className={styles.dialogBody}>
+          <p className={styles.dialogText}>{postDeleteBody(BASE_POST.comment_count)}</p>
+          {deleteDialog === "failed" ? (
+            <Message tone="error">{POST_CHANGE_FORBIDDEN_TEXT}</Message>
+          ) : null}
+        </div>
+      </ConfirmDialog>
+    </section>
+  );
+}
+
+function CommentSamples() {
+  const showToast = useSetAtom(showToastAtom);
+  const threads = buildThreads(SAMPLE_COMMENTS);
+
+  // The forms' answer comes from this page; nothing is sent.
+  async function answerSent(): Promise<FormResult> {
+    showToast(NOTHING_SENT);
+    return { ok: true, reset: true };
+  }
+
+  function renderItem(comment: Comment, replies?: Comment[], editing = false) {
+    return (
+      <CommentItem
+        comment={comment}
+        session={AUTHOR_SESSION}
+        replyCount={countReplies(SAMPLE_COMMENTS, comment.id)}
+        editing={editing}
+        onReply={() => undefined}
+        onStartEdit={() => undefined}
+        onEndEdit={() => undefined}
+        onRemoved={() => undefined}
+      >
+        {replies !== undefined && replies.length > 0 ? (
+          <ul className={styles.replies}>
+            {replies.map((reply) => (
+              <li key={reply.id} className={styles.reply}>
+                {renderItem(reply)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </CommentItem>
+    );
+  }
+
+  return (
+    <section className={styles.section} aria-labelledby="dev-comments">
+      <h2 id="dev-comments" className={styles.sectionTitle}>
+        Comments
+      </h2>
+      <p className={styles.note}>
+        The comments panel reads the store, so its states are drawn here from its parts, on a copy
+        of its ground. The comments are seen by Nadia: Edit and Delete on her own reply only.
+        Presses on the comments are stopped here.
+      </p>
+      <div className={styles.blocks}>
+        <Sample caption="Loading">
+          <div className={styles.commentPanel}>
+            <SkeletonGroup layout="row">
+              <Skeleton shape="avatar-sm" />
+              <SkeletonStack>
+                <Skeleton />
+                <Skeleton />
+              </SkeletonStack>
+            </SkeletonGroup>
+          </div>
+        </Sample>
+        <Sample caption="Failed to load">
+          <div className={styles.commentPanel}>
+            <NoRequests>
+              <ErrorState
+                heading={COMMENTS_ERROR_HEADING}
+                headingAs="h3"
+                text={loadFailureText(NETWORK_FAILURE)}
+                retryVariant="secondary"
+                onRetry={() => undefined}
+              />
+            </NoRequests>
+          </div>
+        </Sample>
+        <Sample caption="No comments yet">
+          <div className={styles.commentPanel}>
+            <EmptyState
+              heading={COMMENTS_EMPTY_HEADING}
+              headingAs="h3"
+              text={COMMENTS_EMPTY_TEXT}
+            />
+            <CommentForm
+              label={COMMENT_FIELD_LABEL}
+              submitLabel={COMMENT_SUBMIT_BUTTON}
+              busyLabel={COMMENT_SUBMIT_BUSY}
+              onSubmit={answerSent}
+            />
+          </div>
+        </Sample>
+      </div>
+      <div className={styles.pair}>
+        <Sample caption="A thread with replies, then the form replying to Erik">
+          <div className={styles.commentPanel}>
+            <NoRequests>
+              <ul className={styles.threads}>
+                {threads.map((thread) => (
+                  <li key={thread.comment.id}>{renderItem(thread.comment, thread.replies)}</li>
+                ))}
+              </ul>
+            </NoRequests>
+            <CommentForm
+              label={COMMENT_FIELD_LABEL}
+              submitLabel={COMMENT_SUBMIT_BUTTON}
+              busyLabel={COMMENT_SUBMIT_BUSY}
+              replyingTo={SAMPLE_COMMENTS[0].name}
+              onCancel={() => showToast(CANCEL_LABEL)}
+              onSubmit={answerSent}
+            />
+          </div>
+        </Sample>
+        <Sample caption="A comment being edited">
+          <div className={styles.commentPanel}>
+            <NoRequests>{renderItem(SAMPLE_COMMENTS[1], undefined, true)}</NoRequests>
+          </div>
+        </Sample>
+      </div>
+    </section>
+  );
+}
+
+function DashboardBlockSamples() {
+  const directoryLink = { label: PEOPLE_DIRECTORY_LINK, to: PATHS.directory };
+  const writeLink = (
+    <ButtonLink to={PATHS.feed} variant="primary">
+      {DASHBOARD_WRITE_POST_LINK}
+    </ButtonLink>
+  );
+  const peopleSamples: { caption: string; state: PeopleBlockState }[] = [
+    { caption: "Loading", state: PEOPLE_LOADING },
+    { caption: "Empty", state: PEOPLE_EMPTY },
+    { caption: "Failed to load", state: PEOPLE_ERROR },
+    { caption: "Ready: a person with no name, a person with no job line", state: PEOPLE_READY },
+  ];
+  const recentSamples: { caption: string; state: RecentPostsBlockState }[] = [
+    { caption: "Loading", state: RECENT_LOADING },
+    { caption: "Empty, with the next step", state: RECENT_EMPTY },
+    { caption: "Failed to load", state: RECENT_ERROR },
+  ];
+  const countSamples: { caption: string; state: CountsBlockState }[] = [
+    { caption: "Ready", state: COUNTS_READY },
+    { caption: "Ready, every count 0", state: COUNTS_ZERO },
+    { caption: "Loading", state: COUNTS_LOADING },
+    { caption: "Failed to load: one error for the three cards", state: COUNTS_ERROR },
+  ];
+  const profileSamples: { caption: string; role: "student" | "alumni"; state: MyAlumniState }[] = [
+    {
+      caption: "A student: complete the account (nothing is loaded)",
+      role: "student",
+      state: MY_ALUMNI_IDLE,
+    },
+    { caption: "Ready", role: "alumni", state: MY_ALUMNI_READY },
+    { caption: "No alumni profile yet", role: "alumni", state: MY_ALUMNI_NONE },
+    { caption: "Loading", role: "alumni", state: MY_ALUMNI_LOADING },
+    { caption: "Failed to load", role: "alumni", state: MY_ALUMNI_ERROR },
+  ];
+
+  return (
+    <NoRequests>
+      <section className={styles.section} aria-labelledby="dev-people">
+        <h2 id="dev-people" className={styles.sectionTitle}>
+          People lists
+        </h2>
+        <p className={styles.note}>
+          Every block below takes its state as a prop; nothing is loaded. Presses are stopped here,
+          since the links open pages that load data.
+        </p>
+        <div className={styles.blocks}>
+          {peopleSamples.map((sample) => (
+            <Sample key={`plain ${sample.caption}`} caption={`Dashboard: ${sample.caption}`}>
+              <PeopleBlock
+                heading={PEOPLE_NEW_HEADING}
+                state={sample.state}
+                emptyHeading={PEOPLE_NEW_EMPTY_HEADING}
+                emptyText={PEOPLE_NEW_EMPTY_TEXT}
+                errorHeading={PEOPLE_ERROR_HEADING}
+                onRetry={() => undefined}
+                footerLink={directoryLink}
+              />
+            </Sample>
+          ))}
+          {peopleSamples.map((sample) => (
+            <Sample key={`card ${sample.caption}`} caption={`Feed side, in a card: ${sample.caption}`}>
+              <PeopleBlock
+                heading={PEOPLE_MENTORING_HEADING}
+                state={sample.state}
+                emptyHeading={PEOPLE_MENTORING_EMPTY_HEADING}
+                emptyText={PEOPLE_MENTORING_EMPTY_TEXT}
+                errorHeading={PEOPLE_ERROR_HEADING}
+                onRetry={() => undefined}
+                footerLink={directoryLink}
+                variant="card"
+              />
+            </Sample>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="dev-recent-posts">
+        <h2 id="dev-recent-posts" className={styles.sectionTitle}>
+          Recent posts
+        </h2>
+        <div className={styles.pair}>
+          <Sample caption="Dashboard, ready: the author over each post, the text cut to three lines">
+            <RecentPostsBlock
+              heading={DASHBOARD_RECENT_HEADING}
+              state={RECENT_READY}
+              showAuthor
+              emptyHeading={DASHBOARD_RECENT_EMPTY_HEADING}
+              emptyText={DASHBOARD_RECENT_EMPTY_WRITER_TEXT}
+              errorHeading={DASHBOARD_RECENT_ERROR_HEADING}
+              onRetry={() => undefined}
+              action={writeLink}
+            />
+          </Sample>
+          <Sample caption="Alumni profile, ready: no author, the date names each card">
+            <RecentPostsBlock
+              heading={PROFILE_POSTS_HEADING}
+              state={RECENT_READY}
+              showAuthor={false}
+              emptyHeading={profilePostsEmptyHeading("Nadia")}
+              emptyText={PROFILE_POSTS_EMPTY_TEXT}
+              errorHeading={PROFILE_POSTS_ERROR_HEADING}
+              onRetry={() => undefined}
+            />
+          </Sample>
+        </div>
+        <div className={styles.blocks}>
+          {recentSamples.map((sample) => (
+            <Sample key={sample.caption} caption={sample.caption}>
+              <RecentPostsBlock
+                heading={DASHBOARD_RECENT_HEADING}
+                state={sample.state}
+                showAuthor
+                emptyHeading={DASHBOARD_RECENT_EMPTY_HEADING}
+                emptyText={DASHBOARD_RECENT_EMPTY_WRITER_TEXT}
+                emptyAction={{ label: DASHBOARD_RECENT_EMPTY_LINK, to: PATHS.feed }}
+                errorHeading={DASHBOARD_RECENT_ERROR_HEADING}
+                onRetry={() => undefined}
+              />
+            </Sample>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="dev-counts">
+        <h2 id="dev-counts" className={styles.sectionTitle}>
+          Counts
+        </h2>
+        {countSamples.map((sample) => (
+          <Sample key={sample.caption} caption={sample.caption}>
+            <CountsBlock state={sample.state} onRetry={() => undefined} />
+          </Sample>
+        ))}
+      </section>
+
+      <section className={styles.section} aria-labelledby="dev-your-profile">
+        <h2 id="dev-your-profile" className={styles.sectionTitle}>
+          Your profile
+        </h2>
+        <div className={styles.blocks}>
+          {profileSamples.map((sample) => (
+            <Sample key={sample.caption} caption={sample.caption}>
+              <YourProfileBlock
+                role={sample.role}
+                state={sample.state}
+                userName={SAMPLE_NAME}
+                userPhoto={null}
+                onRetry={() => undefined}
+              />
+            </Sample>
+          ))}
+        </div>
+      </section>
+    </NoRequests>
   );
 }

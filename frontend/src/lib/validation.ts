@@ -1,6 +1,8 @@
 // Field validators for the forms. Each takes the text as typed and returns
 // the message to show under the field, or null when the value is fine.
 
+import { presentText } from "./alumniDisplay";
+
 export const EMAIL_REQUIRED_MESSAGE = "Enter your email.";
 export const EMAIL_INVALID_MESSAGE = "Enter a valid email, like name@example.com.";
 export const PASSWORD_REQUIRED_MESSAGE = "Enter your password.";
@@ -9,6 +11,8 @@ export const PASSWORD_TOO_SHORT_MESSAGE = "Use at least 8 characters.";
 export const WEB_LINK_INVALID_MESSAGE = "Enter a link that starts with https://";
 export const PHOTO_LINK_INVALID_MESSAGE = WEB_LINK_INVALID_MESSAGE;
 export const GRADUATION_YEAR_FORMAT_MESSAGE = "Enter a year with four digits, like 2019.";
+export const CAPTION_REQUIRED_MESSAGE = "Write something before you publish.";
+export const COMMENT_REQUIRED_MESSAGE = "Write a comment before you send it.";
 
 export const MIN_PASSWORD_LENGTH = 8;
 
@@ -20,6 +24,9 @@ export const MAX_EMAIL_LENGTH = 100;
 export const MAX_TEXT_LENGTH = 100;
 export const MAX_BIO_LENGTH = 2000;
 export const MAX_LINK_LENGTH = 500;
+// Interface limits only: the server sets none (spec C7, STATUS: needs verification).
+export const MAX_POST_LENGTH = 2000;
+export const MAX_COMMENT_LENGTH = 1000;
 export const MIN_GRADUATION_YEAR = 1950;
 // A student in the last years may already list the year they finish.
 export const GRADUATION_YEARS_AHEAD = 6;
@@ -115,6 +122,25 @@ export function validateGraduationYear(value: string, thisYear: number): string 
   return number < MIN_GRADUATION_YEAR || number > lastYear
     ? graduationYearRangeMessage(MIN_GRADUATION_YEAR, lastYear)
     : null;
+}
+
+/** A post caption: at least one visible character, at most 2000 after trimming (AC8). */
+export function validateCaption(value: string): string | null {
+  return validateRequiredText(value, MAX_POST_LENGTH, CAPTION_REQUIRED_MESSAGE);
+}
+
+/** A comment or a reply: at least one visible character, at most 1000 after trimming (AC12). */
+export function validateComment(value: string): string | null {
+  return validateRequiredText(value, MAX_COMMENT_LENGTH, COMMENT_REQUIRED_MESSAGE);
+}
+
+/** Shared by the caption and the comment: one rule, one function. */
+function validateRequiredText(value: string, max: number, requiredMessage: string): string | null {
+  const text = presentText(value);
+  if (text === null) {
+    return requiredMessage;
+  }
+  return validateOptionalText(text, max);
 }
 
 /** Shared by the photo and LinkedIn links: one rule, one function. */

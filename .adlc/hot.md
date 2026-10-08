@@ -17,6 +17,48 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] ship-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | roadmap F8 Done and F9 in progress; root CLAUDE.md frontend line and conventions (G56) updated; owner runs the merge checklist
+
+## [2026-10-08] req-ready-to-merge | REQ-fs-006-frontend-feed-and-dashboard | frontend part 3 (roadmap F8 and the Dashboard half of F9): feed, dashboard, Recent posts on the alumni profile, optional user_id filter on GET /api/posts; 3 review rounds, 14 tasks, 12 commits; library check 469 cases
+
+## [2026-10-08] lesson | L-REQ-fs-006-5 — build a component so the dev page can show every state without copying it
+
+## [2026-10-08] lesson | L-REQ-fs-006-4 — when a fix moves or removes a rule, grep the docs and header comments for the old wording
+
+## [2026-10-08] lesson | L-REQ-fs-006-3 — a list total patched locally and also reloaded needs a log of the local changes
+
+## [2026-10-08] lesson | L-REQ-fs-006-2 — an async answer may only change the state it was sent from, in every branch
+
+## [2026-10-08] lesson | L-REQ-fs-006-1 — a guard that refuses before any call returns its own result kind, not a borrowed status
+
+## [2026-10-08] lesson-updated | L-REQ-fs-002-3 — sixth sighting (REQ-fs-006)
+
+## [2026-10-08] gotcha | G58 — small traps: Date.parse("1"), config/text.ts importing lib, saveFailureText folds 403 and 404
+
+## [2026-10-08] gotcha | G57 — UI part traps from the feed: Button's aria-disabled, a:hover over a composed class, an unimported stylesheet, EmptyState in a Card
+
+## [2026-10-08] gotcha | G56 — throwaway checks that import app code can load .env, reach the database or open a socket
+
+## [2026-10-08] concept | aligned-load-more — first captured
+
+## [2026-10-08] verify-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | findings: C0/M1/m7 open (M1 is a process decision for wrap-up); 16 fixes held over 3 review rounds; library check 469 cases
+
+## [2026-10-08] implement-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 14 tasks, build/style/library checks pass (434 cases); isWriter x4 and mentoring address x2 left for review; browser checks left to review
+
+## [2026-10-08] tier-complete | REQ-fs-006 TASK-007, 008, 010, 011 and the owner-approved TASK-014 (lib/writeFailure.ts) done; build, style check and library check (434 cases) pass; TASK-009 and 012 next
+
+## [2026-10-08] tier-complete | REQ-fs-006 tier 1 (TASK-005 store, TASK-006 shared components) done; build, style check and library check (420 cases) pass
+## [2026-10-08] near-miss | REQ-fs-006 TASK-005 store check first loaded real axios and started one listPosts call per run; sockets and fetch were patched to throw first so nothing left the machine; harness fixed (CommonJS resolver hooked too)
+
+## [2026-10-08] rule-break | REQ-fs-006 TASK-001 test script loaded the root .env through dotenv (printed DB_HOST/DB_NAME, not the password) and ran 4 read-only SELECTs on the local database; nothing written; owner chose to continue with tighter rules (no script may import backend code or load pg/dotenv)
+## [2026-10-08] tier-complete | REQ-fs-006 tier 0 (TASK-001 to 004) done; build, style check and library check (420 cases) pass
+
+## [2026-10-08] architect-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 13 tasks in 5 stages, no ADR; stress-test 0 critical (ADV-001 accepted: other-user delete can hide a post in Load more); AC30 and the Postman example amended
+
+## [2026-10-08] work-path-set | REQ-fs-006-frontend-feed-and-dashboard | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-006-frontend-feed-and-dashboard, off redesign)
+
+## [2026-10-08] spec-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | owner chose to add the user_id filter on GET /api/posts for profile Recent posts (AC26-28 stay)
+
 ## [2026-10-08] req-archived | REQ-fs-005-frontend-directory-and-profiles
 
 ## [2026-10-08] req-merged | REQ-fs-005-frontend-directory-and-profiles | merge commit ca693ce2 on redesign (the feature branch was deleted by the owner)

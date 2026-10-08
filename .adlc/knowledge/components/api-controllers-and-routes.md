@@ -38,7 +38,7 @@ Everything below was run against the real database by the owner on 2026-10-07 (h
 | `GET /api/alumni`, `/filters`, `/me`, `/:id`, `/email/:email` | any logged-in user ([[knowledge/gotchas#^g42\|G42]]: the email is in every answer) |
 | `PUT /api/alumni/:id` | the profile's owner or an admin |
 | `POST /api/posts` | alumni or admin; the author is the caller |
-| `GET /api/posts`, `GET /api/posts/:id/comments` | any logged-in user |
+| `GET /api/posts`, `GET /api/posts/:id/comments` | any logged-in user; `GET /api/posts` takes an optional `user_id` (digits only, 400 on anything else) since REQ-fs-006 |
 | `PUT /api/posts/:id` | the author only, admins included (ADR-02) |
 | `DELETE /api/posts/:id` | the author or an admin; takes the post's comments with it |
 | `POST /api/comments` | any logged-in user; body key `posts_id`; `content` required |

@@ -1,4 +1,5 @@
 import { Button } from "../Button/Button";
+import { ButtonLink } from "../ButtonLink/ButtonLink";
 import styles from "./EmptyState.module.css";
 
 export type EmptyStateProps = {
@@ -7,9 +8,11 @@ export type EmptyStateProps = {
   text: string;
   // The heading element. It always looks the same (H3 size).
   headingAs?: "h2" | "h3";
-  // Give both to show the button.
+  // Give actionLabel and onAction to show a button, or actionLabel and
+  // actionTo to show a link to another page. actionTo wins if both are given.
   actionLabel?: string;
   onAction?: () => void;
+  actionTo?: string;
 };
 
 export function EmptyState({
@@ -18,12 +21,19 @@ export function EmptyState({
   headingAs: Heading = "h2",
   actionLabel,
   onAction,
+  actionTo,
 }: EmptyStateProps) {
   return (
     <div className={styles.empty}>
       <Heading className={styles.heading}>{heading}</Heading>
       <p className={styles.text}>{text}</p>
-      {actionLabel && onAction ? (
+      {actionLabel && actionTo ? (
+        <div className={styles.action}>
+          <ButtonLink to={actionTo} variant="secondary">
+            {actionLabel}
+          </ButtonLink>
+        </div>
+      ) : actionLabel && onAction ? (
         <div className={styles.action}>
           <Button variant="secondary" onClick={onAction}>
             {actionLabel}

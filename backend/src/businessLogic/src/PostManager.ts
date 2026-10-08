@@ -27,8 +27,11 @@ export class PostManager {
     const deleted = await this.postQuery.deletePost(id);
     return deleted;
   }
-  public async listPosts(page: Parameters<PostQuery["listPosts"]>[0]) {
-    const posts = await this.postQuery.listPosts(page);
+  public async listPosts(
+    page: Parameters<PostQuery["listPosts"]>[0],
+    filter?: Parameters<PostQuery["listPosts"]>[1],
+  ) {
+    const posts = await this.postQuery.listPosts(page, filter);
     return posts;
   }
 }

@@ -4,10 +4,12 @@
 //
 // The cases are written from the spec (REQ-fs-004: AC42, AC46, AC53 and the
 // TASK-003 list; REQ-fs-005: choices 13 to 17, AC2, AC5, AC7, AC15, AC17,
-// AC18, AC25, AC26, TASK-015), not from the code. The expected messages are typed out here
+// AC18, AC25, AC26, TASK-015; REQ-fs-006: C3, C7, C9, AC8, AC10 to AC15,
+// AC18, AC36), not from the code. The expected messages are typed out here
 // on purpose: importing the constants would compare the code with itself.
 //
-// It imports only from frontend/src/lib/. It reads no file and calls no API.
+// It imports only from frontend/src/lib/ and the plain words of
+// frontend/src/config/text.ts. It reads no file and calls no API.
 
 import type { Alumni } from "@alumni/shared";
 import {
@@ -708,6 +710,331 @@ check("can save: saved profile, only spaces added", canSaveAlumniForm(false, { .
 const createdForm = alumniToForm(savedProfile);
 check("can save: after the first create", canSaveAlumniForm(false, { ...createdForm }, createdForm), false);
 check("can save: after an empty first create", canSaveAlumniForm(false, { ...EMPTY_ALUMNI_FORM }, NO_PROFILE_FORM), false);
+
+// ---- REQ-fs-006: feed and dashboard rules (C3, C7, C9, AC8, AC10 to AC15, AC36)
+// Expected answers are typed out from the spec, not worked out with the code.
+
+import type { Comment, Post } from "@alumni/shared";
+import { commentCountText, dateText } from "../frontend/src/lib/postDisplay.ts";
+import { canDeleteContent, canEditContent } from "../frontend/src/lib/contentOwner.ts";
+import {
+  appendComment,
+  buildThreads,
+  countReplies,
+  removeWithReplies,
+  replaceComment,
+} from "../frontend/src/lib/commentThread.ts";
+import { mergePosts, nextFeedPage } from "../frontend/src/lib/feedPaging.ts";
+import { validateCaption, validateComment } from "../frontend/src/lib/validation.ts";
+
+// Dates without a zone are read in local time, so these cases give the same
+// answer in every time zone.
+check("date: a normal date", dateText("2026-10-03T09:15:00"), "3 October 2026");
+check("date: two-digit day", dateText("2026-10-13T12:00:00"), "13 October 2026");
+check("date: single-digit day, no leading zero", dateText("2026-01-05T08:00:00"), "5 January 2026");
+check("date: 31 December late in the day", dateText("2026-12-31T23:59:59"), "31 December 2026");
+check("date: leap day 2028", dateText("2028-02-29T10:00:00"), "29 February 2028");
+check("date: with milliseconds", dateText("2026-06-01T10:00:00.000"), "1 June 2026");
+check("date: null", dateText(null), null);
+check('date: ""', dateText(""), null);
+check("date: only spaces", dateText("   "), null);
+check('date: "not a date"', dateText("not a date"), null);
+check('date: "1" is not read as a year', dateText("1"), null);
+check("date: month 13", dateText("2026-13-01T10:00:00"), null);
+
+check("count: 0", commentCountText(0), "No comments yet");
+check("count: 1", commentCountText(1), "1 comment");
+check("count: 2", commentCountText(2), "2 comments");
+check("count: 1000", commentCountText(1000), "1000 comments");
+
+const AUTHOR = { userId: 5, role: "alumni" as const, expiresAt: null };
+const OTHER_ALUMNUS = { userId: 7, role: "alumni" as const, expiresAt: null };
+const ADMIN = { userId: 9, role: "admin" as const, expiresAt: null };
+const STUDENT = { userId: 6, role: "student" as const, expiresAt: null };
+const NO_ROLE = { userId: 5, role: null, expiresAt: null };
+
+check("edit: the author", canEditContent(AUTHOR, 5), true);
+check("edit: another user", canEditContent(OTHER_ALUMNUS, 5), false);
+check("edit: an admin on someone else's", canEditContent(ADMIN, 5), false);
+check("edit: an admin on their own", canEditContent(ADMIN, 9), true);
+check("edit: a student on someone else's", canEditContent(STUDENT, 5), false);
+check("edit: a student on their own comment", canEditContent(STUDENT, 6), true);
+check("edit: author with an unknown role", canEditContent(NO_ROLE, 5), true);
+check("edit: no session", canEditContent(null, 5), false);
+check("edit: no author on the content", canEditContent(AUTHOR, null), false);
+check("delete: the author", canDeleteContent(AUTHOR, 5), true);
+check("delete: another user", canDeleteContent(OTHER_ALUMNUS, 5), false);
+check("delete: an admin on someone else's", canDeleteContent(ADMIN, 5), true);
+check("delete: a student on someone else's", canDeleteContent(STUDENT, 5), false);
+check("delete: a student on their own comment", canDeleteContent(STUDENT, 6), true);
+check("delete: no session", canDeleteContent(null, 5), false);
+check("delete: no author on the content", canDeleteContent(AUTHOR, null), false);
+check("delete: admin, no author on the content", canDeleteContent(ADMIN, null), false);
+
+function comment(id: number, parentId: number | null, createdAt: string | null): Comment {
+  return {
+    id,
+    user_id: 5,
+    posts_id: 1,
+    parent_id: parentId,
+    content: `comment ${id}`,
+    created_at: createdAt,
+    updated_at: createdAt,
+    name: "Nadia Rahman",
+    photo_url: null,
+  };
+}
+// Threads shown as ids, so a failure is easy to read.
+function threadIds(comments: Comment[]): { comment: number; replies: number[] }[] {
+  return buildThreads(comments).map((thread) => ({
+    comment: thread.comment.id,
+    replies: thread.replies.map((reply) => reply.id),
+  }));
+}
+function ids(comments: { id: number }[]): number[] {
+  return comments.map((item) => item.id);
+}
+
+// 1 and 2 top level; 3 and 5 reply to 1; 4 replies to 3; 6's parent is gone.
+const C1 = comment(1, null, "2026-10-03T10:00:00");
+const C2 = comment(2, null, "2026-10-03T09:00:00");
+const C3 = comment(3, 1, "2026-10-03T10:30:00");
+const C4 = comment(4, 3, "2026-10-03T10:45:00");
+const C5 = comment(5, 1, "2026-10-03T10:40:00");
+const C6 = comment(6, 99, "2026-10-03T09:30:00");
+const SHUFFLED = [C4, C1, C6, C5, C3, C2];
+const IN_ORDER = [C1, C2, C3, C4, C5, C6];
+const SHUFFLED_BEFORE = JSON.stringify(SHUFFLED);
+
+check("threads: top level oldest first, replies flat oldest first, reply of a reply under its top", threadIds(SHUFFLED), [
+  { comment: 2, replies: [] },
+  { comment: 6, replies: [] },
+  { comment: 1, replies: [3, 5, 4] },
+]);
+check("threads: the input list is not changed", JSON.stringify(SHUFFLED), SHUFFLED_BEFORE);
+check("threads: empty list", threadIds([]), []);
+check("threads: a reply whose parent is gone is top level", threadIds([comment(10, 8, "2026-10-03T10:00:00")]), [
+  { comment: 10, replies: [] },
+]);
+check(
+  "threads: same time, lower id first",
+  threadIds([comment(8, null, "2026-10-03T10:00:00"), comment(7, null, "2026-10-03T10:00:00")]),
+  [{ comment: 7, replies: [] }, { comment: 8, replies: [] }],
+);
+check(
+  "threads: no date goes last",
+  threadIds([comment(1, null, null), comment(2, null, "2026-10-03T10:00:00")]),
+  [{ comment: 2, replies: [] }, { comment: 1, replies: [] }],
+);
+check(
+  "threads: a parent loop does not hang and nothing is hidden",
+  threadIds([comment(1, 2, "2026-10-03T10:00:00"), comment(2, 1, "2026-10-03T11:00:00")]),
+  [{ comment: 1, replies: [] }, { comment: 2, replies: [] }],
+);
+check("threads: the full comment is kept", buildThreads([C1])[0].comment.content, "comment 1");
+
+check("remove: a leaf", ids(removeWithReplies(IN_ORDER, 5)), [1, 2, 3, 4, 6]);
+check("remove: a comment with replies and a reply of a reply", ids(removeWithReplies(IN_ORDER, 1)), [2, 6]);
+check("remove: a reply that has a reply", ids(removeWithReplies(IN_ORDER, 3)), [1, 2, 5, 6]);
+check("remove: a reply of a reply", ids(removeWithReplies(IN_ORDER, 4)), [1, 2, 3, 5, 6]);
+check("remove: an unknown id", ids(removeWithReplies(IN_ORDER, 50)), [1, 2, 3, 4, 5, 6]);
+check("remove: an id not held still takes its replies", ids(removeWithReplies(IN_ORDER, 99)), [1, 2, 3, 4, 5]);
+check("remove: the input list is not changed", ids(IN_ORDER), [1, 2, 3, 4, 5, 6]);
+check("replies: a comment with 3 below it", countReplies(IN_ORDER, 1), 3);
+check("replies: a reply with 1 below it", countReplies(IN_ORDER, 3), 1);
+check("replies: a leaf", countReplies(IN_ORDER, 5), 0);
+check("replies: an unknown id", countReplies(IN_ORDER, 50), 0);
+
+check("append: goes at the end", ids(appendComment(IN_ORDER, comment(7, 2, "2026-10-03T12:00:00"))), [1, 2, 3, 4, 5, 6, 7]);
+const appendedTwice = appendComment(IN_ORDER, { ...C2, content: "again" });
+check("append: an id already held is not added twice", ids(appendedTwice), [1, 2, 3, 4, 5, 6]);
+check("append: an id already held takes the new copy", appendedTwice[1].content, "again");
+const replaced = replaceComment(IN_ORDER, { ...C4, content: "edited" });
+check("replace: the edited text", replaced[3].content, "edited");
+check("replace: the order is kept", ids(replaced), [1, 2, 3, 4, 5, 6]);
+check("replace: an unknown id changes nothing", ids(replaceComment(IN_ORDER, comment(50, null, null))), [1, 2, 3, 4, 5, 6]);
+check("append/replace: the input list is not changed", IN_ORDER[3].content, "comment 4");
+
+check("next page: 0 held", nextFeedPage(0, 12), 1);
+check("next page: 11 held (after a delete)", nextFeedPage(11, 12), 1);
+check("next page: 12 held", nextFeedPage(12, 12), 2);
+check("next page: 13 held (after a create)", nextFeedPage(13, 12), 2);
+check("next page: 24 held", nextFeedPage(24, 12), 3);
+check("next page: limit 0", nextFeedPage(5, 0), 1);
+check("next page: limit -1", nextFeedPage(5, -1), 1);
+
+function post(id: number, createdAt: string | null, caption = `post ${id}`): Post {
+  return {
+    id,
+    user_id: 5,
+    caption,
+    media_url: null,
+    comment_count: 0,
+    created_at: createdAt,
+    updated_at: createdAt,
+    name: "Nadia Rahman",
+    photo_url: null,
+  };
+}
+const P1 = post(1, "2026-10-01T10:00:00");
+const P2 = post(2, "2026-10-02T10:00:00");
+const P3 = post(3, "2026-10-03T10:00:00");
+const merged = mergePosts([P3, P2], [post(2, "2026-10-02T10:00:00", "new"), P1]);
+check("merge: no id twice, newest first", ids(merged), [3, 2, 1]);
+check("merge: the incoming copy wins", merged[1].caption, "new");
+check("merge: nothing held", ids(mergePosts([], [P1, P3])), [3, 1]);
+check("merge: nothing incoming", ids(mergePosts([P2, P3], [])), [3, 2]);
+check("merge: both empty", ids(mergePosts([], [])), []);
+check("merge: out of order in, newest first out", ids(mergePosts([P1], [P3, P2])), [3, 2, 1]);
+check(
+  "merge: same time, higher id first",
+  ids(mergePosts([post(4, "2026-10-03T10:00:00")], [post(5, "2026-10-03T10:00:00")])),
+  [5, 4],
+);
+check("merge: no date goes last", ids(mergePosts([post(8, null)], [P1])), [1, 8]);
+
+const CAPTION_EMPTY = "Write something before you publish.";
+const COMMENT_EMPTY = "Write a comment before you send it.";
+const TOO_LONG_1000 = "Use 1000 characters or fewer.";
+check("caption: empty", validateCaption(""), CAPTION_EMPTY);
+check("caption: only spaces", validateCaption("   "), CAPTION_EMPTY);
+check("caption: only line breaks", validateCaption("\n\n"), CAPTION_EMPTY);
+check("caption: 1 character", validateCaption("a"), null);
+check("caption: exactly 2000", validateCaption("a".repeat(2000)), null);
+check("caption: 2001", validateCaption("a".repeat(2001)), TOO_LONG_2000);
+check("caption: 2000 with spaces around pass", validateCaption(`  ${"a".repeat(2000)}  `), null);
+check("comment: empty", validateComment(""), COMMENT_EMPTY);
+check("comment: only spaces", validateComment("   "), COMMENT_EMPTY);
+check("comment: 1 character", validateComment("a"), null);
+check("comment: exactly 1000", validateComment("c".repeat(1000)), null);
+check("comment: 1001", validateComment("c".repeat(1001)), TOO_LONG_1000);
+check("comment: 1000 emoji count as 1000", validateComment("\u{1F393}".repeat(1000)), null);
+
+// ---- REQ-fs-006 TASK-014: a failed edit or delete (AC18) --------------------
+// 403 and 404 get their own words before the save rule, which would call
+// both "gone". The words are the answer names, so a case shows which was picked.
+
+import { isGone, writeFailureText } from "../frontend/src/lib/writeFailure.ts";
+
+const WRITE_WORDS = { forbidden: "forbidden", notFound: "notFound", save: SAVE_WORDS };
+const WRITE_WORDS_CONFLICT = { ...WRITE_WORDS, save: SAVE_WORDS_CONFLICT };
+check("write words: 403 is forbidden, not gone", writeFailureText({ kind: "http", status: 403 }, WRITE_WORDS), "forbidden");
+check("write words: 404 is not found, not gone", writeFailureText({ kind: "http", status: 404 }, WRITE_WORDS), "notFound");
+check("write words: 500", writeFailureText({ kind: "http", status: 500 }, WRITE_WORDS), "server");
+check("write words: 409 without conflict words", writeFailureText({ kind: "http", status: 409 }, WRITE_WORDS), "general");
+check("write words: 409 with conflict words", writeFailureText({ kind: "http", status: 409 }, WRITE_WORDS_CONFLICT), "conflict");
+check("write words: no answer", writeFailureText({ kind: "network" }, WRITE_WORDS), "noAnswer");
+check("write words: 400", writeFailureText({ kind: "http", status: 400 }, WRITE_WORDS), "general");
+check("write words: 401", writeFailureText({ kind: "http", status: 401 }, WRITE_WORDS), "general");
+check("gone: 404", isGone({ kind: "http", status: 404 }), true);
+check("gone: 403", isGone({ kind: "http", status: 403 }), false);
+check("gone: 410", isGone({ kind: "http", status: 410 }), false);
+check("gone: 400", isGone({ kind: "http", status: 400 }), false);
+check("gone: 500", isGone({ kind: "http", status: 500 }), false);
+check("gone: no answer", isGone({ kind: "network" }), false);
+
+// ---- REQ-fs-006 fix round, m1: who may write posts, the mentoring address ---
+// ADR-02: alumni and admin may write posts (and have an alumni profile); a
+// student, a role we do not know (null) may not. The "See all" links of the
+// Feed and the Dashboard open the directory with only "open to mentoring" on.
+
+import { canWritePosts } from "../frontend/src/lib/token.ts";
+import { mentoringDirectoryAddress } from "../frontend/src/lib/directoryQuery.ts";
+
+check("may write posts: alumni", canWritePosts("alumni"), true);
+check("may write posts: admin", canWritePosts("admin"), true);
+check("may write posts: student", canWritePosts("student"), false);
+check("may write posts: no role", canWritePosts(null), false);
+check(
+  "mentoring address: directory path, only mentoring=true",
+  mentoringDirectoryAddress("/directory"),
+  { pathname: "/directory", search: "?mentoring=true" },
+);
+check(
+  "mentoring address: reads back as mentoring on, nothing else set",
+  readDirectoryQuery(new URLSearchParams(mentoringDirectoryAddress("/directory").search)),
+  { ...DEFAULT_DIRECTORY_QUERY, mentoring: true },
+);
+
+// ---- REQ-fs-006 fix m8/m9: a failed new comment or reply ------------------
+// A 400 means "the comment replied to is gone" only on a reply; 403 has its
+// own words (not the edit wording). The words are the answer names.
+
+import { commentAddFailureText, isReplyTargetGone } from "../frontend/src/lib/writeFailure.ts";
+
+const ADD_WORDS = {
+  replyTargetGone: "replyTargetGone",
+  postGone: "postGone",
+  forbidden: "forbidden",
+  save: SAVE_WORDS,
+};
+check("reply gone: 400 with a parent", isReplyTargetGone({ kind: "http", status: 400 }, 7), true);
+check("reply gone: 400 without a parent", isReplyTargetGone({ kind: "http", status: 400 }, null), false);
+check("reply gone: 404 with a parent", isReplyTargetGone({ kind: "http", status: 404 }, 7), false);
+check("reply gone: no answer with a parent", isReplyTargetGone({ kind: "network" }, 7), false);
+check("add words: 400 with a parent", commentAddFailureText({ kind: "http", status: 400 }, 7, ADD_WORDS), "replyTargetGone");
+check("add words: 400 without a parent", commentAddFailureText({ kind: "http", status: 400 }, null, ADD_WORDS), "general");
+check("add words: 404", commentAddFailureText({ kind: "http", status: 404 }, null, ADD_WORDS), "postGone");
+check("add words: 404 on a reply", commentAddFailureText({ kind: "http", status: 404 }, 7, ADD_WORDS), "postGone");
+check("add words: 403", commentAddFailureText({ kind: "http", status: 403 }, null, ADD_WORDS), "forbidden");
+check("add words: 403 on a reply", commentAddFailureText({ kind: "http", status: 403 }, 7, ADD_WORDS), "forbidden");
+check("add words: 500", commentAddFailureText({ kind: "http", status: 500 }, 7, ADD_WORDS), "server");
+check("add words: no answer", commentAddFailureText({ kind: "network" }, null, ADD_WORDS), "noAnswer");
+
+// ---- REQ-fs-006 fix round, group D: the plural rule and the words with branches
+// (QUAL-003, QUAL-006). Sentences typed from the spec and design (AC14, AC17,
+// AC21, architecture "Live regions"), not worked out with the code.
+
+import { countText } from "../frontend/src/lib/postDisplay.ts";
+import {
+  commentDeleteBody,
+  dashboardGreeting,
+  feedShowingText,
+  postDeleteBody,
+} from "../frontend/src/config/text.ts";
+
+check("plural: 0 replies", countText(0, "reply", "replies"), "0 replies");
+check("plural: 1 reply", countText(1, "reply", "replies"), "1 reply");
+check("plural: 2 replies", countText(2, "reply", "replies"), "2 replies");
+check("greeting: with a first name", dashboardGreeting("Tanvir"), "Welcome back, Tanvir");
+check("greeting: name not known", dashboardGreeting(null), "Welcome back");
+check("greeting: empty name", dashboardGreeting(""), "Welcome back");
+check("showing: 12 of 42", feedShowingText(12, 42), "Showing 12 of 42 posts");
+check("showing: 1 of 1", feedShowingText(1, 1), "Showing 1 of 1 post");
+check("showing: 0 of 0", feedShowingText(0, 0), "Showing 0 of 0 posts");
+check(
+  "delete post: no comments",
+  postDeleteBody(0),
+  "The post and any comments on it will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete post: 1 comment",
+  postDeleteBody(1),
+  "The post and its 1 comment will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete post: 4 comments",
+  postDeleteBody(4),
+  "The post and its 4 comments will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: no replies",
+  commentDeleteBody(0),
+  "The comment will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: 1 reply",
+  commentDeleteBody(1),
+  "The comment and its 1 reply will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: 3 replies",
+  commentDeleteBody(3),
+  "The comment and its 3 replies will be removed for everyone. This cannot be undone.",
+);
+// A held count that is not a real count is read as none held: page 1.
+check("next page: -5 held", nextFeedPage(-5, 12), 1);
+check("next page: NaN held", nextFeedPage(Number.NaN, 12), 1);
 
 // ---- Result ---------------------------------------------------------------
 

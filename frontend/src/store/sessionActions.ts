@@ -9,6 +9,7 @@ import type { ApiFailure } from "../services/apiError";
 import { logIn } from "../services/authService";
 import { logOut, signUp } from "../services/userService";
 import { resetAlumniAtom } from "./alumniAtoms";
+import { resetPostsAtom } from "./postAtoms";
 import { IDLE_PROFILE, profileAtom } from "./profileAtoms";
 import {
   adoptStoredTokenAtom,
@@ -51,6 +52,7 @@ const clearSessionAtom = atom(null, (_get, set, notice: AuthNotice) => {
   set(tokenAtom, null);
   set(profileAtom, IDLE_PROFILE);
   set(resetAlumniAtom);
+  set(resetPostsAtom);
   set(authNoticeAtom, notice);
 });
 
@@ -58,6 +60,7 @@ const clearSessionAtom = atom(null, (_get, set, notice: AuthNotice) => {
 const startSessionAtom = atom(null, (_get, set, token: string) => {
   set(profileAtom, IDLE_PROFILE);
   set(resetAlumniAtom);
+  set(resetPostsAtom);
   set(authNoticeAtom, null);
   set(tokenAtom, token);
 });
@@ -173,6 +176,7 @@ export const tokenChangedElsewhereAtom = atom(
       // ADV-001: otherwise the new user would see, and could save over,
       // the old user's alumni profile.
       set(resetAlumniAtom);
+      set(resetPostsAtom);
     }
   },
 );

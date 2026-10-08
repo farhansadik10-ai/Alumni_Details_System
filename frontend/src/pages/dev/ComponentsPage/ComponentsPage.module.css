@@ -435,6 +435,68 @@
   background: var(--surface);
 }
 
+/* ----- Posts, comments and the dashboard blocks (REQ-fs-006) ----- */
+
+/* The press guard draws no box: its children sit in the parent's layout. */
+.noRequests {
+  display: contents;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* Feed posts, about as wide as the feed column (448 at the least). */
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--space-8) * 7)), 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* Blocks side by side, 320 at the least, so one fits at 360. */
+.blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--space-8) * 5)), 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dialogText {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The open thread's ground and lists, taken from CommentsPanel with
+ * "composes" (pattern 3; the phone indent comes with .replies). The panel
+ * reads the store, so this page draws its states from the parts.
+ */
+.commentPanel {
+  composes: panel from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
+}
+
+.threads {
+  composes: threads from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
+}
+
+.replies {
+  composes: replies from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
+}
+
+.reply {
+  composes: reply from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
+}
+
 @media (max-width: 767.98px) {
   .page {
     gap: var(--space-6);

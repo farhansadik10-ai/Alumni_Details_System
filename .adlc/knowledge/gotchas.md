@@ -1408,3 +1408,76 @@ Where each old item went:
 **Don't:** Don't leave scratch files in `scripts/`; don't trust "it passes" without the fail run (L-REQ-fs-004-6).
 
 **Related:** [[knowledge/lessons/LESSON-REQ-fs-004-6-a-check-that-reads-only-tracked-files|L-REQ-fs-004-6]], [[knowledge/lessons/LESSON-REQ-fs-003-4-a-check-must-be-able-to-fail|L-REQ-fs-003-4]]
+
+---
+
+## G56 — Throwaway checks that import app code can load .env, reach the database or open a socket ^g56
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-006 |
+| Component | any script outside the repo that imports `backend/` or `frontend/src/store`, `frontend/src/services` |
+| Status | confirmed |
+| Severity | trap (will bite a normal change) |
+
+**What:** Two checks in one REQ broke the owner's rules by accident. A SQL check stubbed `config/db` for one importer; another file in the data layer still loaded the real `db.ts`, which read the root `.env` through `dotenv` and ran 4 read-only SELECTs on the local database. A store check hooked only the ESM resolver; the repo has no `"type": "module"`, so `tsx` loaded the store as CommonJS and the real `axios` and services ran (nothing left the machine only because sockets and `fetch` were patched to throw first).
+
+**Where:** `backend/src/dal/config/db.ts`, `backend/src/dal/query/transaction.ts`, `frontend/package.json` (no `"type"`), scratchpad `storecheck/` (the harness that works).
+
+**Why it's surprising:** Stubbing one import feels like isolation; importing `@alumni/dal`, the app, or any file that reaches them connects to the database (G40). Top-level `await` also fails in a `.ts` script under CommonJS (use `.mts`).
+
+**Why it exists:** Module loading is global, not per file, and `dotenv` runs at import.
+
+**Don't:** Don't import anything under `backend/` from a script. Block `pg`, `dotenv`, `net`, `dns` and sockets first; hook both the ESM and the CommonJS resolver (`Module._resolveFilename`); probe `require.cache` for `axios` and `pg` before the first call; run from the scratchpad; to prove a fix fails before it, copy the HEAD file out with `git show` instead of stashing.
+
+**Related:** [[knowledge/gotchas#^g50|G50]], [[knowledge/gotchas#^g40|G40]], [[knowledge/lessons/LESSON-REQ-fs-004-5-find-out-what-listens-on-the-api-port|L-REQ-fs-004-5]]
+
+---
+
+## G57 — UI part traps from the feed: Button's aria-disabled, a:hover over a composed class, an unimported stylesheet, EmptyState in a Card ^g57
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-006 |
+| Component | `frontend/src/components/ui/` (Button, ButtonLink, EmptyState), `frontend/src/styles/base.css` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) `Button` spreads its props before its own `aria-disabled`, so a caller cannot pass `aria-disabled`; use `busy` to soft-disable a secondary button (it also sets `aria-busy`). (2) `base.css` `a:hover` beats a composed `.primary` class, so a link drawn as a button must set its own hover text colour (`ButtonLink`). (3) `npm run build` does not bundle a component nothing imports, so a broken `composes` path in its stylesheet passes; build it once from a scratch Vite entry outside the repo. (4) `EmptyState` has its own dashed border and padding, so inside a `Card` the box doubles; draw a prompt (h3, text, `ButtonLink`) instead. (5) An `aria-labelledby` must be set only when the labelling element is drawn.
+
+**Where:** `ui/Button/Button.tsx`, `ui/ButtonLink/ButtonLink.module.css`, `styles/base.css:43`, `dashboard/YourProfileBlock/YourProfileBlock.tsx`, `posts/PostSummaryCard/PostSummaryCard.tsx`.
+
+**Why it's surprising:** Each looks right in the code and fails only on screen, in a screen reader, or in a part of the build that never runs.
+
+**Why it exists:** Specificity, prop order and bundling work as designed.
+
+**Don't:** Don't pass `aria-disabled` to `Button`; don't reuse `EmptyState` inside a card; don't trust a green build for a stylesheet nobody imports yet.
+
+**Related:** [[knowledge/gotchas#^g52|G52]], [[knowledge/gotchas#^g53|G53]], [[knowledge/lessons/LESSON-REQ-fs-005-5-does-the-reused-part-carry-what-the-design-needs|L-REQ-fs-005-5]]
+
+---
+
+## G58 — Small traps: Date.parse("1"), config/text.ts importing lib, saveFailureText folds 403 and 404 ^g58
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-006 |
+| Component | `frontend/src/lib/postDisplay.ts`, `frontend/src/config/text.ts`, `frontend/src/lib/saveFailure.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) V8's fallback date parser reads the text "1" as 1 January 2001, so `dateText` checks the shape first (`ISO_DATE_START`) and shows nothing for unreadable text. (2) `config/text.ts` is read by `vite.config.ts` in Node and should stay import-free; the one exception is `countText` from `lib/postDisplay.ts`, which is safe only while `postDisplay.ts` imports nothing (the chain `loadFailure -> text -> postDisplay` is acyclic by convention, and the header comment of `text.ts` is the only guard). (3) `saveFailureText` gives 403 and 404 the same "gone" reason; a screen whose two statuses mean different things must use `lib/writeFailure.ts` (`writeFailureText`, `isGone`).
+
+**Where:** `lib/postDisplay.ts:29`, `config/text.ts:4-9`, `lib/saveFailure.ts:40`, `lib/writeFailure.ts`.
+
+**Why it's surprising:** Each reads as harmless; two of the three fail silently.
+
+**Why it exists:** Browser date parsing is lenient; the config files predate lib; `saveFailureText` was written for My profile, where 403 and 404 mean the same.
+
+**Don't:** Don't call `new Date` on API text without a shape check; don't add another import to `config/text.ts` or any import to `lib/postDisplay.ts`; don't map 403 and 404 through `saveFailureText` alone.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-005-4-a-layer-check-must-say-every-sentence|L-REQ-fs-005-4]]
+

@@ -1,0 +1,62 @@
+/* One post of feed.html: byline, text, image, footer row, open thread. Tokens only. */
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Hidden on a load error (onError), so a broken link leaves no empty box. */
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(var(--space-8) * 8);
+  object-fit: contain;
+  border: var(--border-line) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sunken);
+}
+
+/* The comments button on the left, Edit and Delete on the right; wraps at 360px. */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: var(--border-line) solid var(--line);
+}
+
+/* The quiet button's side padding, pulled back so its words line up with the text, as drawn. */
+.toggle {
+  margin-left: calc(var(--space-3) * -1);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/*
+ * The open thread runs to the card's edges, as drawn: it cancels the Card's
+ * md padding (var(--space-5)) on the sides and the bottom. Change both
+ * together if the Card padding of a post changes.
+ */
+.panel {
+  margin: 0 calc(var(--space-5) * -1) calc(var(--space-5) * -1);
+  min-width: 0;
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dialogText {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

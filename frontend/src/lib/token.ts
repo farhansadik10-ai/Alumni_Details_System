@@ -80,3 +80,12 @@ export function isLiveSession(session: Session | null, now: number): session is 
 export function isAdmin(session: Session | null): boolean {
   return session?.role === "admin";
 }
+
+/**
+ * True for alumni and admin: they may write posts and have an alumni profile
+ * (ADR-02). A student, an unknown role or no role gives false. The server
+ * still decides; this only chooses what the page shows.
+ */
+export function canWritePosts(role: Role | null): boolean {
+  return role === "alumni" || role === "admin";
+}

@@ -1,0 +1,32 @@
+/* The "Recent posts" block of dashboard.html. Tokens only. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* The heading and the optional action; the action wraps under it on a phone. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}

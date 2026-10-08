@@ -1,0 +1,67 @@
+/* The "Your profile" block of dashboard.html. Tokens only. */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* The avatar (md: the design's 56px moves to the nearest step) and the lines. */
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.job {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  overflow-wrap: anywhere;
+}
+
+.promptHeading {
+  margin: 0;
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.promptText {
+  margin: 0;
+  color: var(--muted);
+}

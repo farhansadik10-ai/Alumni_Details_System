@@ -88,6 +88,7 @@ _From the owner, 2026-10-05. The frontend was rebuilt from scratch in `frontend/
 - **What stands in for tests:** `npm run build` must exit 0 (the frontend build runs `tsc -b`, so type errors fail it), plus `npm run check:frontend` (the frontend style check and the library check, both in `scripts/`), plus a manual test checklist the owner runs.
 - **Coverage expectations:** _(none written down)_
 - **Mock policy:** _(none written down)_
+- **Throwaway checks (confirmed by the owner, 2026-10-08):** a script outside the repo that imports app code must never read `.env`, reach the database or open a socket. Start from the safe harness and the rules in [[knowledge/gotchas#^g56|G56]]; never import anything under `backend/`.
 
 ## Comments
 
