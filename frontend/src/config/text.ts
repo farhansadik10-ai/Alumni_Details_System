@@ -1,5 +1,6 @@
 // Words the app shows or reads out in more than one place, and every word of
-// the directory, alumni profile and My profile pages (grouped by page below).
+// the directory, alumni profile, My profile, feed and dashboard pages
+// (grouped by page below).
 // Plain values only: no imports, no DOM (the Vite config reads config files).
 // A function is used only for a word with a hole in it (a name, a count, a year).
 
@@ -175,3 +176,240 @@ export const SAVE_FAILED_CONFLICT =
 export const SAVE_FAILED_GONE =
   "This profile can no longer be saved. It may have been removed, or you may no longer have access.";
 export const SAVE_FAILED_GONE_RETRY = RETRY_LABEL;
+
+// ----- Shared words: post and comment actions (REQ-fs-006) -----------------
+
+export const EDIT_LABEL = "Edit";
+export const DELETE_LABEL = "Delete";
+export const SAVE_LABEL = "Save";
+export const CANCEL_LABEL = "Cancel";
+export const SAVING_LABEL = "Saving";
+export const DELETING_LABEL = "Deleting";
+
+// A failed write of a post or a comment (publish, save or delete). Nothing
+// changed and what was typed is kept. Used through POST_SAVE_FAILURE_WORDS
+// and COMMENT_SAVE_FAILURE_WORDS, both shaped as lib/saveFailure's
+// SaveFailureWords (no import here: config files stay plain values).
+export const WRITE_FAILED_NO_ANSWER =
+  "Nothing was changed. We could not reach the server. Check your connection and try again.";
+export const WRITE_FAILED_SERVER =
+  "Nothing was changed. Something went wrong on our side. Try again in a moment.";
+export const WRITE_FAILED_GENERAL = "Nothing was changed. Something went wrong. Try again.";
+
+// The comment-count words ("No comments yet", "1 comment", "N comments")
+// live in lib/postDisplay.ts (commentCountText), not here.
+
+// ----- Feed (/feed) --------------------------------------------------------
+
+export const FEED_HEADING = "Feed";
+export const FEED_SUB = "News, job openings and events from alumni.";
+// Visually hidden heading above the list; focus goes here after a post delete.
+export const FEED_POSTS_HEADING = "Posts";
+// The polite status line above the list: "Showing 12 of 42 posts".
+export function feedShowingText(shown: number, total: number): string {
+  return total === 1 ? `Showing ${shown} of 1 post` : `Showing ${shown} of ${total} posts`;
+}
+export const FEED_LOADING_TEXT = "Loading posts";
+
+export const FEED_LOAD_MORE_BUTTON = "Load more posts";
+export const FEED_LOAD_MORE_BUSY = "Loading more posts";
+// "Load more" failed. The posts shown stay. The text is a load-failure text.
+export const FEED_MORE_ERROR_HEADING = "More posts could not be loaded";
+
+// Empty feed. Alumni and admin get an action that moves focus to the form.
+export const FEED_EMPTY_HEADING = "No posts yet";
+export const FEED_EMPTY_WRITER_TEXT = "Be the first to share news, a job opening or an event.";
+export const FEED_EMPTY_WRITER_ACTION = "Write the first post";
+export const FEED_EMPTY_READER_TEXT = "Posts from alumni will appear here. Check back later.";
+
+// The first load failed. The text is FAILURE_NO_ANSWER_TEXT or FAILURE_SERVER_TEXT.
+export const FEED_ERROR_HEADING = "The feed could not be loaded";
+
+// The side block on the feed: people open to mentoring.
+export const FEED_MENTORING_HEADING = OPEN_TO_MENTORING;
+
+// ----- Posts: the form, the post card, edit and delete ---------------------
+
+// Who can post: said to a student instead of the form, and on a 403 on publish.
+export const POST_WHO_CAN_POST = "Only alumni and admins can write posts.";
+export const FEED_STUDENT_NOTE = `${POST_WHO_CAN_POST} You can read and comment on every post.`;
+
+// The "Write a post" form. Its label is also the Dashboard's link to the feed.
+export const POST_FORM_HEADING = "Write a post";
+export const POST_CAPTION_PLACEHOLDER = "Share news, a job opening or an event";
+export const POST_IMAGE_LABEL = "Image link";
+export const POST_IMAGE_OPTIONAL = OPTIONAL_MARK;
+export const POST_IMAGE_PLACEHOLDER = ACCOUNT_PHOTO_PLACEHOLDER;
+export const POST_PUBLISH_BUTTON = "Publish post";
+export const POST_PUBLISH_BUSY = "Publishing";
+export const POST_PUBLISHED_TOAST = "Post published";
+
+// Edit in place: label of the caption field, then Save and Cancel.
+export const POST_EDIT_LABEL = "Edit post";
+export const POST_SAVED_TOAST = "Post saved";
+
+// The image of a post, read out by a screen reader.
+export const POST_IMAGE_ALT = "Image shared with this post";
+
+// The delete dialog. The sentence says the post's comments go with it.
+export const POST_DELETE_TITLE = "Delete this post?";
+export function postDeleteBody(commentCount: number): string {
+  if (commentCount === 0) {
+    return "The post and any comments on it will be removed for everyone. This cannot be undone.";
+  }
+  const comments = commentCount === 1 ? "its 1 comment" : `its ${commentCount} comments`;
+  return `The post and ${comments} will be removed for everyone. This cannot be undone.`;
+}
+export const POST_DELETE_CONFIRM = "Delete post";
+export const POST_DELETED_TOAST = "Post deleted";
+
+// 403 on edit or delete; 404 on edit or delete (the post is removed from the list).
+export const POST_CHANGE_FORBIDDEN_TEXT = "You can only edit or delete your own posts.";
+export const POST_NOT_FOUND_TEXT =
+  "This post had already been deleted, so it was removed from the list.";
+// The fallback "gone" words, for a 403 or 404 the page does not explain itself.
+export const POST_GONE_TEXT =
+  "This post can no longer be changed. It may have been deleted, or you may no longer have access.";
+
+export const POST_SAVE_FAILURE_WORDS = {
+  noAnswer: WRITE_FAILED_NO_ANSWER,
+  server: WRITE_FAILED_SERVER,
+  gone: POST_GONE_TEXT,
+  general: WRITE_FAILED_GENERAL,
+};
+
+// ----- Comments: the open thread under a post ------------------------------
+
+export const COMMENTS_LOADING_TEXT = "Loading comments";
+export const COMMENTS_ERROR_HEADING = "The comments could not be loaded";
+// No comments yet ("No comments yet" itself is the count, in lib/postDisplay.ts).
+export const COMMENTS_EMPTY_HEADING = "Start the conversation";
+export const COMMENTS_EMPTY_TEXT = "Be the first to comment on this post.";
+
+export const COMMENT_FIELD_LABEL = "Add a comment";
+export const COMMENT_SUBMIT_BUTTON = "Comment";
+export const COMMENT_SUBMIT_BUSY = "Posting";
+export const COMMENT_POSTED_TOAST = "Comment posted";
+
+export const COMMENT_REPLY_BUTTON = "Reply";
+// Above the comment field while replying; its Cancel is CANCEL_LABEL.
+export function commentReplyingTo(name: string): string {
+  return `Replying to ${name}`;
+}
+
+export const COMMENT_EDIT_LABEL = "Edit comment";
+export const COMMENT_SAVED_TOAST = "Comment saved";
+
+// The delete dialog. The sentence says the replies go with it.
+export const COMMENT_DELETE_TITLE = "Delete this comment?";
+export function commentDeleteBody(replyCount: number): string {
+  if (replyCount === 0) {
+    return "The comment will be removed for everyone. This cannot be undone.";
+  }
+  const replies = replyCount === 1 ? "its 1 reply" : `its ${replyCount} replies`;
+  return `The comment and ${replies} will be removed for everyone. This cannot be undone.`;
+}
+export const COMMENT_DELETE_CONFIRM = "Delete comment";
+export const COMMENT_DELETED_TOAST = "Comment deleted";
+
+// 403 on edit or delete; 404 on edit or delete (removed from the list);
+// 404 on adding a comment (the post itself is gone).
+export const COMMENT_CHANGE_FORBIDDEN_TEXT = "You can only edit or delete your own comments.";
+export const COMMENT_NOT_FOUND_TEXT =
+  "This comment had already been deleted, so it was removed from the list.";
+export const COMMENT_POST_GONE_TEXT =
+  "This post has been deleted, so your comment could not be added.";
+export const COMMENT_GONE_TEXT =
+  "This comment can no longer be changed. It may have been deleted, or you may no longer have access.";
+
+export const COMMENT_SAVE_FAILURE_WORDS = {
+  noAnswer: WRITE_FAILED_NO_ANSWER,
+  server: WRITE_FAILED_SERVER,
+  gone: COMMENT_GONE_TEXT,
+  general: WRITE_FAILED_GENERAL,
+};
+
+// ----- Dashboard (/dashboard) ----------------------------------------------
+
+// The band heading: "Welcome back, Tanvir", or "Welcome back" while the name is unknown.
+export const DASHBOARD_GREETING = "Welcome back";
+export function dashboardGreeting(firstName: string | null): string {
+  return firstName ? `${DASHBOARD_GREETING}, ${firstName}` : DASHBOARD_GREETING;
+}
+export const DASHBOARD_SUB = "Here is what is new in your alumni network.";
+
+// The counts block: three cards, each a label, a number and a link. Its
+// heading is visually hidden (the design shows none).
+export const DASHBOARD_COUNTS_HEADING = "Counts";
+export const DASHBOARD_COUNT_ALUMNI_LABEL = "Alumni in the directory";
+export const DASHBOARD_COUNT_ALUMNI_LINK = "Browse the directory";
+export const DASHBOARD_COUNT_MENTORING_LABEL = OPEN_TO_MENTORING;
+export const DASHBOARD_COUNT_MENTORING_LINK = "See who can help";
+export const DASHBOARD_COUNT_POSTS_LABEL = "Posts in the feed";
+export const DASHBOARD_COUNT_POSTS_LINK = "Open the feed";
+export const DASHBOARD_COUNTS_LOADING = "Loading counts";
+export const DASHBOARD_COUNTS_ERROR_HEADING = "The counts could not be loaded";
+
+// The recent posts block. Its "Write a post" link is for alumni and admin only.
+export const DASHBOARD_RECENT_HEADING = "Recent posts";
+export const DASHBOARD_WRITE_POST_LINK = POST_FORM_HEADING;
+export const DASHBOARD_RECENT_LOADING = "Loading recent posts";
+export const DASHBOARD_RECENT_EMPTY_HEADING = FEED_EMPTY_HEADING;
+export const DASHBOARD_RECENT_EMPTY_WRITER_TEXT =
+  "Nobody has posted yet. Share news, a job opening or an event in the feed.";
+export const DASHBOARD_RECENT_EMPTY_READER_TEXT =
+  "Nobody has posted yet. New posts from alumni will show here.";
+export const DASHBOARD_RECENT_EMPTY_LINK = DASHBOARD_COUNT_POSTS_LINK;
+export const DASHBOARD_RECENT_ERROR_HEADING = "Recent posts could not be loaded";
+
+// The "Your profile" block, by role.
+export const DASHBOARD_PROFILE_HEADING = "Your profile";
+export const DASHBOARD_PROFILE_EDIT_LINK = "Edit my profile";
+export const DASHBOARD_PROFILE_LOADING = "Loading your profile";
+// Alumni or admin without an alumni profile yet.
+export const DASHBOARD_PROFILE_NONE_HEADING = "You have no alumni profile yet";
+export const DASHBOARD_PROFILE_NONE_TEXT =
+  "Create one so other alumni and students can find you in the directory.";
+export const DASHBOARD_PROFILE_NONE_LINK = "Create my profile";
+// A student: no alumni profile, only the account.
+export const DASHBOARD_PROFILE_STUDENT_HEADING = "Complete your account";
+export const DASHBOARD_PROFILE_STUDENT_TEXT =
+  "Add a photo and check your name, so other people know who you are.";
+export const DASHBOARD_PROFILE_STUDENT_LINK = "Go to My profile";
+export const DASHBOARD_PROFILE_ERROR_HEADING = ALUMNI_LOAD_ERROR_HEADING;
+
+// ----- People lists: "New in the directory" and "Open to mentoring" --------
+
+export const PEOPLE_NEW_HEADING = "New in the directory";
+export const PEOPLE_MENTORING_HEADING = OPEN_TO_MENTORING;
+// The link under either list to the directory (with the mentoring filter on for that list).
+export const PEOPLE_DIRECTORY_LINK = "See all in the directory";
+export const PEOPLE_LOADING = "Loading people";
+export const PEOPLE_NEW_EMPTY_HEADING = "Nobody in the directory yet";
+export const PEOPLE_NEW_EMPTY_TEXT = "New alumni profiles will show here. Check back later.";
+export const PEOPLE_MENTORING_EMPTY_HEADING = "Nobody is open to mentoring yet";
+export const PEOPLE_MENTORING_EMPTY_TEXT =
+  "Check back later, or look through the whole directory.";
+export const PEOPLE_ERROR_HEADING = "These people could not be loaded";
+
+// ----- Alumni profile (/directory/:id): Recent posts -----------------------
+
+export const PROFILE_POSTS_HEADING = DASHBOARD_RECENT_HEADING;
+export const PROFILE_POSTS_LOADING = DASHBOARD_RECENT_LOADING;
+// Empty: "Nadia has not posted yet", or without a name "No posts yet".
+export function profilePostsEmptyHeading(firstName: string | null): string {
+  return firstName ? `${firstName} has not posted yet` : FEED_EMPTY_HEADING;
+}
+export const PROFILE_POSTS_EMPTY_TEXT = "Their posts will show here when they share something.";
+export const PROFILE_POSTS_ERROR_HEADING = DASHBOARD_RECENT_ERROR_HEADING;
+
+// ----- Posts and comments: words added by TASK-007 --------------------------
+
+// The image of a post names its author: "Image shared by Nadia Rahman".
+export function postImageAlt(authorName: string): string {
+  return `Image shared by ${authorName}`;
+}
+// Visually hidden heading of the open comment thread under a post.
+export const COMMENTS_HEADING = "Comments";
+// A 400 on a reply: the comment replied to was removed meanwhile (ADV-005).
+export const COMMENT_REPLY_TARGET_GONE_TEXT = "That comment is gone. Your reply was not sent.";

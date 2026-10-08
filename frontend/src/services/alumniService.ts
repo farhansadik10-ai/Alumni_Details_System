@@ -13,8 +13,8 @@ const FILTERS_PATH = `${ALUMNI_PATH}/filters`;
 const MY_PROFILE_PATH = `${ALUMNI_PATH}/me`;
 
 /**
- * The query of GET /api/alumni. A key left out is no filter. `limit` is never
- * sent: the server's default page size is used.
+ * The query of GET /api/alumni. A key left out is no filter. `limit` is sent
+ * only when given; without it the server's default page size is used.
  */
 export interface AlumniListParams {
   q?: string;
@@ -24,6 +24,7 @@ export interface AlumniListParams {
   // The server accepts only the text "true"; anything else is a 400.
   mentoring?: "true";
   page?: number;
+  limit?: number;
 }
 
 // A cancelled call (its `signal` aborted) rejects; tell it apart from a
