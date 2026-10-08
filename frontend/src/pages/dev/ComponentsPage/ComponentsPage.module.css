@@ -435,6 +435,86 @@
   background: var(--surface);
 }
 
+/* ----- Posts, comments and the dashboard blocks (REQ-fs-006) ----- */
+
+/* The press guard draws no box: its children sit in the parent's layout. */
+.noRequests {
+  display: contents;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* Feed posts, about as wide as the feed column (448 at the least). */
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--space-8) * 7)), 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* Blocks side by side, 320 at the least, so one fits at 360. */
+.blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--space-8) * 5)), 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dialogText {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * A copy of the open thread's ground and lists in
+ * components/posts/CommentsPanel/CommentsPanel.module.css: the panel reads the
+ * store, so this page draws its states from the parts. Change both together.
+ */
+.commentPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-top: var(--border-edge) solid var(--edge);
+  background: var(--ground);
+  overflow-wrap: anywhere;
+}
+
+.threads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.replies {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: var(--border-edge) solid var(--edge);
+  list-style: none;
+}
+
+.reply {
+  min-width: 0;
+}
+
 @media (max-width: 767.98px) {
   .page {
     gap: var(--space-6);
@@ -474,5 +554,9 @@
 
   .gridCorner {
     display: none;
+  }
+
+  .replies {
+    padding-left: var(--space-3);
   }
 }
