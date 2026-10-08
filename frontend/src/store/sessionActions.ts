@@ -18,6 +18,7 @@ import {
   tokenAtom,
 } from "./sessionAtoms";
 import type { AuthNotice } from "./sessionAtoms";
+import { resetUsersAtom } from "./usersAtoms";
 
 // The session actions. Each is a write-only atom that returns a result and
 // never throws. None of them navigates: the route guards do that when they
@@ -53,6 +54,7 @@ const clearSessionAtom = atom(null, (_get, set, notice: AuthNotice) => {
   set(profileAtom, IDLE_PROFILE);
   set(resetAlumniAtom);
   set(resetPostsAtom);
+  set(resetUsersAtom);
   set(authNoticeAtom, notice);
 });
 
@@ -61,6 +63,7 @@ const startSessionAtom = atom(null, (_get, set, token: string) => {
   set(profileAtom, IDLE_PROFILE);
   set(resetAlumniAtom);
   set(resetPostsAtom);
+  set(resetUsersAtom);
   set(authNoticeAtom, null);
   set(tokenAtom, token);
 });
@@ -177,6 +180,7 @@ export const tokenChangedElsewhereAtom = atom(
       // the old user's alumni profile.
       set(resetAlumniAtom);
       set(resetPostsAtom);
+      set(resetUsersAtom);
     }
   },
 );

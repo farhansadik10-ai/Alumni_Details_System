@@ -1,15 +1,18 @@
+import { ROLE_WORDS } from "../../../config/text";
 import type { Role } from "../../../lib/token";
 import { Tag } from "./Tag";
 import type { TagVariant } from "./Tag";
 
-const ROLE_TAGS: Record<Role, { variant: TagVariant; word: string }> = {
-  student: { variant: "role-student", word: "Student" },
-  alumni: { variant: "role-alumni", word: "Alumni" },
-  admin: { variant: "role-admin", word: "Admin" },
+// The colour of each role. The word comes from ROLE_WORDS (one copy, shared
+// with the Users role filter).
+const ROLE_VARIANTS: Record<Role, TagVariant> = {
+  student: "role-student",
+  alumni: "role-alumni",
+  admin: "role-admin",
 };
 
 function isRole(value: string): value is Role {
-  return Object.hasOwn(ROLE_TAGS, value);
+  return Object.hasOwn(ROLE_VARIANTS, value);
 }
 
 export type RoleTagProps = {
@@ -21,6 +24,5 @@ export function RoleTag({ role }: RoleTagProps) {
   if (!role || !isRole(role)) {
     return null;
   }
-  const { variant, word } = ROLE_TAGS[role];
-  return <Tag variant={variant}>{word}</Tag>;
+  return <Tag variant={ROLE_VARIANTS[role]}>{ROLE_WORDS[role]}</Tag>;
 }
