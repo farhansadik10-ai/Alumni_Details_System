@@ -11,6 +11,7 @@ import { FAILURE_NO_ANSWER_TEXT, FAILURE_SERVER_TEXT } from "../config/text";
  */
 export type CallFailure = { kind: "network" } | { kind: "http"; status: number };
 
+export const HTTP_BAD_REQUEST = 400;
 export const HTTP_FORBIDDEN = 403;
 export const HTTP_NOT_FOUND = 404;
 export const HTTP_CONFLICT = 409;

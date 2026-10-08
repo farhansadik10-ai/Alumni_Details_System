@@ -1,8 +1,12 @@
 // Words the app shows or reads out in more than one place, and every word of
 // the directory, alumni profile, My profile, feed and dashboard pages
 // (grouped by page below).
-// Plain values only: no imports, no DOM (the Vite config reads config files).
+// Plain values only: no DOM, no React. The one import is the plural rule from
+// lib/postDisplay.ts, a plain function that itself imports nothing (the Vite
+// config reads config/app.ts and config/storageKeys.ts, not this file).
 // A function is used only for a word with a hole in it (a name, a count, a year).
+
+import { COMMENT_COUNT_MANY_WORD, COMMENT_COUNT_ONE_WORD, countText } from "../lib/postDisplay";
 
 // The loading message, for the screen and for a screen reader.
 export const LOADING_TEXT = "Loading";
@@ -187,14 +191,14 @@ export const SAVING_LABEL = "Saving";
 export const DELETING_LABEL = "Deleting";
 
 // A failed write of a post or a comment (publish, save or delete). Nothing
-// changed and what was typed is kept. Used through POST_SAVE_FAILURE_WORDS
+// changed and what was typed is kept. Read only through POST_SAVE_FAILURE_WORDS
 // and COMMENT_SAVE_FAILURE_WORDS, both shaped as lib/saveFailure's
-// SaveFailureWords (no import here: config files stay plain values).
-export const WRITE_FAILED_NO_ANSWER =
+// SaveFailureWords, so these three are not exported.
+const WRITE_FAILED_NO_ANSWER =
   "Nothing was changed. We could not reach the server. Check your connection and try again.";
-export const WRITE_FAILED_SERVER =
+const WRITE_FAILED_SERVER =
   "Nothing was changed. Something went wrong on our side. Try again in a moment.";
-export const WRITE_FAILED_GENERAL = "Nothing was changed. Something went wrong. Try again.";
+const WRITE_FAILED_GENERAL = "Nothing was changed. Something went wrong. Try again.";
 
 // The comment-count words ("No comments yet", "1 comment", "N comments")
 // live in lib/postDisplay.ts (commentCountText), not here.
@@ -207,7 +211,7 @@ export const FEED_SUB = "News, job openings and events from alumni.";
 export const FEED_POSTS_HEADING = "Posts";
 // The polite status line above the list: "Showing 12 of 42 posts".
 export function feedShowingText(shown: number, total: number): string {
-  return total === 1 ? `Showing ${shown} of 1 post` : `Showing ${shown} of ${total} posts`;
+  return `Showing ${shown} of ${countText(total, "post", "posts")}`;
 }
 export const FEED_LOADING_TEXT = "Loading posts";
 
@@ -248,17 +252,14 @@ export const POST_PUBLISHED_TOAST = "Post published";
 export const POST_EDIT_LABEL = "Edit post";
 export const POST_SAVED_TOAST = "Post saved";
 
-// The image of a post, read out by a screen reader.
-export const POST_IMAGE_ALT = "Image shared with this post";
-
 // The delete dialog. The sentence says the post's comments go with it.
 export const POST_DELETE_TITLE = "Delete this post?";
 export function postDeleteBody(commentCount: number): string {
   if (commentCount === 0) {
     return "The post and any comments on it will be removed for everyone. This cannot be undone.";
   }
-  const comments = commentCount === 1 ? "its 1 comment" : `its ${commentCount} comments`;
-  return `The post and ${comments} will be removed for everyone. This cannot be undone.`;
+  const comments = countText(commentCount, COMMENT_COUNT_ONE_WORD, COMMENT_COUNT_MANY_WORD);
+  return `The post and its ${comments} will be removed for everyone. This cannot be undone.`;
 }
 export const POST_DELETE_CONFIRM = "Delete post";
 export const POST_DELETED_TOAST = "Post deleted";
@@ -280,7 +281,6 @@ export const POST_SAVE_FAILURE_WORDS = {
 
 // ----- Comments: the open thread under a post ------------------------------
 
-export const COMMENTS_LOADING_TEXT = "Loading comments";
 export const COMMENTS_ERROR_HEADING = "The comments could not be loaded";
 // No comments yet ("No comments yet" itself is the count, in lib/postDisplay.ts).
 export const COMMENTS_EMPTY_HEADING = "Start the conversation";
@@ -306,8 +306,8 @@ export function commentDeleteBody(replyCount: number): string {
   if (replyCount === 0) {
     return "The comment will be removed for everyone. This cannot be undone.";
   }
-  const replies = replyCount === 1 ? "its 1 reply" : `its ${replyCount} replies`;
-  return `The comment and ${replies} will be removed for everyone. This cannot be undone.`;
+  const replies = countText(replyCount, "reply", "replies");
+  return `The comment and its ${replies} will be removed for everyone. This cannot be undone.`;
 }
 export const COMMENT_DELETE_CONFIRM = "Delete comment";
 export const COMMENT_DELETED_TOAST = "Comment deleted";
@@ -347,13 +347,11 @@ export const DASHBOARD_COUNT_MENTORING_LABEL = OPEN_TO_MENTORING;
 export const DASHBOARD_COUNT_MENTORING_LINK = "See who can help";
 export const DASHBOARD_COUNT_POSTS_LABEL = "Posts in the feed";
 export const DASHBOARD_COUNT_POSTS_LINK = "Open the feed";
-export const DASHBOARD_COUNTS_LOADING = "Loading counts";
 export const DASHBOARD_COUNTS_ERROR_HEADING = "The counts could not be loaded";
 
 // The recent posts block. Its "Write a post" link is for alumni and admin only.
 export const DASHBOARD_RECENT_HEADING = "Recent posts";
 export const DASHBOARD_WRITE_POST_LINK = POST_FORM_HEADING;
-export const DASHBOARD_RECENT_LOADING = "Loading recent posts";
 export const DASHBOARD_RECENT_EMPTY_HEADING = FEED_EMPTY_HEADING;
 export const DASHBOARD_RECENT_EMPTY_WRITER_TEXT =
   "Nobody has posted yet. Share news, a job opening or an event in the feed.";
@@ -365,7 +363,6 @@ export const DASHBOARD_RECENT_ERROR_HEADING = "Recent posts could not be loaded"
 // The "Your profile" block, by role.
 export const DASHBOARD_PROFILE_HEADING = "Your profile";
 export const DASHBOARD_PROFILE_EDIT_LINK = "Edit my profile";
-export const DASHBOARD_PROFILE_LOADING = "Loading your profile";
 // Alumni or admin without an alumni profile yet.
 export const DASHBOARD_PROFILE_NONE_HEADING = "You have no alumni profile yet";
 export const DASHBOARD_PROFILE_NONE_TEXT =
@@ -384,7 +381,6 @@ export const PEOPLE_NEW_HEADING = "New in the directory";
 export const PEOPLE_MENTORING_HEADING = OPEN_TO_MENTORING;
 // The link under either list to the directory (with the mentoring filter on for that list).
 export const PEOPLE_DIRECTORY_LINK = "See all in the directory";
-export const PEOPLE_LOADING = "Loading people";
 export const PEOPLE_NEW_EMPTY_HEADING = "Nobody in the directory yet";
 export const PEOPLE_NEW_EMPTY_TEXT = "New alumni profiles will show here. Check back later.";
 export const PEOPLE_MENTORING_EMPTY_HEADING = "Nobody is open to mentoring yet";
@@ -395,7 +391,6 @@ export const PEOPLE_ERROR_HEADING = "These people could not be loaded";
 // ----- Alumni profile (/directory/:id): Recent posts -----------------------
 
 export const PROFILE_POSTS_HEADING = DASHBOARD_RECENT_HEADING;
-export const PROFILE_POSTS_LOADING = DASHBOARD_RECENT_LOADING;
 // Empty: "Nadia has not posted yet", or without a name "No posts yet".
 export function profilePostsEmptyHeading(firstName: string | null): string {
   return firstName ? `${firstName} has not posted yet` : FEED_EMPTY_HEADING;
@@ -413,3 +408,14 @@ export function postImageAlt(authorName: string): string {
 export const COMMENTS_HEADING = "Comments";
 // A 400 on a reply: the comment replied to was removed meanwhile (ADV-005).
 export const COMMENT_REPLY_TARGET_GONE_TEXT = "That comment is gone. Your reply was not sent.";
+// A 403 on a new comment or reply (not the edit wording: nothing existed yet).
+export const COMMENT_ADD_FORBIDDEN_TEXT =
+  "You cannot comment on this post. Your comment was not sent.";
+// The comment-count link of a post summary goes to the feed. Its hidden end
+// says which post it belongs to: "No comments yet, on the post by Nadia
+// Rahman from 3 October 2026". The date is left out when there is none.
+export function postSummaryLinkContext(authorName: string, date: string | null): string {
+  return date !== null
+    ? `, on the post by ${authorName} from ${date}`
+    : `, on the post by ${authorName}`;
+}

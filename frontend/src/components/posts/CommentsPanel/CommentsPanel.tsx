@@ -12,6 +12,7 @@ import {
   COMMENTS_EMPTY_TEXT,
   COMMENTS_ERROR_HEADING,
   COMMENTS_HEADING,
+  COMMENT_ADD_FORBIDDEN_TEXT,
   COMMENT_FIELD_LABEL,
   COMMENT_POSTED_TOAST,
   COMMENT_POST_GONE_TEXT,
@@ -22,16 +23,22 @@ import {
 } from "../../../config/text";
 import { buildThreads, countReplies } from "../../../lib/commentThread";
 import { loadFailureText } from "../../../lib/loadFailure";
-import { saveFailureText } from "../../../lib/saveFailure";
 import type { Session } from "../../../lib/token";
-import { isGone } from "../../../lib/writeFailure";
+import { COMMENT_REQUIRED_MESSAGE } from "../../../lib/validation";
+import { commentAddFailureText, isGone, isReplyTargetGone } from "../../../lib/writeFailure";
+import type { CommentAddFailureWords } from "../../../lib/writeFailure";
 import { addCommentAtom } from "../../../store/postActions";
 import { commentsAtom, openCommentsAtom } from "../../../store/postAtoms";
 import { showToastAtom } from "../../../store/toastAtoms";
 import styles from "./CommentsPanel.module.css";
 
-// The API answers 400 to a reply whose parent comment no longer exists (ADV-005).
-const HTTP_BAD_REQUEST = 400;
+// The words for a failed new comment or reply (UI-003: a 403 has its own line).
+const COMMENT_ADD_FAILURE_WORDS: CommentAddFailureWords = {
+  replyTargetGone: COMMENT_REPLY_TARGET_GONE_TEXT,
+  postGone: COMMENT_POST_GONE_TEXT,
+  forbidden: COMMENT_ADD_FORBIDDEN_TEXT,
+  save: COMMENT_SAVE_FAILURE_WORDS,
+};
 
 // One reply or one edit at a time, across the whole thread.
 type Active =
@@ -63,6 +70,10 @@ export function CommentsPanel({ id, postId, session, onPostGone }: CommentsPanel
   const fieldRef = useRef<HTMLTextAreaElement>(null);
 
   const [activeState, setActiveState] = useState<Active | null>(null);
+  // The same value, read when a send or save answers: that answer may close
+  // the reply or edit only if it is still the one it was sent from, so a
+  // reply or edit started meanwhile is not wiped (REFL-006).
+  const activeRef = useRef<Active | null>(null);
   // Raised after a comment is added, removed or a reply is started; the
   // effect moves focus to the field after that commit (C11).
   const [focusFieldRequest, setFocusFieldRequest] = useState(0);
@@ -104,34 +115,55 @@ export function CommentsPanel({ id, postId, session, onPostGone }: CommentsPanel
     headingRef.current?.focus();
   }
 
+  function changeActive(next: Active | null) {
+    activeRef.current = next;
+    setActiveState(next);
+  }
+
   function handleReply(comment: Comment) {
-    setActiveState({ kind: "reply", id: comment.id, name: comment.name });
+    changeActive({ kind: "reply", id: comment.id, name: comment.name });
     requestFieldFocus();
   }
 
   function handleCancelReply() {
-    setActiveState(null);
+    changeActive(null);
     requestFieldFocus();
   }
 
+  // Closes the edit of this comment, unless another reply or edit took over.
+  function endEdit(commentId: number) {
+    const current = activeRef.current;
+    if (current?.kind === "edit" && current.id === commentId) {
+      changeActive(null);
+    }
+  }
+
   async function handleAdd(content: string): Promise<FormResult> {
+    const sentFrom = activeRef.current;
     const parentId = replyingTo?.id ?? null;
     const result = await addComment({ posts_id: postId, content, parent_id: parentId });
+    // Still the reply (or plain comment) this was sent from: nothing newer to keep.
+    const unchanged = activeRef.current === sentFrom;
     if (result.ok) {
-      setActiveState(null);
       showToast(COMMENT_POSTED_TOAST);
-      requestFieldFocus();
+      if (unchanged) {
+        changeActive(null);
+        requestFieldFocus();
+      }
       return { ok: true, reset: true };
     }
-    const { failure: addFailure } = result;
-    if (addFailure.kind === "http" && addFailure.status === HTTP_BAD_REQUEST && parentId !== null) {
-      setActiveState(null);
-      return { ok: false, text: COMMENT_REPLY_TARGET_GONE_TEXT };
+    if ("blank" in result) {
+      // Nothing was sent; the form blocks this first.
+      return { ok: false, text: COMMENT_REQUIRED_MESSAGE };
     }
-    if (isGone(addFailure)) {
-      return { ok: false, text: COMMENT_POST_GONE_TEXT };
+    if (isReplyTargetGone(result.failure, parentId) && unchanged) {
+      // The reply is over; the typed text stays for a new comment.
+      changeActive(null);
     }
-    return { ok: false, text: saveFailureText(addFailure, COMMENT_SAVE_FAILURE_WORDS) };
+    return {
+      ok: false,
+      text: commentAddFailureText(result.failure, parentId, COMMENT_ADD_FAILURE_WORDS),
+    };
   }
 
   function renderItem(comment: Comment, replies?: Comment[]) {
@@ -142,8 +174,8 @@ export function CommentsPanel({ id, postId, session, onPostGone }: CommentsPanel
         replyCount={countReplies(items, comment.id)}
         editing={active?.kind === "edit" && active.id === comment.id}
         onReply={handleReply}
-        onStartEdit={(commentId) => setActiveState({ kind: "edit", id: commentId })}
-        onEndEdit={() => setActiveState(null)}
+        onStartEdit={(commentId) => changeActive({ kind: "edit", id: commentId })}
+        onEndEdit={() => endEdit(comment.id)}
         onRemoved={requestFieldFocus}
       >
         {replies !== undefined && replies.length > 0 ? (

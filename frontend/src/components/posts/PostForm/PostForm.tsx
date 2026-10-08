@@ -176,7 +176,13 @@ export const PostForm = forwardRef<HTMLTextAreaElement | null, PostFormProps>(fu
           >
             {submitLabel}
           </Button>
-          {onCancel ? <Button onClick={onCancel}>{CANCEL_LABEL}</Button> : null}
+          {/* Ignored while the save runs (busy keeps it focusable), so the
+              answer never lands on a closed edit (pattern 32, trap 3). */}
+          {onCancel ? (
+            <Button busy={busy} onClick={onCancel}>
+              {CANCEL_LABEL}
+            </Button>
+          ) : null}
         </div>
       </div>
     </form>

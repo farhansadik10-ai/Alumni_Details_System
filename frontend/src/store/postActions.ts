@@ -22,6 +22,7 @@ import {
   currentPostsVisit,
   feedAtom,
   removePostLocallyAtom,
+  withCommentCount,
 } from "./postAtoms";
 import type { FeedState } from "./postAtoms";
 import { sessionAtom } from "./sessionAtoms";
@@ -39,8 +40,16 @@ import { sessionAtom } from "./sessionAtoms";
 // The page maps two failures to its own words: a 400 on `addCommentAtom` with
 // a `parent_id` means the comment replied to is gone (ADV-005), and a 404 on
 // the comments load means the post is gone (see `removePostLocallyAtom`).
+// A comment with no visible text gets `{ ok: false, blank: true }` instead.
 
 export type PostWriteResult = { ok: true } | { ok: false; failure: ApiFailure };
+
+/**
+ * A comment add or save. `blank` means the text had nothing visible and
+ * nothing was sent: no server answer, so no status the page could misread
+ * (a 400 on a reply means "the comment replied to is gone").
+ */
+export type CommentWriteResult = PostWriteResult | { ok: false; blank: true };
 
 export interface PublishPostInput {
   caption: string;
@@ -68,6 +77,11 @@ export interface SaveCommentInput {
 // status is worth reporting: "network".
 const NOT_READY: ApiFailure = { kind: "network" };
 
+// A comment with no visible text is never sent. The forms check first
+// (`validateComment` uses the same `presentText`), so this is a guard with
+// its own result, not a made-up server status.
+const BLANK_TEXT: CommentWriteResult = { ok: false, blank: true };
+
 /**
  * Remembers who writes and in which visit of the feed. The answer may patch
  * the lists only while `isCurrent()` is true. Null when nobody is logged in.
@@ -85,16 +99,6 @@ function startWrite(get: Getter): { isCurrent: () => boolean } | null {
   };
 }
 
-/** The feed with one post's comment count set (never below zero). */
-function withCommentCount(feed: FeedState, postId: number, count: number): FeedState {
-  return {
-    ...feed,
-    items: feed.items.map((post) =>
-      post.id === postId ? { ...post, comment_count: Math.max(0, count) } : post,
-    ),
-  };
-}
-
 /** The comment count the feed holds for a post, or null when it is not held. */
 function heldCommentCount(feed: FeedState, postId: number): number | null {
   return feed.items.find((post) => post.id === postId)?.comment_count ?? null;
@@ -106,7 +110,12 @@ const putPostOnTopAtom = atom(null, (get, set, post: Post) => {
   if (feed.status !== "ready" || feed.items.some((item) => item.id === post.id)) {
     return;
   }
-  set(feedAtom, { ...feed, items: [post, ...feed.items], total: feed.total + 1 });
+  set(feedAtom, {
+    ...feed,
+    items: [post, ...feed.items],
+    total: feed.total + 1,
+    totalEdits: [...feed.totalEdits, { id: post.id, change: 1 }],
+  });
 });
 
 // Replaces a post the server saved, when the ready feed holds it.
@@ -252,21 +261,26 @@ export const deletePostAtom = atom(
 
 /**
  * Adds a comment, or a reply when `parent_id` is a number. The content is
- * trimmed. The post's count goes up by one even when its thread is closed.
+ * trimmed with `presentText`; empty content is refused without a call. The
+ * post's count goes up by one even when its thread is closed.
  */
 export const addCommentAtom = atom(
   null,
-  async (get, set, input: AddCommentInput): Promise<PostWriteResult> => {
+  async (get, set, input: AddCommentInput): Promise<CommentWriteResult> => {
     const scope = startWrite(get);
     if (scope === null) {
       return { ok: false, failure: NOT_READY };
+    }
+    const content = presentText(input.content);
+    if (content === null) {
+      return BLANK_TEXT;
     }
     const postId = input.posts_id;
     let comment: Comment;
     try {
       comment = await createComment({
         posts_id: postId,
-        content: input.content.trim(),
+        content,
         parent_id: input.parent_id,
       });
     } catch (error) {
@@ -283,18 +297,25 @@ export const addCommentAtom = atom(
   },
 );
 
-/** Saves an edited comment (author only). A 404 removes it and its replies here. */
+/**
+ * Saves an edited comment (author only). Same trimming as add. A 404 removes
+ * it and its replies here.
+ */
 export const saveCommentAtom = atom(
   null,
-  async (get, set, input: SaveCommentInput): Promise<PostWriteResult> => {
+  async (get, set, input: SaveCommentInput): Promise<CommentWriteResult> => {
     const scope = startWrite(get);
     if (scope === null) {
       return { ok: false, failure: NOT_READY };
     }
+    const content = presentText(input.content);
+    if (content === null) {
+      return BLANK_TEXT;
+    }
     const where = locateComment(get, input.id);
     let comment: Comment;
     try {
-      comment = await updateComment(input.id, { content: input.content.trim() });
+      comment = await updateComment(input.id, { content });
     } catch (error) {
       const failure = toApiFailure(error);
       if (isGone(failure) && where !== null && scope.isCurrent()) {

@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { To } from "react-router-dom";
 import { PeopleBlock } from "../../components/alumni/PeopleBlock/PeopleBlock";
-import type { PeopleBlockState } from "../../components/alumni/PeopleBlock/PeopleBlock";
 import { FeedPost } from "../../components/posts/FeedPost/FeedPost";
 import { PostForm } from "../../components/posts/PostForm/PostForm";
 import type { FormResult, PostFormValues } from "../../components/posts/PostForm/PostForm";
@@ -44,12 +43,13 @@ import {
   RETRY_LABEL,
   feedShowingText,
 } from "../../config/text";
-import { DEFAULT_DIRECTORY_QUERY, writeDirectoryQuery } from "../../lib/directoryQuery";
+import { mentoringDirectoryAddress } from "../../lib/directoryQuery";
 import { loadFailureText } from "../../lib/loadFailure";
-import type { Role } from "../../lib/token";
+import { canWritePosts } from "../../lib/token";
 import { writeFailureText } from "../../lib/writeFailure";
 import type { WriteFailureWords } from "../../lib/writeFailure";
 import { PATHS } from "../../routes/paths";
+import { toPeopleBlockState } from "../../store/peopleBlockState";
 import { publishPostAtom } from "../../store/postActions";
 import {
   clearFeedAtom,
@@ -64,7 +64,6 @@ import {
   peopleAtom,
   removePostLocallyAtom,
 } from "../../store/postAtoms";
-import type { PeopleState } from "../../store/postAtoms";
 import { sessionAtom } from "../../store/sessionAtoms";
 import { showToastAtom } from "../../store/toastAtoms";
 import styles from "./FeedPage.module.css";
@@ -82,24 +81,7 @@ const PUBLISH_FAILURE_WORDS: WriteFailureWords = {
 
 // "See all in the directory": the directory with "open to mentoring" on,
 // written by the directory's own rule (pattern 24).
-const MENTORING_DIRECTORY: To = {
-  pathname: PATHS.directory,
-  search: `?${writeDirectoryQuery({ ...DEFAULT_DIRECTORY_QUERY, mentoring: true }).toString()}`,
-};
-
-/** Only alumni and admin may write posts (ADR-02); a student reads and comments. */
-function isWriter(role: Role | null): boolean {
-  return role === "alumni" || role === "admin";
-}
-
-// An idle people state, or one loaded for another kind, is "loading" here, so
-// the side list never shows a frame of the Dashboard's list (pattern 23).
-function toPeopleState(state: PeopleState): PeopleBlockState {
-  if (state.status === "idle" || state.kind !== "mentoring") {
-    return { status: "loading", items: [], failure: null };
-  }
-  return { status: state.status, items: state.items, failure: state.failure };
-}
+const MENTORING_DIRECTORY: To = mentoringDirectoryAddress(PATHS.directory);
 
 /**
  * The Feed (feed.html, AC1 to AC9, AC15 to AC20, AC35): the posts, newest
@@ -132,7 +114,7 @@ export default function FeedPage() {
   const [focusHeadingRequest, setFocusHeadingRequest] = useState(0);
 
   const userId = session?.userId ?? null;
-  const writer = isWriter(session?.role ?? null);
+  const writer = canWritePosts(session?.role ?? null);
 
   // Both loads start when the page opens, and again for another user; both
   // are forgotten when it closes, so the next visit never starts from this
@@ -344,7 +326,7 @@ export default function FeedPage() {
         <aside className={styles.side}>
           <PeopleBlock
             heading={FEED_MENTORING_HEADING}
-            state={toPeopleState(people)}
+            state={toPeopleBlockState(people, "mentoring")}
             emptyHeading={PEOPLE_MENTORING_EMPTY_HEADING}
             emptyText={PEOPLE_MENTORING_EMPTY_TEXT}
             errorHeading={PEOPLE_ERROR_HEADING}

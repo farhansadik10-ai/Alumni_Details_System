@@ -137,12 +137,10 @@ export function FeedPost({
     setConfirmOpen(true);
   }
 
-  // Cancel and Escape. Ignored while the delete runs, so its answer is always
-  // seen inside the open dialog.
+  // Cancel and Escape, also while the delete runs: the browser closes the
+  // dialog on a second Escape anyway, so the flag always follows it. A failure
+  // that answers after the close becomes a toast (handleConfirmDelete).
   function closeConfirm() {
-    if (deletingRef.current) {
-      return;
-    }
     confirmOpenRef.current = false;
     setConfirmOpen(false);
   }

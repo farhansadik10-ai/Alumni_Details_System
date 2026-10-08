@@ -3,9 +3,9 @@
 // use these. This file imports nothing, so the words live here (pattern 28).
 
 export const COMMENT_COUNT_NONE_TEXT = "No comments yet";
-export const COMMENT_COUNT_ONE_TEXT = "1 comment";
-// Put after the number for every count other than 0 and 1: "2 comments".
-export const COMMENT_COUNT_MANY_SUFFIX = "comments";
+// The word after the number: "1 comment", "2 comments" (through countText).
+export const COMMENT_COUNT_ONE_WORD = "comment";
+export const COMMENT_COUNT_MANY_WORD = "comments";
 
 // Fixed English names, the same in every browser (never toLocaleDateString).
 const MONTH_NAMES: readonly string[] = [
@@ -51,13 +51,19 @@ export function dateText(iso: string | null): string | null {
   return `${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+/**
+ * A count and its word: "1 reply" for exactly one, otherwise "N replies".
+ * The one plural rule of the post and comment words; config/text.ts uses it
+ * for the delete dialogs and the feed's status line.
+ */
+export function countText(count: number, one: string, many: string): string {
+  return count === 1 ? `1 ${one}` : `${count} ${many}`;
+}
+
 /** "No comments yet", "1 comment", otherwise "N comments". */
 export function commentCountText(count: number): string {
   if (count === 0) {
     return COMMENT_COUNT_NONE_TEXT;
   }
-  if (count === 1) {
-    return COMMENT_COUNT_ONE_TEXT;
-  }
-  return `${count} ${COMMENT_COUNT_MANY_SUFFIX}`;
+  return countText(count, COMMENT_COUNT_ONE_WORD, COMMENT_COUNT_MANY_WORD);
 }

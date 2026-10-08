@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { PeopleBlock } from "../../components/alumni/PeopleBlock/PeopleBlock";
-import type { PeopleBlockState } from "../../components/alumni/PeopleBlock/PeopleBlock";
 import { CountsBlock } from "../../components/dashboard/CountsBlock/CountsBlock";
 import type { CountsBlockState } from "../../components/dashboard/CountsBlock/CountsBlock";
 import { RecentPostsBlock } from "../../components/dashboard/RecentPostsBlock/RecentPostsBlock";
@@ -25,9 +24,10 @@ import {
   dashboardGreeting,
 } from "../../config/text";
 import { firstName } from "../../lib/alumniDisplay";
-import type { Role } from "../../lib/token";
+import { canWritePosts } from "../../lib/token";
 import { PATHS } from "../../routes/paths";
 import { clearMyAlumniAtom, loadMyAlumniAtom, myAlumniAtom } from "../../store/alumniAtoms";
+import { toPeopleBlockState } from "../../store/peopleBlockState";
 import {
   clearPeopleAtom,
   clearRecentPostsAtom,
@@ -39,7 +39,7 @@ import {
   recentPostsAtom,
   statsAtom,
 } from "../../store/postAtoms";
-import type { PeopleState, RecentPostsState, StatsState } from "../../store/postAtoms";
+import type { RecentPostsState, StatsState } from "../../store/postAtoms";
 import { profileAtom } from "../../store/profileAtoms";
 import { sessionAtom } from "../../store/sessionAtoms";
 import styles from "./DashboardPage.module.css";
@@ -47,14 +47,10 @@ import styles from "./DashboardPage.module.css";
 // The Dashboard's recent posts are everyone's newest, not one author's.
 const EVERYONE: null = null;
 
-/** Only alumni and admin have an alumni profile, and only they may post. */
-function isWriter(role: Role | null): boolean {
-  return role === "alumni" || role === "admin";
-}
-
 // The atoms carry "idle" and a key; the blocks draw only loading, ready and
 // error. An idle state, or one loaded for another key, is "loading" here, so
-// a block never shows a frame of another page's data (pattern 23).
+// a block never shows a frame of another page's data (pattern 23). The people
+// list uses the shared toPeopleBlockState.
 
 function toCountsState(state: StatsState): CountsBlockState {
   if (state.status === "idle") {
@@ -65,13 +61,6 @@ function toCountsState(state: StatsState): CountsBlockState {
 
 function toRecentPostsState(state: RecentPostsState): RecentPostsBlockState {
   if (state.status === "idle" || state.authorId !== EVERYONE) {
-    return { status: "loading", items: [], failure: null };
-  }
-  return { status: state.status, items: state.items, failure: state.failure };
-}
-
-function toPeopleState(state: PeopleState): PeopleBlockState {
-  if (state.status === "idle" || state.kind !== "newest") {
     return { status: "loading", items: [], failure: null };
   }
   return { status: state.status, items: state.items, failure: state.failure };
@@ -103,7 +92,8 @@ export default function DashboardPage() {
 
   const role = session?.role ?? null;
   const userId = session?.userId ?? null;
-  const writer = isWriter(role);
+  // Only alumni and admin have an alumni profile, and only they may post.
+  const writer = canWritePosts(role);
 
   const retryStats = useCallback(() => void loadStats(), [loadStats]);
   const retryRecentPosts = useCallback(
@@ -183,7 +173,7 @@ export default function DashboardPage() {
           />
           <PeopleBlock
             heading={PEOPLE_NEW_HEADING}
-            state={toPeopleState(people)}
+            state={toPeopleBlockState(people, "newest")}
             emptyHeading={PEOPLE_NEW_EMPTY_HEADING}
             emptyText={PEOPLE_NEW_EMPTY_TEXT}
             errorHeading={PEOPLE_ERROR_HEADING}

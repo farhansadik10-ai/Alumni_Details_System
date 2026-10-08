@@ -12,6 +12,7 @@ import {
 } from "../../../config/text";
 import { displayName, jobLine, presentText } from "../../../lib/alumniDisplay";
 import { loadFailureText } from "../../../lib/loadFailure";
+import { canWritePosts } from "../../../lib/token";
 import type { Role } from "../../../lib/token";
 import { PATHS } from "../../../routes/paths";
 import type { MyAlumniState } from "../../../store/alumniAtoms";
@@ -33,10 +34,6 @@ export type YourProfileBlockProps = {
   userPhoto: string | null;
   onRetry: () => void;
 };
-
-function hasAlumniProfile(role: Role | null): boolean {
-  return role === "alumni" || role === "admin";
-}
 
 /** A prompt in a card: a heading, a line and a link to My profile. */
 function Prompt({ heading, text, linkLabel }: { heading: string; text: string; linkLabel: string }) {
@@ -64,7 +61,8 @@ export function YourProfileBlock({ role, state, userName, userPhoto, onRetry }: 
   const headingId = useId();
 
   let body;
-  if (!hasAlumniProfile(role)) {
+  // Those who may post are the ones with an alumni profile (ADR-02).
+  if (!canWritePosts(role)) {
     body = (
       <Prompt
         heading={DASHBOARD_PROFILE_STUDENT_HEADING}

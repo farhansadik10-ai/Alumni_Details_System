@@ -28,6 +28,9 @@ export type LoadStatus = "idle" | "loading" | "ready" | "error";
  * with its own failure; a failed "Load more" keeps the posts held.
  * `removedIds` are the posts this browser deleted during the visit: a load
  * that was already running when the delete finished drops them (ADV-003).
+ * `totalEdits` lists, in order, every change this browser made to `total`
+ * during the visit (a post put on top: +1, a held post taken off: -1), so a
+ * load that ran meanwhile can apply them to its older answer (CORR-001).
  */
 export interface FeedState {
   status: LoadStatus;
@@ -38,6 +41,13 @@ export interface FeedState {
   more: "idle" | "loading" | "error";
   moreFailure: ApiFailure | null;
   removedIds: number[];
+  totalEdits: FeedTotalEdit[];
+}
+
+/** One change this browser made to the feed total: which post, and by how much. */
+export interface FeedTotalEdit {
+  id: number;
+  change: 1 | -1;
 }
 
 /** The one open comment thread (C3). `postId !== post.id` means "not this post's". */
@@ -90,6 +100,7 @@ const IDLE_FEED: FeedState = {
   more: "idle",
   moreFailure: null,
   removedIds: [],
+  totalEdits: [],
 };
 const IDLE_COMMENTS: CommentsState = {
   postId: null,
@@ -130,6 +141,16 @@ export function currentPostsVisit(): number {
   return postsVisit;
 }
 
+/** The feed with one post's comment count set (never below zero). */
+export function withCommentCount(feed: FeedState, postId: number, count: number): FeedState {
+  return {
+    ...feed,
+    items: feed.items.map((post) =>
+      post.id === postId ? { ...post, comment_count: Math.max(0, count) } : post,
+    ),
+  };
+}
+
 /** The answer's posts without the ones deleted during the visit, and how many went. */
 function withoutRemoved(
   posts: readonly Post[],
@@ -139,14 +160,34 @@ function withoutRemoved(
   return { kept, dropped: posts.length - kept.length };
 }
 
+/**
+ * The total to show after a feed answer: the server's total, minus the posts
+ * it sent that this browser deleted, plus every change this browser made to
+ * the total while the call ran (`totalEdits` from `editsAtStart` on). A change
+ * for a post the answer holds is skipped: the answer already counts it. Never
+ * below the posts held, so "21 of 20" cannot be shown.
+ */
+function totalAfterAnswer(
+  answer: { total: number; items: readonly Post[] },
+  dropped: number,
+  edits: readonly FeedTotalEdit[],
+  editsAtStart: number,
+  heldCount: number,
+): number {
+  const answered = new Set(answer.items.map((post) => post.id));
+  const change = edits
+    .slice(editsAtStart)
+    .filter((edit) => !answered.has(edit.id))
+    .reduce((sum, edit) => sum + edit.change, 0);
+  return Math.max(heldCount, answer.total - dropped + change, 0);
+}
+
 /** Loads page 1 of the feed. Shows no posts while it loads. */
 export const loadFeedAtom = atom(null, async (get, set): Promise<void> => {
   const ticket = feedRequest.begin();
-  set(feedAtom, {
-    ...IDLE_FEED,
-    status: "loading",
-    removedIds: get(feedAtom).removedIds,
-  });
+  const { removedIds, totalEdits } = get(feedAtom);
+  set(feedAtom, { ...IDLE_FEED, status: "loading", removedIds, totalEdits });
+  const editsAtStart = totalEdits.length;
   const params: PostListParams = { page: FIRST_PAGE };
   try {
     const result = await listPosts(params, ticket.signal);
@@ -155,11 +196,12 @@ export const loadFeedAtom = atom(null, async (get, set): Promise<void> => {
     }
     const current = get(feedAtom);
     const { kept, dropped } = withoutRemoved(result.items, current.removedIds);
+    const items = mergePosts([], kept);
     set(feedAtom, {
       ...current,
       status: "ready",
-      items: mergePosts([], kept),
-      total: Math.max(0, result.total - dropped),
+      items,
+      total: totalAfterAnswer(result, dropped, current.totalEdits, editsAtStart, items.length),
       limit: result.limit,
       failure: null,
       more: "idle",
@@ -167,11 +209,13 @@ export const loadFeedAtom = atom(null, async (get, set): Promise<void> => {
     });
   } catch (error) {
     if (ticket.isCurrent() && !isCancelled(error)) {
+      const current = get(feedAtom);
       set(feedAtom, {
         ...IDLE_FEED,
         status: "error",
         failure: toApiFailure(error),
-        removedIds: get(feedAtom).removedIds,
+        removedIds: current.removedIds,
+        totalEdits: current.totalEdits,
       });
     }
   }
@@ -181,7 +225,8 @@ export const loadFeedAtom = atom(null, async (get, set): Promise<void> => {
  * Loads the next page of a ready feed and merges it by id. The page is worked
  * out from how many posts are held (`nextFeedPage`), so this browser's own
  * creates and deletes never skip or repeat a post. `total` comes from the
- * answer. On failure the posts held stay and `more` is "error".
+ * answer plus this browser's creates and deletes made while the call ran.
+ * On failure the posts held stay and `more` is "error".
  */
 export const loadMoreFeedAtom = atom(null, async (get, set): Promise<void> => {
   const before = get(feedAtom);
@@ -190,6 +235,7 @@ export const loadMoreFeedAtom = atom(null, async (get, set): Promise<void> => {
   }
   const ticket = feedRequest.begin();
   set(feedAtom, { ...before, more: "loading", moreFailure: null });
+  const editsAtStart = before.totalEdits.length;
   const params: PostListParams = {
     page: nextFeedPage(before.items.length, before.limit),
   };
@@ -201,10 +247,11 @@ export const loadMoreFeedAtom = atom(null, async (get, set): Promise<void> => {
     // Read again: a write may have changed the list while this call ran.
     const current = get(feedAtom);
     const { kept, dropped } = withoutRemoved(result.items, current.removedIds);
+    const items = mergePosts(current.items, kept);
     set(feedAtom, {
       ...current,
-      items: mergePosts(current.items, kept),
-      total: Math.max(0, result.total - dropped),
+      items,
+      total: totalAfterAnswer(result, dropped, current.totalEdits, editsAtStart, items.length),
       limit: result.limit,
       more: "idle",
       moreFailure: null,
@@ -227,13 +274,18 @@ export const loadMoreFeedAtom = atom(null, async (get, set): Promise<void> => {
  */
 export const openCommentsAtom = atom(
   null,
-  async (_get, set, postId: number): Promise<void> => {
+  async (get, set, postId: number): Promise<void> => {
     const ticket = commentsRequest.begin();
     set(commentsAtom, { ...IDLE_COMMENTS, status: "loading", postId });
     try {
       const items = await getCommentsByPost(postId, ticket.signal);
       if (ticket.isCurrent()) {
         set(commentsAtom, { postId, status: "ready", items, failure: null });
+        // The count is the list the server just returned (C2, CORR-002).
+        const feed = get(feedAtom);
+        if (feed.status === "ready" && feed.items.some((post) => post.id === postId)) {
+          set(feedAtom, withCommentCount(feed, postId, items.length));
+        }
       }
     } catch (error) {
       if (ticket.isCurrent() && !isCancelled(error)) {
@@ -269,6 +321,7 @@ export const removePostLocallyAtom = atom(null, (get, set, id: number) => {
       items: held ? feed.items.filter((post) => post.id !== id) : feed.items,
       total: held ? Math.max(0, feed.total - 1) : feed.total,
       removedIds: feed.removedIds.includes(id) ? feed.removedIds : [...feed.removedIds, id],
+      totalEdits: held ? [...feed.totalEdits, { id, change: -1 }] : feed.totalEdits,
     });
   }
   if (get(commentsAtom).postId === id) {

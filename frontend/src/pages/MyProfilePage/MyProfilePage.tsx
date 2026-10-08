@@ -13,6 +13,7 @@ import {
   MY_PROFILE_PUBLIC_LINK,
   myProfileSub,
 } from "../../config/text";
+import { canWritePosts } from "../../lib/token";
 import { alumniProfilePath } from "../../routes/paths";
 import { clearMyAlumniAtom, myAlumniAtom } from "../../store/alumniAtoms";
 import { profileAtom } from "../../store/profileAtoms";
@@ -39,7 +40,8 @@ export default function MyProfilePage() {
   // The role in the token decides the cards and the band's tag, so the two
   // always agree.
   const role = session?.role ?? null;
-  const hasAlumniCard = session !== null && (role === "alumni" || role === "admin");
+  // `session !== null` is kept so TypeScript knows the card's key below exists.
+  const hasAlumniCard = session !== null && canWritePosts(role);
 
   const user = profile.status === "ready" ? profile.user : null;
   const sub = user ? myProfileSub(user.name, user.email) : "";

@@ -11,7 +11,7 @@ import {
   DASHBOARD_COUNT_POSTS_LABEL,
   DASHBOARD_COUNT_POSTS_LINK,
 } from "../../../config/text";
-import { DEFAULT_DIRECTORY_QUERY, writeDirectoryQuery } from "../../../lib/directoryQuery";
+import { mentoringDirectoryAddress } from "../../../lib/directoryQuery";
 import { loadFailureText } from "../../../lib/loadFailure";
 import { PATHS } from "../../../routes/paths";
 import type { ApiFailure } from "../../../store/postAtoms";
@@ -41,10 +41,7 @@ type CountCard = {
 };
 
 // The directory with "open to mentoring" on, written by the directory's own rule.
-const MENTORING_DIRECTORY: To = {
-  pathname: PATHS.directory,
-  search: `?${writeDirectoryQuery({ ...DEFAULT_DIRECTORY_QUERY, mentoring: true }).toString()}`,
-};
+const MENTORING_DIRECTORY: To = mentoringDirectoryAddress(PATHS.directory);
 
 // The three cards of dashboard.html. `students` is not shown (the design has three).
 const CARDS: readonly CountCard[] = [

@@ -29,6 +29,7 @@ import {
 } from "../../../config/text";
 import { canDeleteContent, canEditContent } from "../../../lib/contentOwner";
 import type { Session } from "../../../lib/token";
+import { COMMENT_REQUIRED_MESSAGE } from "../../../lib/validation";
 import { isGone, writeFailureText } from "../../../lib/writeFailure";
 import type { WriteFailureWords } from "../../../lib/writeFailure";
 import { deleteCommentAtom, saveCommentAtom } from "../../../store/postActions";
@@ -79,6 +80,12 @@ export function CommentItem({
   // Raised by Save and Cancel only: an edit closed because another comment
   // took over keeps focus where the user put it.
   const [focusEditRequest, setFocusEditRequest] = useState(0);
+  // `editing` now, read when a save answers: if another reply or edit took
+  // over meanwhile, the answer must not close it or move focus (REFL-006).
+  const editingRef = useRef(editing);
+  useEffect(() => {
+    editingRef.current = editing;
+  }, [editing]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -103,9 +110,15 @@ export function CommentItem({
   async function handleSave(content: string): Promise<FormResult> {
     const result = await saveComment({ id: comment.id, content });
     if (result.ok) {
-      closeEdit();
+      if (editingRef.current) {
+        closeEdit();
+      }
       showToast(COMMENT_SAVED_TOAST);
       return { ok: true };
+    }
+    if ("blank" in result) {
+      // Nothing was sent; the form blocks this first.
+      return { ok: false, text: COMMENT_REQUIRED_MESSAGE };
     }
     if (isGone(result.failure)) {
       // The store took the comment off the list, so this form goes with it.
@@ -121,11 +134,10 @@ export function CommentItem({
     setConfirmOpen(true);
   }
 
-  // Cancel and Escape; ignored while the delete runs (ADV-004).
+  // Cancel and Escape, also while the delete runs: the browser closes the
+  // dialog on a second Escape anyway, so the flag always follows it. A failure
+  // that answers after the close becomes a toast (handleConfirmDelete).
   function closeConfirm() {
-    if (deletingRef.current) {
-      return;
-    }
     confirmOpenRef.current = false;
     setConfirmOpen(false);
   }

@@ -8,7 +8,8 @@
 // AC18, AC36), not from the code. The expected messages are typed out here
 // on purpose: importing the constants would compare the code with itself.
 //
-// It imports only from frontend/src/lib/. It reads no file and calls no API.
+// It imports only from frontend/src/lib/ and the plain words of
+// frontend/src/config/text.ts. It reads no file and calls no API.
 
 import type { Alumni } from "@alumni/shared";
 import {
@@ -931,6 +932,109 @@ check("gone: 410", isGone({ kind: "http", status: 410 }), false);
 check("gone: 400", isGone({ kind: "http", status: 400 }), false);
 check("gone: 500", isGone({ kind: "http", status: 500 }), false);
 check("gone: no answer", isGone({ kind: "network" }), false);
+
+// ---- REQ-fs-006 fix round, m1: who may write posts, the mentoring address ---
+// ADR-02: alumni and admin may write posts (and have an alumni profile); a
+// student, a role we do not know (null) may not. The "See all" links of the
+// Feed and the Dashboard open the directory with only "open to mentoring" on.
+
+import { canWritePosts } from "../frontend/src/lib/token.ts";
+import { mentoringDirectoryAddress } from "../frontend/src/lib/directoryQuery.ts";
+
+check("may write posts: alumni", canWritePosts("alumni"), true);
+check("may write posts: admin", canWritePosts("admin"), true);
+check("may write posts: student", canWritePosts("student"), false);
+check("may write posts: no role", canWritePosts(null), false);
+check(
+  "mentoring address: directory path, only mentoring=true",
+  mentoringDirectoryAddress("/directory"),
+  { pathname: "/directory", search: "?mentoring=true" },
+);
+check(
+  "mentoring address: reads back as mentoring on, nothing else set",
+  readDirectoryQuery(new URLSearchParams(mentoringDirectoryAddress("/directory").search)),
+  { ...DEFAULT_DIRECTORY_QUERY, mentoring: true },
+);
+
+// ---- REQ-fs-006 fix m8/m9: a failed new comment or reply ------------------
+// A 400 means "the comment replied to is gone" only on a reply; 403 has its
+// own words (not the edit wording). The words are the answer names.
+
+import { commentAddFailureText, isReplyTargetGone } from "../frontend/src/lib/writeFailure.ts";
+
+const ADD_WORDS = {
+  replyTargetGone: "replyTargetGone",
+  postGone: "postGone",
+  forbidden: "forbidden",
+  save: SAVE_WORDS,
+};
+check("reply gone: 400 with a parent", isReplyTargetGone({ kind: "http", status: 400 }, 7), true);
+check("reply gone: 400 without a parent", isReplyTargetGone({ kind: "http", status: 400 }, null), false);
+check("reply gone: 404 with a parent", isReplyTargetGone({ kind: "http", status: 404 }, 7), false);
+check("reply gone: no answer with a parent", isReplyTargetGone({ kind: "network" }, 7), false);
+check("add words: 400 with a parent", commentAddFailureText({ kind: "http", status: 400 }, 7, ADD_WORDS), "replyTargetGone");
+check("add words: 400 without a parent", commentAddFailureText({ kind: "http", status: 400 }, null, ADD_WORDS), "general");
+check("add words: 404", commentAddFailureText({ kind: "http", status: 404 }, null, ADD_WORDS), "postGone");
+check("add words: 404 on a reply", commentAddFailureText({ kind: "http", status: 404 }, 7, ADD_WORDS), "postGone");
+check("add words: 403", commentAddFailureText({ kind: "http", status: 403 }, null, ADD_WORDS), "forbidden");
+check("add words: 403 on a reply", commentAddFailureText({ kind: "http", status: 403 }, 7, ADD_WORDS), "forbidden");
+check("add words: 500", commentAddFailureText({ kind: "http", status: 500 }, 7, ADD_WORDS), "server");
+check("add words: no answer", commentAddFailureText({ kind: "network" }, null, ADD_WORDS), "noAnswer");
+
+// ---- REQ-fs-006 fix round, group D: the plural rule and the words with branches
+// (QUAL-003, QUAL-006). Sentences typed from the spec and design (AC14, AC17,
+// AC21, architecture "Live regions"), not worked out with the code.
+
+import { countText } from "../frontend/src/lib/postDisplay.ts";
+import {
+  commentDeleteBody,
+  dashboardGreeting,
+  feedShowingText,
+  postDeleteBody,
+} from "../frontend/src/config/text.ts";
+
+check("plural: 0 replies", countText(0, "reply", "replies"), "0 replies");
+check("plural: 1 reply", countText(1, "reply", "replies"), "1 reply");
+check("plural: 2 replies", countText(2, "reply", "replies"), "2 replies");
+check("greeting: with a first name", dashboardGreeting("Tanvir"), "Welcome back, Tanvir");
+check("greeting: name not known", dashboardGreeting(null), "Welcome back");
+check("greeting: empty name", dashboardGreeting(""), "Welcome back");
+check("showing: 12 of 42", feedShowingText(12, 42), "Showing 12 of 42 posts");
+check("showing: 1 of 1", feedShowingText(1, 1), "Showing 1 of 1 post");
+check("showing: 0 of 0", feedShowingText(0, 0), "Showing 0 of 0 posts");
+check(
+  "delete post: no comments",
+  postDeleteBody(0),
+  "The post and any comments on it will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete post: 1 comment",
+  postDeleteBody(1),
+  "The post and its 1 comment will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete post: 4 comments",
+  postDeleteBody(4),
+  "The post and its 4 comments will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: no replies",
+  commentDeleteBody(0),
+  "The comment will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: 1 reply",
+  commentDeleteBody(1),
+  "The comment and its 1 reply will be removed for everyone. This cannot be undone.",
+);
+check(
+  "delete comment: 3 replies",
+  commentDeleteBody(3),
+  "The comment and its 3 replies will be removed for everyone. This cannot be undone.",
+);
+// A held count that is not a real count is read as none held: page 1.
+check("next page: -5 held", nextFeedPage(-5, 12), 1);
+check("next page: NaN held", nextFeedPage(Number.NaN, 12), 1);
 
 // ---- Result ---------------------------------------------------------------
 

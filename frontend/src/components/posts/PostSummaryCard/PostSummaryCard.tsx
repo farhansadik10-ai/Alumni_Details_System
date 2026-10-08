@@ -1,5 +1,7 @@
 import { useId } from "react";
 import type { Post } from "@alumni/shared";
+import { postSummaryLinkContext } from "../../../config/text";
+import { displayName } from "../../../lib/alumniDisplay";
 import { commentCountText, dateText } from "../../../lib/postDisplay";
 import { PATHS } from "../../../routes/paths";
 import { Card } from "../../ui/Card/Card";
@@ -48,6 +50,10 @@ export function PostSummaryCard({ post, showAuthor }: PostSummaryCardProps) {
         <p className={styles.footer}>
           <Link strong to={PATHS.feed}>
             {commentCountText(post.comment_count)}
+            {/* Every card has this link: the hidden end names the post (UI-001). */}
+            <span className="visuallyHidden">
+              {postSummaryLinkContext(displayName(post.name), date)}
+            </span>
           </Link>
         </p>
       </div>

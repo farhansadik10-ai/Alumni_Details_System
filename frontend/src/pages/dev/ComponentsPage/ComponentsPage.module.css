@@ -477,42 +477,24 @@
 }
 
 /*
- * A copy of the open thread's ground and lists in
- * components/posts/CommentsPanel/CommentsPanel.module.css: the panel reads the
- * store, so this page draws its states from the parts. Change both together.
+ * The open thread's ground and lists, taken from CommentsPanel with
+ * "composes" (pattern 3; the phone indent comes with .replies). The panel
+ * reads the store, so this page draws its states from the parts.
  */
 .commentPanel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  min-width: 0;
-  padding: var(--space-4) var(--space-5) var(--space-5);
-  border-top: var(--border-edge) solid var(--edge);
-  background: var(--ground);
-  overflow-wrap: anywhere;
+  composes: panel from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
 }
 
 .threads {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  composes: threads from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
 }
 
 .replies {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: var(--space-1) 0 0;
-  padding: 0 0 0 var(--space-4);
-  border-left: var(--border-edge) solid var(--edge);
-  list-style: none;
+  composes: replies from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
 }
 
 .reply {
-  min-width: 0;
+  composes: reply from "../../../components/posts/CommentsPanel/CommentsPanel.module.css";
 }
 
 @media (max-width: 767.98px) {
@@ -554,9 +536,5 @@
 
   .gridCorner {
     display: none;
-  }
-
-  .replies {
-    padding-left: var(--space-3);
   }
 }

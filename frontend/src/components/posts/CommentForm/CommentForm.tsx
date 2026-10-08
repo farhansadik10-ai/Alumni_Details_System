@@ -125,7 +125,13 @@ export const CommentForm = forwardRef<HTMLTextAreaElement | null, CommentFormPro
             <Button type="submit" variant="secondary" busy={busy} busyLabel={busyLabel}>
               {submitLabel}
             </Button>
-            {onCancel ? <Button onClick={onCancel}>{CANCEL_LABEL}</Button> : null}
+            {/* Ignored while the send runs (busy keeps it focusable), so the
+                answer never lands on a closed edit or reply (pattern 32, trap 3). */}
+            {onCancel ? (
+              <Button busy={busy} onClick={onCancel}>
+                {CANCEL_LABEL}
+              </Button>
+            ) : null}
           </div>
         </div>
       </form>
