@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] req-archived | REQ-fs-006-frontend-feed-and-dashboard
+
+## [2026-10-08] req-merged | REQ-fs-006-frontend-feed-and-dashboard | merge commit b4c31a97 on redesign (the feature branch was deleted by the owner)
+
 ## [2026-10-08] ship-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | roadmap F8 Done and F9 in progress; root CLAUDE.md frontend line and conventions (G56) updated; owner runs the merge checklist
 
 ## [2026-10-08] req-ready-to-merge | REQ-fs-006-frontend-feed-and-dashboard | frontend part 3 (roadmap F8 and the Dashboard half of F9): feed, dashboard, Recent posts on the alumni profile, optional user_id filter on GET /api/posts; 3 review rounds, 14 tasks, 12 commits; library check 469 cases
