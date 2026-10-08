@@ -112,3 +112,10 @@
 .secondary:disabled {
   border-color: var(--line);
 }
+
+/* Phone: a small button is still a full touch target (REQ-fs-007 AC19). */
+@media (max-width: 767.98px) {
+  .sm {
+    min-height: var(--control-h);
+  }
+}

@@ -27,7 +27,11 @@
   flex-shrink: 0;
 }
 
+/* inline-flex and min-height: a touch target of the control height (REQ-fs-007 AC19). */
 .appName {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
   color: var(--text);
   font-size: var(--text-h3);
   line-height: var(--leading-h3);

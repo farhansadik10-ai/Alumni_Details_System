@@ -59,6 +59,17 @@
   font-weight: var(--weight-bold);
 }
 
+/* Phone (log in, sign-up): the icon buttons are full touch targets (REQ-fs-007 AC19). */
+@media (max-width: 767.98px) {
+  .icons {
+    grid-template-columns: repeat(3, var(--control-h));
+  }
+
+  .icons .button {
+    height: var(--control-h);
+  }
+}
+
 /* Lifts the focused button so its ring (base.css) is not covered by its neighbours. */
 .button:focus-visible {
   position: relative;

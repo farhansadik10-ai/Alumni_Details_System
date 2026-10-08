@@ -37,3 +37,11 @@
   background: var(--action);
   color: var(--on-action);
 }
+
+/* A role is one short word: it never breaks inside. Without this a table
+   column shrinks it to "Alum / ni" (REQ-fs-007 phone audit). */
+.roleStudent,
+.roleAlumni,
+.roleAdmin {
+  overflow-wrap: normal;
+}

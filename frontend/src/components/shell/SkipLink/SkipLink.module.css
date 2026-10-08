@@ -7,6 +7,10 @@
   top: var(--space-2);
   inset-inline-start: var(--space-2);
   z-index: var(--z-header);
+  /* At least the control height, as a touch target (REQ-fs-007 AC19). */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
   padding: var(--space-2) var(--space-4);
   border: var(--border-edge) solid var(--edge);
   border-radius: var(--radius);
