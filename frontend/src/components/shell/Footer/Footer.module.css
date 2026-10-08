@@ -2,11 +2,27 @@
   border-top: var(--border-line) solid var(--line);
 }
 
+/* Name on the left, About on the right; the two wrap onto two lines when
+   they do not fit side by side, so no breakpoint is needed. */
 .inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--space-5) var(--gutter);
+  padding: var(--space-3) var(--gutter);
   color: var(--muted);
   font-size: var(--text-small);
   line-height: var(--leading-small);
+}
+
+/* The About link (the shared Link takes no class): a touch target of the
+   control height (REQ-fs-007 AC19). The smaller padding above keeps the
+   footer as tall as before. */
+.inner > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
 }
