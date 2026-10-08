@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import type { SignUpUserDTO } from "@alumni/shared";
 import { REMEMBERED_EMAIL_STORAGE_KEY } from "../config/storageKeys";
+import { presentText } from "../lib/alumniDisplay";
 import { removeStored, writeStored } from "../lib/browserStorage";
 import { isLiveSession, readToken } from "../lib/token";
 import { toApiFailure } from "../services/apiError";
@@ -113,8 +114,8 @@ export const signUpAtom = atom(
       email: input.email.trim(),
       password: input.password,
       role: input.role,
-      name: input.name?.trim() || null,
-      photo_url: input.photo_url?.trim() || null,
+      name: presentText(input.name),
+      photo_url: presentText(input.photo_url),
     };
 
     try {

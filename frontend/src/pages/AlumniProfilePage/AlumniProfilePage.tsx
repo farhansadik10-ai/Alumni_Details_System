@@ -47,10 +47,15 @@ import {
 } from "../../lib/alumniDisplay";
 import { readDirectorySearch } from "../../lib/directoryReturn";
 import { loadFailureText } from "../../lib/loadFailure";
+import { mailtoHref } from "../../lib/mailtoLink";
 import { readProfileId } from "../../lib/profileId";
 import { isWebLink } from "../../lib/validation";
 import { PATHS } from "../../routes/paths";
-import { loadAlumniAtom, viewedAlumniAtom } from "../../store/alumniAtoms";
+import {
+  clearViewedAlumniAtom,
+  loadAlumniAtom,
+  viewedAlumniAtom,
+} from "../../store/alumniAtoms";
 import styles from "./AlumniProfilePage.module.css";
 
 // How many lines the Details skeleton draws: one per row of the card.
@@ -69,6 +74,7 @@ export default function AlumniProfilePage() {
   const id = readProfileId(rawId);
   const viewed = useAtomValue(viewedAlumniAtom);
   const loadAlumni = useSetAtom(loadAlumniAtom);
+  const clearViewed = useSetAtom(clearViewedAlumniAtom);
   const bandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,6 +82,10 @@ export default function AlumniProfilePage() {
       void loadAlumni(id);
     }
   }, [id, loadAlumni]);
+
+  // Leaving the page forgets the profile, so the next visit never starts
+  // from this visit's error, "not found" or old data (CORR-004, ARCH-005).
+  useEffect(() => () => clearViewed(), [clearViewed]);
 
   // The atom may still hold another profile: it counts only when its id is
   // this page's id (TASK-005).
@@ -142,7 +152,8 @@ function bandDetails(alumni: Alumni) {
     presentText(alumni.field),
   ].filter((tag): tag is string => tag !== null);
 
-  const email = presentText(alumni.email);
+  // Only a plain address becomes a link (CORR-001).
+  const emailHref = mailtoHref(alumni.email);
   const linkedIn = presentText(alumni.linkedin_url);
   // Only an http(s) address becomes a link: never javascript:, ftp: or
   // anything else (AC16).
@@ -163,10 +174,10 @@ function bandDetails(alumni: Alumni) {
         </>
       ) : undefined,
     actions:
-      email !== null || showLinkedIn ? (
+      emailHref !== null || showLinkedIn ? (
         <>
-          {email !== null ? (
-            <ProfileBandAction variant="primary" href={`mailto:${email}`}>
+          {emailHref !== null ? (
+            <ProfileBandAction variant="primary" href={emailHref}>
               {first !== null ? profileEmailLink(first) : PROFILE_EMAIL_LABEL}
             </ProfileBandAction>
           ) : null}
@@ -187,6 +198,7 @@ function ProfileContent({ alumni }: { alumni: Alumni }) {
   const detailsId = useId();
   const bio = presentText(alumni.bio);
   const email = presentText(alumni.email);
+  const emailHref = mailtoHref(alumni.email);
   const year = alumni.graduation_year === null ? null : String(alumni.graduation_year);
 
   const rows: { label: string; value: string }[] = [
@@ -225,7 +237,10 @@ function ProfileContent({ alumni }: { alumni: Alumni }) {
             <div className={styles.row}>
               <dt className={styles.label}>{PROFILE_EMAIL_LABEL}</dt>
               <dd className={styles.value}>
-                {email !== null ? <Link href={`mailto:${email}`}>{email}</Link> : NOT_GIVEN}
+                {/* An address that is not plain is shown as text, not as a link (CORR-001). */}
+                {email === null ? NOT_GIVEN : null}
+                {email !== null && emailHref !== null ? <Link href={emailHref}>{email}</Link> : null}
+                {email !== null && emailHref === null ? email : null}
               </dd>
             </div>
             <div className={styles.row}>

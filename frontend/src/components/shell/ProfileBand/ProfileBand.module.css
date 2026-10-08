@@ -72,7 +72,15 @@
   min-width: 0;
 }
 
+/* The Admin tag is filled with --action, which on the light theme is the
+   band's own color, so it lost its box (review UI-002). In this slot only it
+   is filled with the band's text color and written in the band's color: a
+   light box on the band in both themes (18:1 light, 13:1 dark). Tags on cards
+   keep --action. The other role tags do not read these two tokens. */
 .tag {
+  --action: var(--band-text);
+  --on-action: var(--band);
+
   max-width: 100%;
 }
 

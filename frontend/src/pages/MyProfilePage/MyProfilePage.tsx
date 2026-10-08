@@ -1,4 +1,5 @@
-import { useAtomValue } from "jotai";
+import { useEffect } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { AccountCard } from "../../components/profile/AccountCard/AccountCard";
 import { AlumniProfileCard } from "../../components/profile/AlumniProfileCard/AlumniProfileCard";
 import { PageLayout } from "../../components/shell/PageLayout/PageLayout";
@@ -13,7 +14,7 @@ import {
   myProfileSub,
 } from "../../config/text";
 import { alumniProfilePath } from "../../routes/paths";
-import { myAlumniAtom } from "../../store/alumniAtoms";
+import { clearMyAlumniAtom, myAlumniAtom } from "../../store/alumniAtoms";
 import { profileAtom } from "../../store/profileAtoms";
 import { sessionAtom } from "../../store/sessionAtoms";
 import styles from "./MyProfilePage.module.css";
@@ -29,6 +30,11 @@ export default function MyProfilePage() {
   const session = useAtomValue(sessionAtom);
   const profile = useAtomValue(profileAtom);
   const myAlumni = useAtomValue(myAlumniAtom);
+  const clearMyAlumni = useSetAtom(clearMyAlumniAtom);
+
+  // Only when the page closes: while it is open the band's public link
+  // reads the saved profile from the atom (CORR-004, ARCH-005).
+  useEffect(() => () => clearMyAlumni(), [clearMyAlumni]);
 
   // The role in the token decides the cards and the band's tag, so the two
   // always agree.

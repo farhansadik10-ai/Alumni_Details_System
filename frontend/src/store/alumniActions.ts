@@ -1,7 +1,9 @@
 import { atom } from "jotai";
 import type { Alumni, PublicUser, UpdateUserDTO } from "@alumni/shared";
+import { presentText } from "../lib/alumniDisplay";
 import { alumniFormToBody } from "../lib/alumniForm";
 import type { AlumniFormValues } from "../lib/alumniForm";
+import { HTTP_CONFLICT } from "../lib/loadFailure";
 import { createAlumni, updateAlumni } from "../services/alumniService";
 import { toApiFailure } from "../services/apiError";
 import type { ApiFailure } from "../services/apiError";
@@ -30,8 +32,6 @@ export interface AccountInput {
 // Nothing to save against: no session, or the profile has not loaded. The
 // forms are not shown then, so no status is worth reporting: "network".
 const NOT_READY: ApiFailure = { kind: "network" };
-
-const CONFLICT = 409;
 
 /**
  * Saves the alumni profile form: a create when the user has none, an edit
@@ -63,7 +63,7 @@ export const saveAlumniProfileAtom = atom(
         alumni = await createAlumni(body);
       } catch (error) {
         const failure = toApiFailure(error);
-        if (failure.kind === "http" && failure.status === CONFLICT && isSameUser()) {
+        if (failure.kind === "http" && failure.status === HTTP_CONFLICT && isSameUser()) {
           await set(loadMyAlumniAtom, { quiet: true });
         }
         return { ok: false, failure };
@@ -93,8 +93,8 @@ export const saveAccountAtom = atom(
     }
     const { userId } = session;
     const body: UpdateUserDTO = {
-      name: input.name.trim() || null,
-      photo_url: input.photoUrl.trim() || null,
+      name: presentText(input.name),
+      photo_url: presentText(input.photoUrl),
     };
 
     let user: PublicUser;

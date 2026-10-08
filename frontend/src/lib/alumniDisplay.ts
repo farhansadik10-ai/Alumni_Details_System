@@ -11,14 +11,23 @@ import {
 
 /**
  * The trimmed text, or null when there is none. The one copy of this rule:
- * tags, band lines and Details rows all use it (AC2, AC36).
+ * tags, band lines, Details rows, the header name and the bodies the forms
+ * send all use it (AC2, AC36). A field left out (undefined) counts as none.
  */
-export function presentText(text: string | null): string | null {
-  if (text === null) {
+export function presentText(text: string | null | undefined): string | null {
+  if (text === null || text === undefined) {
     return null;
   }
   const trimmed = text.trim();
   return trimmed === "" ? null : trimmed;
+}
+
+/**
+ * True when two typed values would be sent the same: spaces around the text
+ * do not count, and empty is the same as only spaces.
+ */
+export function sameText(a: string, b: string): boolean {
+  return presentText(a) === presentText(b);
 }
 
 /** The name to show, or "Name not given". */

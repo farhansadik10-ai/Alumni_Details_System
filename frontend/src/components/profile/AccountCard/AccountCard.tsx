@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import type { PublicUser } from "@alumni/shared";
-import { useId, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { FormEvent, RefObject } from "react";
 import { Button } from "../../ui/Button/Button";
 import { Card } from "../../ui/Card/Card";
 import { ErrorState } from "../../ui/ErrorState/ErrorState";
@@ -28,14 +28,15 @@ import {
   SAVE_FAILED_SERVER,
 } from "../../../config/text";
 import { useFormError } from "../../../hooks/useFormError";
+import { sameText } from "../../../lib/alumniDisplay";
 import { loadFailureText } from "../../../lib/loadFailure";
+import { saveFailureText } from "../../../lib/saveFailure";
+import type { SaveFailureWords } from "../../../lib/saveFailure";
 import { GENERAL_ERROR_MESSAGE, validateName, validatePhotoLink } from "../../../lib/validation";
 import { saveAccountAtom } from "../../../store/alumniActions";
 import { loadProfileAtom, profileAtom } from "../../../store/profileAtoms";
 import { logOutAtom } from "../../../store/sessionActions";
 import { showToastAtom } from "../../../store/toastAtoms";
-import { saveFailureText } from "../saveFailureText";
-import type { SaveFailureWords } from "../saveFailureText";
 import styles from "./AccountCard.module.css";
 
 // The Account card has no conflict case: the email is never sent. A 403 or
@@ -70,11 +71,26 @@ export function AccountCard({ primary = true }: AccountCardProps) {
   const profile = useAtomValue(profileAtom);
   const loadProfile = useSetAtom(loadProfileAtom);
   const headingId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // "Try again" goes away with the error state: focus moves to the heading,
+  // which stays the same element in every status.
+  function handleRetryLoad() {
+    void loadProfile();
+    headingRef.current?.focus();
+  }
 
   let body;
   if (profile.status === "ready" && profile.user !== null) {
     // Keyed on the user: another user's values never stay in the fields.
-    body = <AccountForm key={profile.user.id} user={profile.user} primary={primary} />;
+    body = (
+      <AccountForm
+        key={profile.user.id}
+        user={profile.user}
+        primary={primary}
+        headingRef={headingRef}
+      />
+    );
   } else if (profile.status === "error") {
     // The profile call does not keep its failure (null), so the shared rule
     // gives the no-answer words.
@@ -84,7 +100,7 @@ export function AccountCard({ primary = true }: AccountCardProps) {
         headingAs="h3"
         text={loadFailureText(null)}
         retryVariant="secondary"
-        onRetry={() => void loadProfile()}
+        onRetry={handleRetryLoad}
       />
     );
   } else {
@@ -101,7 +117,7 @@ export function AccountCard({ primary = true }: AccountCardProps) {
   return (
     <Card as="section" padding="lg" aria-labelledby={headingId}>
       <div className={styles.card}>
-        <h2 id={headingId} className={styles.heading}>
+        <h2 ref={headingRef} id={headingId} className={styles.heading} tabIndex={-1}>
           {ACCOUNT_CARD_HEADING}
         </h2>
         {body}
@@ -113,9 +129,11 @@ export function AccountCard({ primary = true }: AccountCardProps) {
 type AccountFormProps = {
   user: PublicUser;
   primary: boolean;
+  // Takes keyboard focus when the save button is switched off under it.
+  headingRef: RefObject<HTMLHeadingElement>;
 };
 
-function AccountForm({ user, primary }: AccountFormProps) {
+function AccountForm({ user, primary, headingRef }: AccountFormProps) {
   const saveAccount = useSetAtom(saveAccountAtom);
   const showToast = useSetAtom(showToastAtom);
   const logOut = useSetAtom(logOutAtom);
@@ -129,10 +147,23 @@ function AccountForm({ user, primary }: AccountFormProps) {
 
   const nameRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
+  const saveRef = useRef<HTMLButtonElement>(null);
+
+  // The values as typed after the last render, for the end of a save.
+  const latest = useRef({ name, photoUrl });
+  useEffect(() => {
+    latest.current = { name, photoUrl };
+  });
+
+  // The saved user is the store's, so after a save the form is unchanged
+  // again. Save is off until a value differs, so a save always changes
+  // something (UI-001).
+  const changed =
+    !sameText(name, user.name ?? "") || !sameText(photoUrl, user.photo_url ?? "");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sending.current) {
+    if (sending.current || !changed) {
       return;
     }
 
@@ -155,13 +186,25 @@ function AccountForm({ user, primary }: AccountFormProps) {
     setBusy(true);
 
     // The action trims both values and never sends the email.
-    const result = await saveAccount({ name, photoUrl });
+    // The fields stay editable while it runs. A field is reset to the saved
+    // answer only if it still holds what was sent, so newer typing is kept
+    // (CORR-005).
+    const sent = { name, photoUrl };
+    const result = await saveAccount(sent);
     sending.current = false;
     setBusy(false);
 
     if (result.ok) {
-      setName(result.user.name ?? "");
-      setPhotoUrl(result.user.photo_url ?? "");
+      const savedName = result.user.name ?? "";
+      const savedPhotoUrl = result.user.photo_url ?? "";
+      const nameAsSent = sameText(latest.current.name, sent.name);
+      const photoAsSent = sameText(latest.current.photoUrl, sent.photoUrl);
+      setName((current) => (sameText(current, sent.name) ? savedName : current));
+      setPhotoUrl((current) => (sameText(current, sent.photoUrl) ? savedPhotoUrl : current));
+      // Nothing typed meanwhile: the button is about to be switched off.
+      if (nameAsSent && photoAsSent && document.activeElement === saveRef.current) {
+        headingRef.current?.focus();
+      }
       showToast(ACCOUNT_SAVED_TOAST);
       return;
     }
@@ -228,9 +271,11 @@ function AccountForm({ user, primary }: AccountFormProps) {
 
       <div className={styles.save}>
         <Button
+          ref={saveRef}
           type="submit"
           variant={primary ? "primary" : "secondary"}
           busy={busy}
+          disabled={!changed && !busy}
         >
           {ACCOUNT_SAVE_BUTTON}
         </Button>

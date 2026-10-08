@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import type { Alumni } from "@alumni/shared";
 import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, MouseEvent } from "react";
 import { Button } from "../../ui/Button/Button";
 import { Card } from "../../ui/Card/Card";
 import { Checkbox } from "../../ui/Checkbox/Checkbox";
@@ -36,7 +36,9 @@ import {
 import { useFormError } from "../../../hooks/useFormError";
 import {
   alumniToForm,
+  canSaveAlumniForm,
   firstInvalidField,
+  sameAlumniForm,
   validateAlumniForm,
 } from "../../../lib/alumniForm";
 import type {
@@ -45,12 +47,12 @@ import type {
   AlumniFormValues,
 } from "../../../lib/alumniForm";
 import { loadFailureText } from "../../../lib/loadFailure";
+import { saveFailureReason, saveFailureText } from "../../../lib/saveFailure";
+import type { SaveFailureWords } from "../../../lib/saveFailure";
 import { GENERAL_ERROR_MESSAGE } from "../../../lib/validation";
 import { saveAlumniProfileAtom } from "../../../store/alumniActions";
 import { loadMyAlumniAtom, myAlumniAtom } from "../../../store/alumniAtoms";
 import { showToastAtom } from "../../../store/toastAtoms";
-import { saveFailureReason, saveFailureText } from "../saveFailureText";
-import type { SaveFailureWords } from "../saveFailureText";
 import styles from "./AlumniProfileCard.module.css";
 
 // A 409 on create has its own words: the profile was reloaded into the form.
@@ -98,20 +100,58 @@ export function AlumniProfileCard() {
   const [gone, setGone] = useState(false);
   const [busy, setBusy] = useState(false);
   const fieldRefs = useRef<Partial<Record<AlumniFormField, HTMLElement | null>>>({});
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const saveRef = useRef<HTMLButtonElement>(null);
+
+  // The values the running (or last) save sent; null when no save is waiting
+  // for the store to take its answer.
+  const [sent, setSent] = useState<AlumniFormValues | null>(null);
+  // The values as typed after the last render, for the end of a save.
+  const latestValues = useRef(values);
+  useEffect(() => {
+    latestValues.current = values;
+  });
 
   // The saved profile the form was last filled from. When the store holds
   // another one (a load, a save, the reload after a 409), the values are
-  // reset in place during render, so no frame shows the old values.
+  // reset in place during render, so no frame shows the old values. Text
+  // typed while a save ran is kept: the reset happens only when the form
+  // still holds what was sent (CORR-005).
   const [filledFrom, setFilledFrom] = useState<Alumni | null>(mine.alumni);
   if (mine.alumni !== filledFrom) {
     setFilledFrom(mine.alumni);
-    setValues(alumniToForm(mine.alumni));
-    setErrors(NO_ERRORS);
+    if (sent === null || sameAlumniForm(values, sent)) {
+      setValues(alumniToForm(mine.alumni));
+      setErrors(NO_ERRORS);
+    }
+    setSent(null);
   }
+
+  // Discard changes is off until a value differs from the saved one
+  // (UI-001). Save is off on the same rule, except with no profile yet:
+  // then the save creates it, even from the empty form (AC24, R2-001).
+  const saved = alumniToForm(mine.alumni);
+  const changed = !sameAlumniForm(values, saved);
+  const canSave = canSaveAlumniForm(mine.status === "none", values, saved);
 
   useEffect(() => {
     void loadMyAlumni();
   }, [loadMyAlumni]);
+
+  // A button about to be switched off would drop keyboard focus to the
+  // page; the card heading takes it instead.
+  function keepFocusFrom(button: HTMLElement | null) {
+    if (button !== null && document.activeElement === button) {
+      headingRef.current?.focus();
+    }
+  }
+
+  // "Try again" goes away with the error state: focus moves to the heading,
+  // which stays the same element in every status.
+  function handleRetryLoad() {
+    void loadMyAlumni();
+    headingRef.current?.focus();
+  }
 
   function register(field: AlumniFormField) {
     return (element: HTMLElement | null) => {
@@ -138,7 +178,7 @@ export function AlumniProfileCard() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sending.current) {
+    if (sending.current || !canSave) {
       return;
     }
 
@@ -155,15 +195,20 @@ export function AlumniProfileCard() {
 
     sending.current = true;
     setBusy(true);
+    setSent(values);
 
     // A create or an edit, chosen by the store. After a 409 the store has
     // already reloaded the profile, so the form shows it before the message.
+    // The fields stay editable while it runs; the store's answer resets them
+    // only if they still hold what was sent (see filledFrom above).
     const result = await saveProfile(values);
     sending.current = false;
     setBusy(false);
 
     if (result.ok) {
-      setValues(alumniToForm(result.alumni));
+      if (sameAlumniForm(latestValues.current, values)) {
+        keepFocusFrom(saveRef.current);
+      }
       showToast(ALUMNI_SAVED_TOAST);
       return;
     }
@@ -175,14 +220,17 @@ export function AlumniProfileCard() {
   }
 
   // Back to the last saved values, or empty; no question, no request (AC29).
-  function handleDiscard() {
+  function handleDiscard(event: MouseEvent<HTMLButtonElement>) {
+    keepFocusFrom(event.currentTarget);
     setValues(alumniToForm(mine.alumni));
     setErrors(NO_ERRORS);
+    setSent(null);
     showFailure(null);
   }
 
   function handleReload() {
     showFailure(null);
+    setSent(null);
     void loadMyAlumni();
   }
 
@@ -290,10 +338,19 @@ export function AlumniProfileCard() {
         />
 
         <div className={styles.actions}>
-          <Button type="submit" variant="primary" busy={busy}>
+          <Button
+            ref={saveRef}
+            type="submit"
+            variant="primary"
+            busy={busy}
+            disabled={!canSave && !busy}
+          >
             {ALUMNI_SAVE_BUTTON}
           </Button>
-          <Button onClick={handleDiscard}>{ALUMNI_DISCARD_BUTTON}</Button>
+          {/* Off while a save runs: its answer would refill the form (R2-002). */}
+          <Button disabled={!changed || busy} onClick={handleDiscard}>
+            {ALUMNI_DISCARD_BUTTON}
+          </Button>
         </div>
       </form>
     );
@@ -305,7 +362,7 @@ export function AlumniProfileCard() {
         headingAs="h3"
         text={loadFailureText(mine.failure)}
         retryVariant="secondary"
-        onRetry={() => void loadMyAlumni()}
+        onRetry={handleRetryLoad}
       />
     );
   } else {
@@ -325,7 +382,7 @@ export function AlumniProfileCard() {
     <Card as="section" padding="lg" aria-labelledby={headingId}>
       <div className={styles.card}>
         <div className={styles.top}>
-          <h2 id={headingId} className={styles.heading}>
+          <h2 ref={headingRef} id={headingId} className={styles.heading} tabIndex={-1}>
             {ALUMNI_CARD_HEADING}
           </h2>
           <p className={styles.intro}>{ALUMNI_CARD_INTRO}</p>

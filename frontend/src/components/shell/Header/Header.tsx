@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { Link as RouterLink, NavLink } from "react-router-dom";
 import { APP_NAME } from "../../../config/app";
 import { MenuIcon } from "../../../icons/MenuIcon";
+import { presentText } from "../../../lib/alumniDisplay";
 import { isAdmin } from "../../../lib/token";
 import { PATHS } from "../../../routes/paths";
 import { profileAtom } from "../../../store/profileAtoms";
@@ -47,7 +48,7 @@ function UserBlock({ profile }: { profile: Profile }) {
     );
   }
 
-  const name = profile.user?.name?.trim() || null;
+  const name = presentText(profile.user?.name);
 
   // The call failed, or the user has no name: a plain avatar and plain words.
   if (name === null) {

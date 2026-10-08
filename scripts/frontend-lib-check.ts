@@ -37,6 +37,7 @@ import {
 import { directoryReturnState, readDirectorySearch } from "../frontend/src/lib/directoryReturn.ts";
 import { initialsOf } from "../frontend/src/lib/initials.ts";
 import { loadFailureText } from "../frontend/src/lib/loadFailure.ts";
+import { mailtoHref } from "../frontend/src/lib/mailtoLink.ts";
 import { pageRange } from "../frontend/src/lib/pageRange.ts";
 import { readProfileId } from "../frontend/src/lib/profileId.ts";
 import { readReturnAddress } from "../frontend/src/lib/returnAddress.ts";
@@ -627,6 +628,86 @@ check("load words: no failure kept", loadFailureText(null), LOAD_NO_ANSWER);
 check("load words: 500", loadFailureText({ kind: "http", status: 500 }), LOAD_SERVER);
 check("load words: 503", loadFailureText({ kind: "http", status: 503 }), LOAD_SERVER);
 check("load words: 404 gets the server words, as the pages did", loadFailureText({ kind: "http", status: 404 }), LOAD_SERVER);
+
+// ---- REQ-fs-005 fix round 1: the email link (CORR-001) ----------------------
+// Only a plain address becomes a mailto: link; anything that could add a
+// copy-to address, a subject or a body is shown as text (null here).
+
+check("mailto: a@b.co", mailtoHref("a@b.co"), "mailto:a@b.co");
+check("mailto: spaces around are trimmed", mailtoHref("  a@b.co  "), "mailto:a@b.co");
+check("mailto: dots, plus and hyphen", mailtoHref("nadia.rahman+alumni@uni-x.example.se"), "mailto:nadia.rahman%2Balumni@uni-x.example.se");
+check("mailto: ?cc= is not a link", mailtoHref("a@b.co?cc=x@y.z"), null);
+check("mailto: &body= is not a link", mailtoHref("a@b.co&body=x"), null);
+check("mailto: # is not a link", mailtoHref("a@b.co#x"), null);
+check("mailto: % is not a link", mailtoHref("a%40b@c.co"), null);
+check("mailto: comma (two addresses) is not a link", mailtoHref("a@b.co,c@d.co"), null);
+check("mailto: semicolon is not a link", mailtoHref("a@b.co;c@d.co"), null);
+check("mailto: a space inside is not a link", mailtoHref("a b@c.co"), null);
+check("mailto: a line break is not a link", mailtoHref("a@b.co\nbcc:x@y.z"), null);
+check("mailto: two @ is not a link", mailtoHref("a@b@c.co"), null);
+check("mailto: no dot in the domain", mailtoHref("a@b"), null);
+check("mailto: no @", mailtoHref("ab.co"), null);
+check("mailto: empty", mailtoHref(""), null);
+check("mailto: only spaces", mailtoHref("   "), null);
+check("mailto: null", mailtoHref(null), null);
+check("mailto: javascript: is not a link", mailtoHref("javascript:alert(1)//@b.co"), null);
+check("mailto: 100 characters pass", mailtoHref(`${"a".repeat(94)}@b.com`), `mailto:${"a".repeat(94)}@b.com`);
+check("mailto: 101 characters", mailtoHref(`${"a".repeat(95)}@b.com`), null);
+
+// ---- REQ-fs-005 fix round 1, batch C: save words, unchanged forms (UI-001, Q-1, REFL-001)
+
+// Imports are hoisted, so this block keeps its own: the other blocks stay untouched.
+import { sameAlumniForm } from "../frontend/src/lib/alumniForm.ts";
+import { sameText } from "../frontend/src/lib/alumniDisplay.ts";
+import { saveFailureReason, saveFailureText } from "../frontend/src/lib/saveFailure.ts";
+
+// The words are the reason names, so a case shows which reason was picked.
+const SAVE_WORDS = { noAnswer: "noAnswer", server: "server", gone: "gone", general: "general" };
+const SAVE_WORDS_CONFLICT = { ...SAVE_WORDS, conflict: "conflict" };
+check("save words: no answer", saveFailureText({ kind: "network" }, SAVE_WORDS), "noAnswer");
+check("save words: 400", saveFailureText({ kind: "http", status: 400 }, SAVE_WORDS), "general");
+check("save words: 403", saveFailureText({ kind: "http", status: 403 }, SAVE_WORDS), "gone");
+check("save words: 404", saveFailureText({ kind: "http", status: 404 }, SAVE_WORDS), "gone");
+check("save words: 409 with conflict words", saveFailureText({ kind: "http", status: 409 }, SAVE_WORDS_CONFLICT), "conflict");
+check("save words: 409 without conflict words", saveFailureText({ kind: "http", status: 409 }, SAVE_WORDS), "general");
+check("save words: 418 (unknown)", saveFailureText({ kind: "http", status: 418 }, SAVE_WORDS), "general");
+check("save words: 499", saveFailureText({ kind: "http", status: 499 }, SAVE_WORDS), "general");
+check("save words: 500", saveFailureText({ kind: "http", status: 500 }, SAVE_WORDS), "server");
+check("save words: 503", saveFailureText({ kind: "http", status: 503 }, SAVE_WORDS), "server");
+check("save reason: 404 is gone (shows the reload)", saveFailureReason({ kind: "http", status: 404 }), "gone");
+check("save reason: no answer", saveFailureReason({ kind: "network" }), "noAnswer");
+
+check("present: undefined (field left out)", presentText(undefined), null);
+check('same text: " a " and "a"', sameText(" a ", "a"), true);
+check('same text: "" and only spaces', sameText("", "   "), true);
+check('same text: "a" and "b"', sameText("a", "b"), false);
+check("same text: letter case counts", sameText("A", "a"), false);
+
+const SAVED_FORM = { ...EMPTY_ALUMNI_FORM, department: "CSE", graduationYear: "2019", bio: "Hi" };
+check("same form: empty and empty", sameAlumniForm(EMPTY_ALUMNI_FORM, { ...EMPTY_ALUMNI_FORM }), true);
+check("same form: untouched saved form", sameAlumniForm(SAVED_FORM, { ...SAVED_FORM }), true);
+check("same form: only spaces added", sameAlumniForm({ ...SAVED_FORM, department: " CSE ", graduationYear: "2019 " }, SAVED_FORM), true);
+check("same form: one field changed", sameAlumniForm({ ...SAVED_FORM, bio: "Hello" }, SAVED_FORM), false);
+check("same form: a field emptied", sameAlumniForm({ ...SAVED_FORM, department: "" }, SAVED_FORM), false);
+check("same form: mentoring ticked", sameAlumniForm({ ...SAVED_FORM, mentoring: true }, SAVED_FORM), false);
+check('same form: year "abc" against empty', sameAlumniForm({ ...EMPTY_ALUMNI_FORM, graduationYear: "abc" }, EMPTY_ALUMNI_FORM), false);
+
+// ---- REQ-fs-005 fix round 2, batch F: when Save profile is on (AC24, R2-001)
+
+import { canSaveAlumniForm } from "../frontend/src/lib/alumniForm.ts";
+
+// With no profile yet the saved form is the empty one (alumniToForm(null)).
+const NO_PROFILE_FORM = alumniToForm(null);
+check("can save: new profile, empty form", canSaveAlumniForm(true, { ...EMPTY_ALUMNI_FORM }, NO_PROFILE_FORM), true);
+check("can save: new profile, typed form", canSaveAlumniForm(true, { ...EMPTY_ALUMNI_FORM, company: "Acme" }, NO_PROFILE_FORM), true);
+check("can save: saved profile, same form", canSaveAlumniForm(false, { ...SAVED_FORM }, SAVED_FORM), false);
+check("can save: saved profile, changed form", canSaveAlumniForm(false, { ...SAVED_FORM, bio: "Hello" }, SAVED_FORM), true);
+check("can save: saved profile, only spaces added", canSaveAlumniForm(false, { ...SAVED_FORM, department: " CSE ", bio: "Hi  " }, SAVED_FORM), false);
+// After the first create the store holds the profile: no longer new, and
+// the form equals what was saved (an empty create included).
+const createdForm = alumniToForm(savedProfile);
+check("can save: after the first create", canSaveAlumniForm(false, { ...createdForm }, createdForm), false);
+check("can save: after an empty first create", canSaveAlumniForm(false, { ...EMPTY_ALUMNI_FORM }, NO_PROFILE_FORM), false);
 
 // ---- Result ---------------------------------------------------------------
 

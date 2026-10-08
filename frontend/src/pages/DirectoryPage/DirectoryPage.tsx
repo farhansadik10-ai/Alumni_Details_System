@@ -36,6 +36,7 @@ import {
 import type { DirectoryQuery } from "../../lib/directoryQuery";
 import { loadFailureText } from "../../lib/loadFailure";
 import {
+  clearDirectoryAtom,
   directoryAtom,
   filtersAtom,
   loadDirectoryAtom,
@@ -70,6 +71,7 @@ export default function DirectoryPage() {
   const filters = useAtomValue(filtersAtom);
   const loadDirectory = useSetAtom(loadDirectoryAtom);
   const loadFilters = useSetAtom(loadFiltersAtom);
+  const clearDirectory = useSetAtom(clearDirectoryAtom);
 
   const [searchText, setSearchText] = useState(query.q);
 
@@ -86,7 +88,7 @@ export default function DirectoryPage() {
   // Set only by Pagination's onChange: Back, a pasted link and the
   // past-the-end fix never move focus (ADV-007).
   const focusCountOnPage = useRef(false);
-  // The address already moved to the last page once (AC7).
+  // The address the past-the-end fix last moved, until that episode ends (AC7).
   const clampedKey = useRef<string | null>(null);
 
   const countRef = useRef<HTMLParagraphElement>(null);
@@ -120,13 +122,16 @@ export default function DirectoryPage() {
   /**
    * A change of a filter, the checkbox or the page. It pushes a history
    * entry, and a search still waiting for its timer goes with it (ADV-003).
+   * A new search always starts on page 1, even when a page click sends it
+   * (AC6, CORR-002).
    */
   function writeControl(patch: Partial<DirectoryQuery>): boolean {
     const pending = stopTimer();
     const base = liveQuery.current;
     const q = pending ?? base.q;
     lastCommitted.current = q;
-    return writeAddress({ ...base, q, ...patch }, false);
+    const newSearch = q !== base.q;
+    return writeAddress({ ...base, q, ...patch, ...(newSearch ? { page: 1 } : {}) }, false);
   }
 
   /** Sends the search text now. Typing replaces the history entry (listed deviation). */
@@ -193,6 +198,10 @@ export default function DirectoryPage() {
 
   useEffect(() => () => void stopTimer(), []);
 
+  // Leaving the page forgets the list, so the next visit never shows this
+  // visit's list or error for a frame before its own load (CORR-004, ARCH-005).
+  useEffect(() => () => clearDirectory(), [clearDirectory]);
+
   // After the user changed page: focus on the count line. Pagination has
   // gone while the page loads, so nothing takes focus back (AC8).
   useEffect(() => {
@@ -209,11 +218,18 @@ export default function DirectoryPage() {
   const pastTheEnd =
     current !== null && current.status === "ready" && current.total > 0 && query.page > pageCount;
 
-  // A page past the end: the address moves to the last page, once (AC7).
+  // A page past the end: the address moves to the last page, once per
+  // episode (AC7). The mark is cleared as soon as the page is not past the
+  // end, so the same address past the end again is moved again and the
+  // skeleton is never left on screen (CORR-003).
   useEffect(() => {
-    if (pastTheEnd && clampedKey.current !== queryKey) {
+    if (!pastTheEnd) {
+      clampedKey.current = null;
+    } else if (
+      clampedKey.current !== queryKey &&
+      writeAddress({ ...liveQuery.current, page: pageCount }, true)
+    ) {
       clampedKey.current = queryKey;
-      writeAddress({ ...liveQuery.current, page: pageCount }, true);
     }
   });
 

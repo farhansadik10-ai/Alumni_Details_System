@@ -1,8 +1,14 @@
-import type { ApiFailure } from "../../store/alumniAtoms";
-
 // The card-level message of a failed save, for both My profile cards. The
 // rule is here once; the words come from the caller, so each card can say
 // its own thing.
+
+import {
+  HTTP_CONFLICT,
+  HTTP_FIRST_SERVER_ERROR,
+  HTTP_FORBIDDEN,
+  HTTP_NOT_FOUND,
+} from "./loadFailure";
+import type { CallFailure } from "./loadFailure";
 
 /** Why a save failed, as far as the user needs to know. */
 export type SaveFailureReason = "noAnswer" | "server" | "gone" | "conflict" | "general";
@@ -20,33 +26,28 @@ export interface SaveFailureWords {
   general: string;
 }
 
-const FORBIDDEN = 403;
-const NOT_FOUND = 404;
-const CONFLICT = 409;
-const FIRST_SERVER_ERROR = 500;
-
 /**
  * No answer → "noAnswer"; 500 and up → "server"; 403 or 404 → "gone" (the
  * thing can no longer be saved); 409 → "conflict"; anything else → "general".
  */
-export function saveFailureReason(failure: ApiFailure): SaveFailureReason {
+export function saveFailureReason(failure: CallFailure): SaveFailureReason {
   if (failure.kind === "network") {
     return "noAnswer";
   }
-  if (failure.status >= FIRST_SERVER_ERROR) {
+  if (failure.status >= HTTP_FIRST_SERVER_ERROR) {
     return "server";
   }
-  if (failure.status === FORBIDDEN || failure.status === NOT_FOUND) {
+  if (failure.status === HTTP_FORBIDDEN || failure.status === HTTP_NOT_FOUND) {
     return "gone";
   }
-  if (failure.status === CONFLICT) {
+  if (failure.status === HTTP_CONFLICT) {
     return "conflict";
   }
   return "general";
 }
 
 /** The message to show in the card that failed. */
-export function saveFailureText(failure: ApiFailure, words: SaveFailureWords): string {
+export function saveFailureText(failure: CallFailure, words: SaveFailureWords): string {
   const reason = saveFailureReason(failure);
   if (reason === "conflict") {
     return words.conflict ?? words.general;

@@ -3,6 +3,7 @@
 // that a save sends.
 
 import type { Alumni, CreateAlumniDTO } from "@alumni/shared";
+import { presentText, sameText } from "./alumniDisplay";
 import {
   MAX_BIO_LENGTH,
   MAX_TEXT_LENGTH,
@@ -107,21 +108,43 @@ export function firstInvalidField(errors: AlumniFormErrors): AlumniFormField | n
  */
 export function alumniFormToBody(values: AlumniFormValues): AlumniFormBody {
   return {
-    department: textOrNull(values.department),
+    department: presentText(values.department),
     graduation_year: yearOrNull(values.graduationYear),
-    current_company: textOrNull(values.company),
-    job_title: textOrNull(values.jobTitle),
-    experience: textOrNull(values.experience),
-    bio: textOrNull(values.bio),
-    linkedin_url: textOrNull(values.linkedinUrl),
+    current_company: presentText(values.company),
+    job_title: presentText(values.jobTitle),
+    experience: presentText(values.experience),
+    bio: presentText(values.bio),
+    linkedin_url: presentText(values.linkedinUrl),
     mentorship_available: values.mentoring,
-    field: textOrNull(values.field),
+    field: presentText(values.field),
   };
 }
 
-function textOrNull(value: string): string | null {
-  const text = value.trim();
-  return text === "" ? null : text;
+/**
+ * True when the two forms would save the same profile: text is compared
+ * after trimming, the checkbox as it is. Discard changes stays off while the
+ * form is the same as the saved one (UI-001); Save too, once a profile
+ * exists (see canSaveAlumniForm).
+ */
+export function sameAlumniForm(a: AlumniFormValues, b: AlumniFormValues): boolean {
+  return (
+    a.mentoring === b.mentoring &&
+    FIELD_ORDER.every((field) => field === "mentoring" || sameText(a[field], b[field]))
+  );
+}
+
+/**
+ * True when "Save profile" is on. With no profile yet (`isNew`) there is
+ * always something to save, even an empty form: the save creates the profile
+ * (AC24). With a saved profile, Save is on only when a value differs from it
+ * (UI-001, R2-001). Discard changes follows sameAlumniForm alone.
+ */
+export function canSaveAlumniForm(
+  isNew: boolean,
+  values: AlumniFormValues,
+  saved: AlumniFormValues,
+): boolean {
+  return isNew || !sameAlumniForm(values, saved);
 }
 
 /** A whole number, or null when empty. The form is judged before this runs. */

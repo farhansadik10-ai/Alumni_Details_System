@@ -19,6 +19,8 @@
 //      a string only in routes/paths.ts and config/storageKeys.ts
 //   j  every max-width media query line in a stylesheet equals the phone
 //      layout of config/layout.ts
+//   k  no import of react, react-dom, react-router-dom, services/ or store/
+//      from lib/ (lib is plain functions; type imports of @alumni/shared are fine)
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -46,6 +48,11 @@ const SCRIPT_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 // Folders whose files may not reach the API themselves (rule d).
 const UI_FOLDERS = ["components/", "pages/", "routes/", "hooks/", "icons/"];
 
+// The folder of plain functions, and what it may not import (rule k).
+const LIB_FOLDER = "lib/";
+const LIB_BANNED_PACKAGES = ["react", "react-dom", "react-router-dom"];
+const LIB_BANNED_FOLDER = /(?:^|\/)(services|store)(?:\/|$)/;
+
 const BANNED_PACKAGES = ["antd", "@ant-design", "@fontsource-variable/inter"];
 
 const RULES = {
@@ -59,6 +66,7 @@ const RULES = {
   h: "box-shadow, gradient or outline removed in a stylesheet",
   i: "address or storage key written as a string outside routes/paths.ts and config/storageKeys.ts",
   j: "max-width media query that differs from config/layout.ts",
+  k: "import of React, the router, services/ or store/ from lib/",
 };
 
 // The CSS named colors (CSS Color Module Level 4). "transparent", "currentColor"
@@ -315,7 +323,7 @@ function checkSizeLiterals(rel, lines, breakpointLine) {
   });
 }
 
-// ----- rules c and d --------------------------------------------------------
+// ----- rules c, d and k -----------------------------------------------------
 
 function isPackage(specifier, name) {
   return specifier === name || specifier.startsWith(`${name}/`);
@@ -323,11 +331,21 @@ function isPackage(specifier, name) {
 
 function checkImports(rel, text) {
   const inUiFolder = UI_FOLDERS.some((folder) => rel.startsWith(folder));
+  const inLib = rel.startsWith(LIB_FOLDER);
   for (const match of text.matchAll(IMPORT_SPECIFIER)) {
     const specifier = match[1];
     const line = lineOf(text, match.index);
     const banned = BANNED_PACKAGES.find((name) => isPackage(specifier, name));
     if (banned) report("c", rel, line, `import of "${specifier}"`);
+    if (inLib) {
+      const libPackage = LIB_BANNED_PACKAGES.find((name) => isPackage(specifier, name));
+      const libFolder = specifier.startsWith(".") ? specifier.match(LIB_BANNED_FOLDER) : null;
+      if (libPackage) {
+        report("k", rel, line, `import of "${specifier}" (lib/ is plain functions, no React)`);
+      } else if (libFolder) {
+        report("k", rel, line, `import of "${specifier}" (lib/ may not reach ${libFolder[1]}/)`);
+      }
+    }
     if (!inUiFolder) continue;
     if (isPackage(specifier, "axios")) {
       report("d", rel, line, `import of "${specifier}" (API calls live in services/)`);

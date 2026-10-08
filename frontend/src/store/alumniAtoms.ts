@@ -91,7 +91,8 @@ export const filtersAtom = atom<FiltersState>(IDLE_FILTERS);
 export const viewedAlumniAtom = atom<ViewedAlumniState>(IDLE_VIEWED);
 export const myAlumniAtom = atom<MyAlumniState>(IDLE_MY_ALUMNI);
 
-// One per loader; resetAlumniAtom cancels all four.
+// One per loader; resetAlumniAtom cancels all four, and the three clear atoms
+// cancel the directory's, the viewed profile's and the user's own profile's.
 const directoryRequest = createLatestRequest();
 const filtersRequest = createLatestRequest();
 const viewedRequest = createLatestRequest();
@@ -228,6 +229,38 @@ export const loadMyAlumniAtom = atom(
 export const setMyAlumniAtom = atom(null, (_get, set, alumni: Alumni) => {
   myAlumniRequest.cancel();
   set(myAlumniAtom, { status: "ready", alumni, failure: null });
+});
+
+/**
+ * Forgets the directory list and cancels its call. The directory calls it
+ * when it unmounts, so the next visit never shows this visit's list or error
+ * for a frame before its own load starts (CORR-004, ARCH-005). The filter
+ * options are kept: they do not depend on the address.
+ */
+export const clearDirectoryAtom = atom(null, (_get, set) => {
+  directoryRequest.cancel();
+  set(directoryAtom, IDLE_DIRECTORY);
+});
+
+/**
+ * Forgets the viewed profile and cancels its call. The profile page calls it
+ * when it unmounts, so the next visit never starts from this visit's error,
+ * "not found" or old data (CORR-004, ARCH-005).
+ */
+export const clearViewedAlumniAtom = atom(null, (_get, set) => {
+  viewedRequest.cancel();
+  set(viewedAlumniAtom, IDLE_VIEWED);
+});
+
+/**
+ * Forgets the user's own profile and cancels its call. My profile calls it
+ * when it unmounts, never while it is open (the band's public link reads the
+ * saved profile), so the next visit never starts from this visit's error or
+ * old profile (CORR-004, ARCH-005).
+ */
+export const clearMyAlumniAtom = atom(null, (_get, set) => {
+  myAlumniRequest.cancel();
+  set(myAlumniAtom, IDLE_MY_ALUMNI);
 });
 
 /**
