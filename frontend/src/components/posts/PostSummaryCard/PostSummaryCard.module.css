@@ -1,0 +1,19 @@
+/* The summary card of dashboard.html "Recent posts". Tokens only. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.date {
+  color: var(--muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.footer {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}

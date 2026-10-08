@@ -1,0 +1,29 @@
+/*
+ * The "Write a post" form of feed.html, also used to edit a post. Tokens only.
+ * The frame (surface, edge, padding) belongs to whoever places the form.
+ */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* The image link and the buttons share a row and wrap on a narrow screen. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+/* 240px before it grows, as drawn. */
+.imageField {
+  flex: 1 1 calc(var(--space-8) * 3.75);
+  min-width: 0;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

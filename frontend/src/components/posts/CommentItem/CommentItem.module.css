@@ -1,0 +1,23 @@
+/* One comment of feed.html: byline with its text and buttons beside the avatar. Tokens only. */
+.item {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The 36px text buttons, pulled left so their words line up with the text, as drawn. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-left: calc(var(--space-2) * -1);
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dialogText {
+  margin: 0;
+}
