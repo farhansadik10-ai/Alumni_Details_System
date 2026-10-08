@@ -152,3 +152,158 @@
 **Claim:** When a placeholder page becomes real, grep the patterns doc for its name; "being built" examples go stale silently.
 **Saw it in:** `docs/frontend-patterns.md` pattern 14 "Where it lives" (named DashboardPage as being built)
 **Context:** Found while writing TASK-013; the example now points at UsersPage.
+
+## CAND-032 [review-arch]
+**Claim:** Keep an atom's "right key for this page" check in the store (a selector), not in each page.
+**Saw it in:** `frontend/src/pages/DashboardPage/DashboardPage.tsx:57-80` (and FeedPage.tsx:97, AlumniProfilePage.tsx:305)
+**Context:** One atom per kind with a key makes every page re-write the same idle/other-key-to-loading mapping.
+
+## CAND-033 [review-arch]
+**Claim:** A role rule used by two screens goes in lib/ once, with a lib-check case, even if it is one line.
+**Saw it in:** `frontend/src/pages/FeedPage/FeedPage.tsx:91` and `DashboardPage.tsx:51` (`isWriter`)
+**Context:** Same ADR-02 rule copied byte for byte into two pages.
+
+## CAND-034 [review-qual]
+**Claim:** Do not copy a stylesheet into the dev page; use CSS Modules `composes` so the page cannot drift from the component.
+**Saw it in:** `frontend/src/pages/dev/ComponentsPage/ComponentsPage.module.css` (.commentPanel) vs `CommentsPanel.module.css:7`
+**Context:** A "change both together" comment is a drift warning, not a fix.
+
+## CAND-035 [review-qual]
+**Claim:** Export a text constant only when another file reads it; add a grep-for-readers pass at wrap-up of each UI part.
+**Saw it in:** `frontend/src/config/text.ts:283,350,368,398`
+**Context:** Six loading/alt constants were written for skeletons that never used them.
+
+## CAND-036 [review-qual]
+**Claim:** Plural and fallback logic that lives in config/text.ts has no lib-check case; put such rules in lib/ or add cases.
+**Saw it in:** `frontend/src/config/text.ts:260,309` (postDeleteBody, commentDeleteBody, dashboardGreeting)
+**Context:** The no-test-runner check only covers lib/, so text functions with branches go unchecked.
+
+## CAND-037 [review-corr]
+**Claim:** A loader that writes a server total after an await must re-apply the local adds and removes made during the call, or derive total from the held list.
+**Saw it in:** `frontend/src/store/postAtoms.ts:7924-7931`
+**Context:** Load more overwrote the total that a publish had just raised.
+
+## CAND-038 [review-corr]
+**Claim:** When a busy guard ignores a dialog's close request, also handle the browser closing the native dialog anyway, or the open flag and the element disagree.
+**Saw it in:** `frontend/src/components/posts/FeedPost/FeedPost.tsx:6105-6111`
+**Context:** closeConfirm returns early while deleting, but useModalDialog's close event can still close the element.
+
+## CAND-039 [ui-review]
+**Claim:** A link whose only text is a count ("No comments yet") needs a hidden name for its post, or a links list shows identical names.
+**Saw it in:** `frontend/src/components/posts/PostSummaryCard/PostSummaryCard.tsx:49`
+**Context:** Dashboard and profile Recent posts show three links with the same name, all to /feed.
+
+## CAND-040 [ui-review]
+**Claim:** Every in-place edit form needs the same "disabled until changed" rule as AccountCard; copy it when a second edit form is built.
+**Saw it in:** `frontend/src/components/posts/PostForm/PostForm.tsx:78`
+**Context:** Edit then Save with no change sent a PUT; AccountCard.tsx:162 already guards this.
+
+## CAND-041 [ui-review]
+**Claim:** Map each write's failure to its own wording; a shared edit message on the add path reads as the wrong action.
+**Saw it in:** `frontend/src/components/posts/CommentsPanel/CommentsPanel.tsx:134`
+**Context:** A 403 on adding a comment showed "This comment can no longer be changed."
+
+## CAND-042 [ui-review]
+**Claim:** When a UI check stores a theme key, the emulated colour scheme is ignored; set the app's own theme key for dark shots.
+**Saw it in:** `.adlc/context/design-system.md` (theme persistence)
+**Context:** My first "dark" screenshots were light because the login helper set `ua.theme=light`.
+
+## CAND-043 [implement-task]
+**Claim:** Never ignore a native `<dialog>` close request in the caller's flag; the browser closes it on a second Escape anyway, so the flag must follow and late answers go elsewhere.
+**Saw it in:** `frontend/src/components/posts/FeedPost/FeedPost.tsx` (closeConfirm), `frontend/src/hooks/useModalDialog.ts` (handleClose)
+**Context:** CORR-003: an early return in closeConfirm left `open` true on a closed dialog, so a delete failure went into a hidden dialog.
+
+## CAND-044 [implement-task]
+**Claim:** Button spreads its props before its own `aria-disabled`, so a caller cannot pass `aria-disabled`; use `busy` to soft-disable a secondary button.
+**Saw it in:** `frontend/src/components/ui/Button/Button.tsx` (aria-disabled after `{...buttonProps}`)
+**Context:** Making Cancel inert during a save (REFL-002); `busy` also sets `aria-busy` on Cancel, which is the price.
+
+## CAND-043 [implement-task]
+**Claim:** When folding a null check into a shared helper, keep the `x !== null &&` part if later JSX reads `x.field`; TypeScript narrows only on the inline check.
+**Saw it in:** `frontend/src/pages/MyProfilePage/MyProfilePage.tsx:44`
+**Context:** canWritePosts(role) alone broke the build at `session.userId` (TS18047), though the behaviour was the same.
+
+## CAND-045 [implement-task]
+**Claim:** To reuse a component's look on the dev page, `composes` each class from its stylesheet; its media-query rules come along with the class, so delete the copied phone rule too.
+**Saw it in:** `frontend/src/pages/dev/ComponentsPage/ComponentsPage.module.css` (.commentPanel, .threads, .replies, .reply)
+**Context:** QUAL-004: 35 copied lines with "change both together"; the phone indent of `.replies` lived in two media queries.
+
+## CAND-046 [implement-task]
+**Claim:** When a list total is patched locally and also reloaded, log each local change with its id and apply the ones made during the call to the answer, skipping ids the answer already holds.
+**Saw it in:** `frontend/src/store/postAtoms.ts:170` (totalAfterAnswer)
+**Context:** CORR-001: a late Load more answer replaced the patched total, showing "21 of 20"; a plain counter double-counts a deleted post the answer still contains.
+
+## CAND-047 [implement-task]
+**Claim:** To prove a store fix fails before it, copy the HEAD version (git show) into the scratchpad with absolute imports and point the fake-service harness at it by an env var.
+**Saw it in:** scratchpad `storecheck/harness.mjs` (STORE_UNDER_TEST=old)
+**Context:** No git write (stash) allowed; the copy also exposed that an unsent-on-blank guard otherwise hangs on a never-answered fake call.
+
+## CAND-048 [review-arch]
+**Claim:** A pure mapper whose output type is a component prop type has no good home: lib cannot import the store, so name where such mappers live before the second copy appears.
+**Saw it in:** `frontend/src/store/peopleBlockState.ts:4`
+**Context:** m1 put `toPeopleBlockState` in store/ with a type-only import up from components/ (ARCH-004).
+
+## CAND-049 [review-arch]
+**Claim:** When a config file imports a lib function, say so in its header and check that the lib file imports nothing, because only a comment keeps the cycle out.
+**Saw it in:** `frontend/src/config/text.ts:4-9`, `frontend/src/lib/postDisplay.ts:7`
+**Context:** ARCH-005: `loadFailure -> text -> postDisplay` is acyclic today by convention only.
+
+## CAND-048 [review-reflect]
+**Claim:** When a fix covers a lesson's trap, list every control that can change the same state during the call, not only the one the finding named.
+**Saw it in:** `frontend/src/components/posts/CommentItem/CommentItem.tsx:178` (Reply/Edit live while a save runs)
+**Context:** m5 made Cancel busy; other comments' Reply/Edit still replace the open edit, and the answer then clears it.
+
+## CAND-049 [review-reflect]
+**Claim:** A pure mapper that must sit in store/ for a type should get its input shape declared in lib/, or it has no check cases.
+**Saw it in:** `frontend/src/store/peopleBlockState.ts:12`
+**Context:** Same as LESSON-REQ-fs-005-4; the merge of the two copies (m1) moved the rule to where the check script cannot reach.
+
+## CAND-050 [review-qual]
+**Claim:** When a fix round deletes a "known gap" from docs, grep the docs for every other sentence that points at it.
+**Saw it in:** `docs/frontend-patterns.md:581`
+**Context:** The Open points entry on copied CSS was removed; pattern text still says "see Open points".
+
+## CAND-051 [review-qual]
+**Claim:** When a new named constant replaces a magic number, replace every copy in the same fix.
+**Saw it in:** `frontend/src/store/postActions.ts:75`
+**Context:** HTTP_BAD_REQUEST was added for one rule while a second file wrote 400 again.
+
+## CAND-050 [review-corr]
+**Claim:** "Skip a logged change when the answer already holds that item" only works if the answer's page can hold the item; for a later page, a write made during the call stays ambiguous.
+**Saw it in:** `frontend/src/store/postAtoms.ts:170`
+**Context:** CORR-004: page-1 posts never appear in a page-2 answer.
+
+## CAND-051 [review-corr]
+**Claim:** A sentinel status used by a store guard (400 for blank text) is read by later code as the server's meaning of that status; give guards their own kind.
+**Saw it in:** `frontend/src/store/postActions.ts:75`, `frontend/src/lib/writeFailure.ts:50`
+**Context:** CORR-005.
+
+## CAND-052 [ui-review]
+**Claim:** After a local total patch, a late Load more answer that already counts the write (but lacks its id) is patched twice: 27 shown for 26 real.
+**Saw it in:** `frontend/src/store/postAtoms.ts` (totalAfterAnswer)
+**Context:** UI-004; self-heals on the next load, rated trivial. Reproduce by delaying page 2 in a mock until after a publish or delete.
+
+## CAND-053 [ui-review]
+**Claim:** To get an element-level proof of "looks the same", compare new screenshots with the old ones byte for byte, then pixel by pixel in a canvas inside the headless page (no image library needed).
+**Saw it in:** scratchpad `ui-review/r14.mjs` (not in repo)
+**Context:** 13 of 16 round 2 shots were byte-identical to round 1; the other three differed by 21 pixels and a 14px page-end height.
+
+## CAND-054 [implement-task]
+**Claim:** When an async answer closes a shared "one active at a time" state, compare against the value it was sent from (kept in a ref) instead of setting null.
+**Saw it in:** `frontend/src/components/posts/CommentsPanel/CommentsPanel.tsx` (handleAdd, endEdit)
+**Context:** REFL-006: a late send or save wiped a reply or edit the user started meanwhile and moved focus.
+
+## CAND-055 [implement-task]
+**Claim:** A guard that refuses before any call returns its own result variant, never a borrowed HTTP status that callers map to server meanings.
+**Saw it in:** `frontend/src/store/postActions.ts` (BLANK_TEXT)
+**Context:** QUAL-009/CORR-005: the blank guard's made-up 400 read as "the comment you replied to is gone".
+
+## CAND-056 [review-quality]
+**Claim:** When a fix moves a rule (a mapping, a copy, a count), grep the docs and the file header comments for the old wording in the same round; both went stale in rounds 2 and 3.
+**Saw it in:** `docs/frontend-patterns.md` (QUAL-008), `frontend/src/store/postActions.ts` header (QUAL-013)
+**Context:** the code was right each time; only the prose still described the removed arrangement.
+
+## CAND-057 [review-reflect]
+**Claim:** When a fix guards the success branch of an async answer against newer user state, guard every branch that has a side effect (focus request, toast, close), not only the one the review named.
+**Saw it in:** `frontend/src/components/posts/CommentItem/CommentItem.tsx` (handleSave 404 branch calls `onRemoved`)
+**Context:** REFL-009: round 3 fixed ok-path close/focus; the 404 path still moves focus.

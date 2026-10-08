@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] verify-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | findings: C0/M1/m7 open (M1 is a process decision for wrap-up); 16 fixes held over 3 review rounds; library check 469 cases
+
 ## [2026-10-08] implement-gate-cleared | REQ-fs-006-frontend-feed-and-dashboard | 14 tasks, build/style/library checks pass (434 cases); isWriter x4 and mentoring address x2 left for review; browser checks left to review
 
 ## [2026-10-08] tier-complete | REQ-fs-006 TASK-007, 008, 010, 011 and the owner-approved TASK-014 (lib/writeFailure.ts) done; build, style check and library check (434 cases) pass; TASK-009 and 012 next

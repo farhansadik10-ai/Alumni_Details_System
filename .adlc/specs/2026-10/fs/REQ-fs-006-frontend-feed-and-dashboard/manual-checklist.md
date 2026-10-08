@@ -70,6 +70,11 @@ Log in, copy your token, and call the API directly with Postman (or any tool tha
 - [ ] Keyboard only: Tab through the composer, each post's buttons, the comments, "Load more" and the side list on the feed, and every block on the dashboard. Every stop has a visible focus ring, in both themes.
 - [ ] Turn on "reduce motion" in your system settings (`prefers-reduced-motion`): nothing slides or fades on the feed and the dashboard.
 
+## Added by the review phase (round 3)
+
+- [ ] Comments: press Reply on one comment and type a few words, but do not send. In the same moment send a different comment (or save an edit) on a slow connection. When the answer arrives, the words you were typing in the Reply box are still there (review item n1; checked by reading only, no browser run).
+- [ ] Feed: press "Load more" on a slow connection and publish a post while it loads. The "Showing N of M posts" line may be off by one until the next load; it must never show more posts than the total (known limit n2, accepted).
+- [ ] Edit a post and press Save without changing anything. Today it sends the request and shows "Post saved". Tell the agents if you want it blocked (review item m6, your call).
 ## Left open by the implement phase
 
 The agents did not use a browser in this phase. The review phase checks focus by a real Tab key, 360px and 200% zoom, and takes screenshots against a mock API. The lines above are still yours to run against the real backend.
