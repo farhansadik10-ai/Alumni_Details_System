@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-007 |
 | Tier | 5 |
-| Status | pending |
+| Status | done (one open point for the gate: a broken picture link) |
 | Repo | alumni-details-system |
 | Depends on | TASK-012 |
 | Blocks | TASK-014 |
@@ -34,12 +34,25 @@ The entry script holds only what every page needs, the one Latin font file is pr
 
 ## Acceptance
 
-- [ ] The built `frontend/dist/index.html` has exactly one `rel="preload"` for a font, with `crossorigin`, and the file it names is the one the page requests; the browser console shows no "preloaded but not used" warning.
-- [ ] Every `<img>` has `width`, `height`, `decoding="async"` and (where not at the top) `loading="lazy"`.
-- [ ] `performance.md` lists each `memo` with its before and after render counts, and the entry script change with its bytes.
-- [ ] `npm run build`, the style check and the library check exit 0.
-- [ ] The browser scenarios of TASK-012 are run again on every screen this task touched: no sideways scroll at 360px, 390px and 200% zoom; the Directory scenarios of TASK-007; the unchanged-edit scenarios of TASK-011; Users search, role, page and delete with Escape. `phone-audit.md` records the re-run, and the screenshots of the Feed and the Users page are refreshed.
-- [ ] A post picture that is wide, tall and broken (a link that fails) does not move the page when it loads.
+- [x] The built `frontend/dist/index.html` has exactly one `rel="preload"` for a font, with `crossorigin`, and the file it names is the one the page requests; the browser console shows no "preloaded but not used" warning.
+- [x] Every `<img>` has `width`, `height`, `decoding="async"` and (where not at the top) `loading="lazy"`.
+- [x] `performance.md` lists each `memo` with its before and after render counts, and the entry script change with its bytes.
+- [x] `npm run build`, the style check and the library check exit 0.
+- [x] The browser scenarios of TASK-012 are run again on every screen this task touched: no sideways scroll at 360px, 390px and 200% zoom; the Directory scenarios of TASK-007; the unchanged-edit scenarios of TASK-011; Users search, role, page and delete with Escape. `phone-audit.md` records the re-run, and the screenshots of the Feed and the Users page are refreshed.
+- [ ] A post picture that is wide, tall and broken (a link that fails) does not move the page when it loads. Wide and tall: met (shift 0). Broken: not met; the open point in Notes.
+
+## Notes
+
+Written by: task-implementer (tier: deep), 2026-10-09. Full numbers in `performance.md`.
+
+- **Entry script:** no page in it. `postAtoms`, `alumniAtoms`, `usersAtoms` (and their services) are in it because `sessionActions.ts` resets them on log out; moving them is a design change, not an import move, so nothing moved. A what-if scratch build without those imports: −2,462 gzip on the entry (bytes move to pages). `validation.ts` is there through `Avatar` (`isWebLink`), shell code.
+- **Font:** `fontPreload()` in `vite.config.ts`; one preload, `crossorigin`, same file as the CSS `url()`; one request in Chrome, no unused-preload warning. Checked alone with fake bundles (throws with no Latin file). cyrillic-ext is inlined as data by Vite (under 4 KB).
+- **Images:** deviation: `height: auto` kept in `.image`. Without it the `height="3"` attribute sets the height (the attribute is a presentational hint that only a CSS height overrides). `aspect-ratio: 4 / 3` with no `auto` gives the fixed box.
+- **Open point (AC25 "broken"):** a link that fails after the box is drawn is still hidden by `onError` (REQ-fs-006 rule "no empty box"), so the page moves up once (shift 0.17 to 0.20 in view). Wide and tall: shift 0. Choice for the owner: keep (A, built) or keep an empty 4:3 box on failure (B).
+- **Render counter:** injected only by a scratch Vite plugin at serve time (`t013/vite.count.mjs`); never in `frontend/`. `grep -rn "__rc\|__t013" frontend/` finds nothing.
+- **memo:** `FeedPost` (+ stable `handleToggleComments` reading `store.get(commentsAtom)`), `AlumniCard`, `UserNameCell`. Not `CommentItem` (one draw per sibling; `children` JSX defeats memo) nor `UserActionsCell` (inline closure from `Table` render; one Button).
+- **Motion:** nothing animates; `base.css` stops all motion under reduced motion. No change.
+- **Re-run:** all browser scenarios pass; see `phone-audit.md`, "Re-run after TASK-013".
 
 ## Related
 

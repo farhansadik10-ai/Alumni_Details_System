@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-007 |
 | Tier | 0 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-001 |
 | Blocks | TASK-006, TASK-008, TASK-010 |
@@ -32,9 +32,19 @@ Everything the Users page and the About page need that is not a component exists
 
 ## Acceptance
 
-- [ ] `npm run build` and the style check exit 0.
-- [ ] `RoleTag` looks the same as before.
-- [ ] Later tasks import these words; none types a visible string again.
+- [x] `npm run build` and the style check exit 0.
+- [x] `RoleTag` looks the same as before.
+- [x] Later tasks import these words; none types a visible string again.
+
+## Notes
+
+- Checks (2026-10-08): `npm run build` exit 0 (with `tsc -b`), style check PASS (184 files), lib check 493 passed / 0 failed.
+- `RoleTag`: same variants, same three words, same `null` for an unknown role; only the word now comes from `ROLE_WORDS`. `ROLE_WORDS` is typed `Record<"student" | "alumni" | "admin", string>` in `text.ts`, so `text.ts` still has one import (G58).
+- Names later tasks use. Users: `USERS_HEADING`, `USERS_SUB`, `USERS_SEARCH_LABEL`, `USERS_SEARCH_PLACEHOLDER`, `USERS_SEARCH_BUTTON`, `USERS_ROLE_LABEL`, `USERS_ALL_ROLES`, `USERS_CLEAR_BUTTON`, `USERS_COLUMN_{NAME,EMAIL,ROLE,JOINED,ACTIONS}`, `USERS_YOU_TAG`, `USERS_DELETE_BUTTON`, `usersDeleteButtonName(name)` (aria-label "Delete <name>", as the design), `usersCount(total)`, `USERS_COUNT_{LOADING,NONE,FAILED}`, `USERS_EMPTY_{MATCH,NONE}_{HEADING,TEXT}`, `USERS_ERROR_HEADING`, `USER_DELETE_TITLE`, `userDeleteBody(name)`, `USER_DELETE_CONFIRM`, `userDeletedToast(name)`, `USER_ALREADY_GONE_TOAST`, `userDeleteBlockedText(name)`, `userDeleteFailureWords(name)`. Shared: `ROLE_WORDS`, `NO_ROLE`. About: `FOOTER_ABOUT_LINK`, `ABOUT_HEADING`, `aboutSub(appName)`, `ABOUT_PURPOSE_HEADING`, `aboutPurposeText(appName)`, `ABOUT_USE_HEADING`, `ABOUT_USE_TEXT`, `ABOUT_CONTACT_HEADING`, `ABOUT_CONTACT_TEXT` (followed by the `CONTACT_EMAIL` link).
+- `userDeleteFailureWords(name)` returns `{ blocked, forbidden, notFound, save: { noAnswer, server, gone, general } }`, the shape TASK-004's `UserDeleteFailureWords` (WriteFailureWords + `blocked`) describes. It is checked by shape where TASK-008 passes it to `userDeleteFailureText`; `text.ts` does not import the type. The 404 words equal the already-gone toast.
+- Sub text: the task and AC1 say "Everyone with an account."; the design adds "Only admins can open this page." The task's shorter text is used.
+- Backend contract read (not run): `GET /api/users` admin only, takes `q`, `role`, `page`, `limit`, answers `{ items, total, page, limit }`; `DELETE /api/users/:id` admin only, 200 `{ message }`, 404 when gone, 409 (ConflictError) when the user owns posts, comments or an alumni profile.
+- Manual checklist (needs the real server): an admin list with `q` and `role`; a real 409 on a user with content.
 
 ## Related
 

@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-007 |
 | Tier | 1 |
-| Status | pending |
+| Status | implemented |
 | Repo | alumni-details-system |
 | Depends on | TASK-002 |
 | Blocks | TASK-008 |
@@ -37,6 +37,25 @@ The Directory's search, timer, page change, clear and past-the-end code is one h
 ## Notes
 
 Highest-risk task of the REQ. Commit it on its own so it can be reverted alone.
+
+**Done 2026-10-08 (task-implementer).** `npm run build`, style check (188 files, 0 findings) and library check (529 passed) exit 0. Browser check not run here (no browser in this agent); TASK-012 runs it.
+
+What moved, unchanged in logic, comments and ids: `SEARCH_DELAY_MS`, `liveQuery`, `setParams`, `lastCommitted`, `pendingText`, `timer`, `focusCountOnPage`, `clampedKey`, `stopTimer`, `writeAddress`, `writeControl`, `commitSearch`, the layout effect, the `q` sync effect, the unmount timer cleanup, the focus-count effect, the `current` / `pageCount` / `pastTheEnd` rule and the past-the-end effect. `queryKeyOf(q)` became `write(q).toString()` (same text). Handlers renamed only: `handleSearchTextChange` -> `onSearchTextChange`, `() => commitSearch(searchText)` -> `searchNow`, `handleFilterChange` -> `changeFilter` (adds `page: 1` as before), `handlePageChange` -> `changePage`, `handleClear` -> `clear` (writes `defaultQuery`), the focus half of `retryList` -> `retryFocus`.
+
+Small additions to the listed interface: the hook also returns `current` (the list, or null when its `queryKey` is not this address's), so the page draws items and failure from it without repeating the key rule; `list` is typed generic (`L extends {queryKey, status, total, limit}`), so `current` keeps the page's own state type. `changePage` needs `{ page } as Partial<Q>` (TypeScript cannot narrow a generic spread).
+
+One ordering change: the hook's effects are now declared before the page's load, filter-options and clear-on-close effects (they used to sit between and after them). Checked: none of them reads what another writes in the same commit. The load effect runs only when `queryKey` changes, and in that commit `current` is null, so `pastTheEnd` is false and the clamp does nothing.
+
+Where each Directory behaviour lives now:
+- Search timer (300 ms, replaces the history entry): hook, `onSearchTextChange` -> `commitSearch` -> `writeAddress(..., true)`.
+- Enter / Search button sends now: hook, `searchNow`.
+- A filter pushes an entry and goes to page 1; a waiting search goes with it (CORR-002): hook, `changeFilter` -> `writeControl` -> `writeAddress(..., false)`.
+- Back / Forward / pasted link restores the search box: hook, the `query.q` sync effect with `lastCommitted`.
+- Past the end moves to the last page once per episode (AC7, CORR-003): hook, the effect with `clampedKey`; the page shows the skeleton while `pastTheEnd` (page's `view`).
+- Focus on the count line only after Pagination (AC8, ADV-007): hook, `changePage` sets `focusCountOnPage`; the `query.page` effect focuses `countRef`.
+- Clear focuses the search box: hook, `clear` -> `searchRef.focus()`.
+- Retry focuses the count line: page `retryList` starts the load, then hook `retryFocus`.
+- Timer stopped on unmount: hook. List cleared on close, list load, filter options: page.
 
 ## Related
 

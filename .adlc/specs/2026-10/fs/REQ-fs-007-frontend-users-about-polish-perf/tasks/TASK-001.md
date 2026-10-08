@@ -27,12 +27,19 @@ The size of the frontend build on this branch, before any change of this REQ, is
 
 ## Acceptance
 
-- [ ] `build-size.md` has the Before table: entry script, entry stylesheet, every page file, the fonts and the totals, raw and gzip.
-- [ ] No source file was changed (`git status` shows only the vault file).
+- [x] `build-size.md` has the Before table: entry script, entry stylesheet, every page file, the fonts and the totals, raw and gzip.
+- [x] No source file was changed (`git status` shows only the vault file).
 
 ## Notes
 
 Do this first, before any other task changes the code.
+
+Done 2026-10-08 at commit `4a957152`, tree clean before the build. Build passed (Vite, 2.6 s).
+Gzip measured with `gzip -c` (GNU gzip 1.14, level 6) in Git Bash. Vite's own gzip kB and `gzip -9`
+both differ by a few hundred bytes on the entry script, so TASK-014 must use the same command.
+`favicon.svg` (203 B, copied from `public/`) is left out of the totals. The entry script is
+288,075 B raw / 98,078 B gzip, 79% of all JS raw. Fonts: three woff2 subsets, 63,612 B raw.
+No database, `.env` or backend import was involved; nothing for the manual checklist.
 
 ## Related
 

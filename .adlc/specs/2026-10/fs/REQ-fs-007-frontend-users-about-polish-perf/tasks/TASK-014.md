@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-007 |
 | Tier | 6 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-001, TASK-013 |
 | Blocks | none |
@@ -30,9 +30,28 @@ The docs describe what was built, the build size after is on record, and all che
 
 ## Acceptance
 
-- [ ] Every path written in the new sections exists.
-- [ ] The roadmap rows match the real state.
-- [ ] All four checks exit 0 and the grep prints nothing.
+- [x] Every path written in the new sections exists.
+- [x] The roadmap rows match the real state.
+- [x] All four checks exit 0 and the grep prints nothing.
+
+## Notes
+
+Written by: task-implementer (tier: deep), 2026-10-09.
+
+- **Docs:** `docs/frontend-patterns.md` has new sections 34 (admin list and delete), 35 (`useListAddress`), 36 (About and footer link, `ROLE_WORDS`, shared `usersColumns`), 37 (phone and performance rules, how to run the audit with a mock API). Updated: Contents; patterns 1, 6 to 9, 12 to 14, 16, 18, 22 to 24, 28 and 32; "How to add" (new rule 7, from L-REQ-fs-006-4); Checks to run (536 cases, the font-preload check, the build-size method); Open points (part 4). The old line 629 no longer lists `lastPage` under `directoryQuery.ts`.
+- **Every path checked:** a script took every backtick path starting `frontend/`, `scripts/`, `docs/` or `.adlc/` from the file and tested it exists: none missing.
+- **Old wording grep (L-REQ-fs-006-4):** `lastPage`, "being built", `BeingBuilt`, `469`, "part 4", F10/F11 in `docs/`, `frontend/src`, `scripts/`. All doc hits fixed. Two code comments out of my blast radius, listed in Open points instead: `PageLayout.tsx:47` still uses "This page is being built" as its example, and `useListAddress.ts:30` says rule d keeps `hooks/` out of `store/` (rule d checks only `axios` and `services/`). `BeingBuilt.tsx` has no importer now; deleting it is a code change, left for later.
+- **Roadmap:** F9, F10, F11 Done (REQ-fs-007); Last and Later rows unchanged.
+- **Build size:** After table, shared chunks, fonts, totals and a Difference table in `build-size.md`. Total +8,091 gzip (+3.8%); entry script +1,213 gzip (+1.2%). Vite renamed some shared chunks (for example `saveFailure-qy1Ih9V_.css` became `Textarea-qy1Ih9V_.css`, same hash), so the difference is given by group as well as by file.
+- **Checks, 2026-10-09:**
+  - `npm run build` (root: api then frontend): exit 0, `✓ built in 2.11s`, same hashes as the workspace build.
+  - `node scripts/frontend-style-check.mjs`: 200 files, rules a to k all 0, `PASS: no findings`, exit 0.
+  - `npx tsx scripts/frontend-lib-check.ts`: `536 passed, 0 failed`, exit 0.
+  - `git grep -n --untracked "antd" -- frontend/src frontend/package.json`: printed nothing (exit 1 = no match).
+  - `grep -rlF "Compare each section with" frontend/dist`: printed nothing.
+  - Font preload: `grep -c 'rel="preload"' frontend/dist/index.html` = 1; the file name in `index.html` and in `assets/index-D_ODS2_Q.css` is the same, `hanken-grotesk-latin-wght-normal-CaVRRdDk.woff2`.
+- No `.env` read, no database, no backend import, no git write. Scratch files only in the session scratchpad.
+- Not edited (wrap-up, AC32): root `CLAUDE.md`, `.adlc/context/project-overview.md`.
 
 ## Related
 

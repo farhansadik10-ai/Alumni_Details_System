@@ -17,9 +17,9 @@
 | F6 | Alumni directory | | Done (REQ-fs-005) |
 | F7 | Alumni profile and My profile | | Done (REQ-fs-005) |
 | F8 | Post feed | | Done (REQ-fs-006) |
-| F9 | Dashboard and admin users | Dashboard done (REQ-fs-006); admin Users page still to do | In progress |
-| F10 | Polish and performance | | To do |
-| F11 | About page | | To do |
+| F9 | Dashboard and admin users | Dashboard (REQ-fs-006); admin Users page (REQ-fs-007) | Done (REQ-fs-007) |
+| F10 | Polish and performance | | Done (REQ-fs-007) |
+| F11 | About page | | Done (REQ-fs-007) |
 | Last | Pull request to main | | To do |
 | Later | Automated tests, password reset by email, Privacy page, deployment | | Later |
 | Later | Before the demo: remove the test rows from the database | Users whose email starts with b2test, apitest or apicheck, and their alumni profiles | Later |

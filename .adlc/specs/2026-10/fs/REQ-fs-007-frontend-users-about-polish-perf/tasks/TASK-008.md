@@ -48,3 +48,30 @@ An admin can search, filter by role, page through and delete users on `/users`, 
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-007-frontend-users-about-polish-perf/architecture]]
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-005-1-disable-until-changed-has-three-traps|L-REQ-fs-005-1]], [[knowledge/lessons/LESSON-REQ-fs-006-5-build-a-component-so-the-dev-page-can-show-it|L-REQ-fs-006-5]], [[knowledge/gotchas#^g46|G46]], [[knowledge/gotchas#^g57|G57]]
+
+## Notes
+
+Written by: task-implementer (tier: deep), 2026-10-09.
+
+- **Checks:** `npm run build` (tsc -b + vite), `node scripts/frontend-style-check.mjs` (0 findings, 198 files) and `npx tsx scripts/frontend-lib-check.ts` (536 passed) all exit 0. No `setTimeout` in the page or `components/users/`. No word added to `config/text.ts`; all existed.
+- **Props for TASK-009 (dev page):** `DeleteUserDialog` takes `open`, `name` (already through `displayName`), `busy`, `errorText` (string or null), `onClose`, `onConfirm`. `UserNameCell` takes `name`, `photoUrl`, `isSelf`. `UserActionsCell` takes `name`, `isSelf`, `onDelete`. `UsersFilters` takes `query`, `searchText`, `onSearchTextChange`, `onSearchNow`, `onRoleChange(role: "" | Role)`, `searchRef?`. None of them reads the store or calls a service.
+- **Delete, beyond the plan (two small decisions):**
+  1. Busy is per user (`deletingIds`), not one flag: an admin can Escape out of a slow delete of X and open Delete for Y. A late answer for X closes the dialog only if the open dialog is still X's (`confirmOpenRef` holds the open user's id, not a boolean); otherwise its failure is a toast and its success is a toast only.
+  2. Focus after a late success (dialog already closed) moves to the count line only if focus was lost with the row (`document.activeElement` is body), so it never pulls focus out of the search box.
+- **Not moved:** after a failure in the open dialog, focus stays where it is (on the confirm button after a click). `ConfirmDialog` exposes no ref to Cancel and must not change; the `Message` is `role="alert"`, so it is read out. Same as `FeedPost`.
+- **Deviation (small, in the page):** `refillEmptiedPage` reloads the same address when a delete empties the last visible row of a page but the server still has rows for it (page 1, total > 0). Without it the page shows "No users found" while users remain. A page past the end is still moved by the hook.
+- Name cell: the design links one name to a profile; `PublicUser` has no alumni id, so names are plain text.
+- Filters have no Clear button (the design has none); Clear is in the "no match" empty state (`USERS_CLEAR_BUTTON`, "Clear search and role").
+
+**Browser scenarios for TASK-012** (mock API, admin token; also a non-admin token):
+1. Non-admin on `/users`: no-access page, no `GET /api/users` sent.
+2. Typing waits 300 ms then one request with `q`; Enter and Search send at once; Back restores the box.
+3. Role filter: All roles sends no `role`; Student/Alumni/Admin send the stored word; the address follows.
+4. Page change: focus on the count line, address `page=2`; a pasted `page=99` moves to the last page.
+5. Own row: "You" tag, no Delete; other rows: Delete read out as "Delete <name>".
+6. Delete success: dialog closes, toast "<name> was deleted", total down by one, focus on the count line (real Tab shows the ring).
+7. Delete 409: message in the dialog, row stays. 404: dialog closes, "already gone" toast, row gone. Network failure and 500: their words in the dialog.
+8. Slow delete: Escape twice closes the dialog; a late 409 appears as a toast; Delete on the same or another row opens the dialog again.
+9. Delete the only row of page 2: moves to page 1. Delete the last row of page 1 with more users on the server: page reloads, no "No users found".
+10. Empty with and without search; error with Try again (focus to the count line); loading skeleton; no old rows for a frame under a new search.
+11. Both themes; 360px cards with a 60-character name and email, no sideways scroll; Delete 44px tall.

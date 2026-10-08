@@ -4,7 +4,7 @@
 |---|---|
 | REQ | REQ-fs-007 |
 | Tier | 1 |
-| Status | pending |
+| Status | done |
 | Repo | alumni-details-system |
 | Depends on | TASK-002 |
 | Blocks | TASK-006, TASK-008 |
@@ -31,9 +31,17 @@
 
 ## Acceptance
 
-- [ ] The library check passes with the new cases.
-- [ ] One case was shown to fail with a deliberately wrong expectation, in a copy outside the repo (L-REQ-fs-003-4).
-- [ ] The three role words are defined once (reuse `Role` from `lib/token.ts`; export a `ROLES` list there if none is exported).
+- [x] The library check passes with the new cases.
+- [x] One case was shown to fail with a deliberately wrong expectation, in a copy outside the repo (L-REQ-fs-003-4).
+- [x] The three role words are defined once (reuse `Role` from `lib/token.ts`; export a `ROLES` list there if none is exported).
+
+## Notes
+
+- `ROLES` in `lib/token.ts` was module-private; it is now exported (one word added, no behaviour change). `usersQuery.ts` reads the role with `ROLES.find(role => role === value) ?? ""`, the same test `toRole` uses.
+- `UserListParams` in `lib/usersQuery.ts` has the same name as the one in `services/userService.ts` (as the task says), but types `role` as `Role` and has no `limit`. A file that imports both must alias one.
+- 36 new cases (block "REQ-fs-007 TASK-003"); library check 529 passed, 0 failed. Extra cases beyond the list: `role=admin%20`, a repeated `role`, `role=student` / `role=alumni`, `toUserListParams` and `hasUsersCriteria`.
+- Fail proof: a copy in the session scratchpad with imports rewritten to absolute paths and the `role=ADMIN` case expecting `"admin"`: 528 passed, 1 failed, exit 1.
+- `npm run build` and `node scripts/frontend-style-check.mjs` pass.
 
 ## Related
 

@@ -34,6 +34,17 @@ A finished About page at `/about`, reached from a footer link on every page insi
 - [ ] Browser check (TASK-012): the link shows on Dashboard, Directory, Feed, My profile, Users; Tab reaches it and shows the focus ring; the page works at 360px in both themes; focus moves to the heading after the move.
 - [ ] `grep -in "privacy\|password reset" frontend/src/pages/AboutPage frontend/src/config/text.ts` finds nothing new.
 
+## Notes
+
+Done 2026-10-08 (task-implementer).
+
+- Every word was already in `text.ts` (TASK-005); nothing was added there.
+- AboutPage: `PageLayout` (heading `ABOUT_HEADING`, sub `aboutSub(APP_NAME)`), then two `Card`s with `padding="lg"`: a plain card holding two `<section>`s (purpose, what you can do) and a `section` card for "Who to ask". The email link is `mailtoHref(CONTACT_EMAIL)`; if that is ever null (owner sets a non-plain address) the email shows as text. The email sits in a span with `overflow-wrap: anywhere` so a long address cannot scroll sideways at 360px. One phone media query (it narrows the gap between the two sections).
+- Footer: `.inner` is now a flex row with `flex-wrap` and `space-between`, so name and About sit on two lines when they do not fit; no media query. The link is the shared `Link` (`to={PATHS.about}`), so it keeps the shared focus ring. Header nav is unchanged.
+- Route: `<Route path={PATHS.about}>` sits inside `RequireAuth` and `AppShell`, after the admin route and before the not-found route.
+- Checks: `npm run build` exit 0, `dist/assets` has `AboutPage-*.js` and `AboutPage-*.css`; style check PASS (rule e 0); lib check 529 passed; `grep -in "privacy\|password reset"` on AboutPage and text.ts finds nothing.
+- Not done here: the browser check (360px, both themes, Tab to the link, focus on the heading) is TASK-012's.
+
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-007-frontend-users-about-polish-perf/architecture]]
