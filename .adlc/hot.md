@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] verify-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | findings: C0/M1/m15 open (M1 is a stale vault page, decided at wrapup); 2 review rounds, 5 reviewers each; fix rounds resolved the bugs and the regression found in round 2; library check 333 cases
+
 ## [2026-10-08] implement-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 15 tasks done (14 planned plus a cleanup task); build, style check and library check (282 cases) pass; browser review on a mock API only (the real backend on port 3000 was never called); 5 findings go to review
 
 ## [2026-10-08] architect-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 14 tasks in 5 stages, no ADR; stress test found 0 critical, 3 major, 5 minor, all fixed in the plan; 7 small deviations accepted by the owner

@@ -138,3 +138,144 @@
 **Claim:** When a script looks for "the button with aria-expanded", scope it to its form: the header's phone menu button also has `aria-expanded` and comes first.
 **Saw it in:** `frontend/src/components/alumni/DirectoryFilters/DirectoryFilters.tsx:160`
 **Context:** A review script read the menu button and reported the Filters panel closed when it was open.
+
+## From quality-reviewer (REQ-fs-005)
+- A shared pure rule that cannot live in lib/ (needs a store type) escapes the library check; declare its own input shape in lib instead (as loadFailure.ts did). Evidence: saveFailureText.ts has no cases.
+- "Compose to avoid drift" must cover every repeated block, not one: composes was used for .heading while .card/.form/border-row stayed copied across two CSS modules.
+- Count of cases in docs (282) should exclude fixture self-checks and function-vs-itself cases.
+
+## CAND-029 [review-corr]
+**Claim:** Build a `mailto:` or other scheme link from user-stored text only after checking or encoding it, because the server does not validate the field.
+**Saw it in:** `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx:173`
+**Context:** The sign-up route accepts any non-empty email string, so `?cc=` and `&body=` can ride in the link.
+
+## CAND-030 [review-corr]
+**Claim:** A state that is keyed by id but set from an effect shows the previous visit's status for one frame; derive "loading" until this mount has asked.
+**Saw it in:** `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx:88-92`
+**Context:** The atom outlives the page, so `viewed.id === id` is true for an old error or not-found.
+
+## CAND-031 [review-corr]
+**Claim:** A once-per-key guard ("done for this address") must be cleared when the condition ends, or the same key cannot be fixed twice.
+**Saw it in:** `frontend/src/pages/DirectoryPage/DirectoryPage.tsx:221-226`
+**Context:** `clampedKey` keeps the last past-the-end address.
+
+## CAND-032 [review-corr]
+**Claim:** Give the shared API client a default timeout; a hung server otherwise leaves every loader and busy button with no error state.
+**Saw it in:** `frontend/src/services/apiClient.ts`
+**Context:** Only the logout call sets a timeout.
+
+## CAND-029 [review-reflect]
+**Claim:** Write a spec pointer in a code comment with the REQ id ("REQ-fs-005 AC7"); bare AC and ADV numbers repeat in every REQ.
+**Saw it in:** `frontend/src/components/alumni/DirectoryFilters/DirectoryFilters.tsx:73`
+**Context:** 75 comment lines cite AC or ADV numbers, 2 files name a REQ; conventions.md Comments (new in this REQ) allows the bare form.
+
+## CAND-029 [review-arch]
+**Claim:** A style-check rule for "lib has no React or services; store has no components" belongs next to rule d, or the layer rule is habit only.
+**Saw it in:** `scripts/frontend-style-check.mjs:47`
+**Context:** Rule d guards UI folders only; lib/store layering held by hand in REQ-fs-005.
+
+## CAND-030 [review-arch]
+**Claim:** Declare a failure/status shape once in lib and let services import it, not copy it by hand per layer.
+**Saw it in:** `frontend/src/lib/loadFailure.ts:10`, `frontend/src/components/profile/saveFailureText.ts:1`
+**Context:** Three declarations of the same shape plus HTTP status numbers repeated in three files.
+
+## CAND-031 [review-arch]
+**Claim:** When a deviation says "typing replaces history", check that every caller of the shared write function passes the right replace flag.
+**Saw it in:** `frontend/src/pages/DirectoryPage/DirectoryPage.tsx:133`
+**Context:** Enter and the Search button reuse the typing path, so they replace too.
+
+## CAND-032 [review-arch]
+**Claim:** Treating atom state as current because its key matches the address shows stale data for one frame before the reload sets loading.
+**Saw it in:** `frontend/src/pages/DirectoryPage/DirectoryPage.tsx:207`
+**Context:** Back from a profile renders the old list, then a skeleton.
+
+## CAND-033 [review-arch]
+**Claim:** Debounce/address-sync logic that needs refs and timers goes in a hook, so a second searchable list does not copy the page body.
+**Saw it in:** `frontend/src/pages/DirectoryPage/DirectoryPage.tsx:63-218`
+**Context:** Most bug-prone code of the REQ sits in the page and cannot be reached by the library check.
+
+## CAND-034 [implement-task]
+**Claim:** Before switching off a button that may hold focus (a clean save, Discard), move focus to a stable target such as the card heading; a disabled button drops focus to the page.
+**Saw it in:** `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.tsx` (keepFocusFrom)
+**Context:** Button passes `disabled` through but overwrites a caller's `aria-disabled` with its busy flag, so the focusable aria-disabled route needs a Button change.
+
+## CAND-035 [review-qual]
+**Claim:** Do not cite review finding ids (CORR-004, UI-001) in code comments; state the reason in words.
+**Saw it in:** `frontend/src/store/alumniAtoms.ts:237` (18 places)
+**Context:** The ids live in one REQ's review-log with no REQ number; they dangle after archive.
+
+## CAND-036 [review-qual]
+**Claim:** When two forms need the same edge-case fix, extract it in the fix round; two mechanisms for one problem drift.
+**Saw it in:** `AccountCard.tsx:298` and `AlumniProfileCard.tsx:98` (keep typing during save, focus hand-off)
+**Context:** CORR-005 and UI-001 were fixed twice, differently.
+
+## CAND-037 [review-qual]
+**Claim:** Moving a rule into lib/ should bring its cases and a layer-check rule in the same round.
+**Saw it in:** `scripts/frontend-style-check.mjs` rule k; `scripts/frontend-lib-check.ts:657`
+**Context:** Q-1 and ARCH-001 closed together with 44 new cases.
+
+## CAND-038 [review-qual]
+**Claim:** After a fix round, grep the docs for case counts and open-point lists; they go stale first.
+**Saw it in:** `docs/frontend-patterns.md:438`
+**Context:** "282 cases" and an already-fixed focus gap still listed as open.
+
+## CAND-035 [review-reflect]
+**Claim:** When two forms share a rule (same-values, keep newer typing, focus move), write the rule once in lib or a hook with cases, not once per form.
+**Saw it in:** `frontend/src/components/profile/AccountCard/AccountCard.tsx:140`, `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.tsx:100`
+**Context:** The fix round gave each card its own version; only the Alumni one has a lib function and cases.
+
+## CAND-036 [review-reflect]
+**Claim:** When constants move into a shared file, grep for the bare number across the layer and convert every local copy in the same change.
+**Saw it in:** `frontend/src/store/alumniAtoms.ts:87`
+**Context:** HTTP_NOT_FOUND now exists in lib/loadFailure.ts, yet the store keeps `NOT_FOUND = 404`.
+
+## CAND-037 [review-reflect]
+**Claim:** A layer rule in the style check should ban the full list of forbidden imports, not only the ones that were found by hand.
+**Saw it in:** `scripts/frontend-style-check.mjs:53`
+**Context:** Rule k bans react and store/ but not jotai, axios or components/ for lib/.
+
+
+## CAND-041 [review-arch]
+**Claim:** A layer check must encode every sentence of the layer rule, not only the one broken last.
+**Saw it in:** `scripts/frontend-style-check.mjs:51-53,339-348`
+**Context:** Rule k bans react, router, services, store from lib/ but not hooks, components, jotai; nothing checks services to store.
+
+## CAND-042 [review-arch]
+**Claim:** Move a shared type and its constants to a neutrally named lib file when a second rule starts reading them.
+**Saw it in:** `frontend/src/lib/loadFailure.ts:12-18`
+**Context:** CallFailure and the HTTP numbers live in the load-words file; saveFailure and a store file import them from there.
+
+## CAND-043 [review-arch]
+**Claim:** When two forms need "keep what was typed during a save", write the decision once in lib/, not twice in components.
+**Saw it in:** `AccountCard.tsx` (latest ref) and `AlumniProfileCard.tsx` (sent state plus render reset)
+**Context:** Two mechanisms for one rule (CORR-005).
+
+## CAND-044 [review-arch]
+**Claim:** Put CSS blocks shared by two components in a neutral module, not in one of the two components' files.
+**Saw it in:** `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.module.css:7-54`
+**Context:** composes from a sibling card's module ties the two together by class name.
+
+## CAND-045 [review-arch]
+**Claim:** A clear-on-close action must also stop non-request writers (a save's set), or "starts from idle" is false.
+**Saw it in:** `frontend/src/store/alumniAtoms.ts:229-264`
+**Context:** setMyAlumniAtom after unmount restores ready; harmless here, a trap for a source with an error state.
+
+## CAND-046 [review-arch]
+**Claim:** When a fix changes why a store atom exists, update the architecture file's reason in the same round.
+**Saw it in:** REQ architecture.md store rationale vs `docs/frontend-patterns.md` pattern 23
+**Context:** "Kept when the user comes back" went away with clear-on-close.
+
+## CAND-047 [review-corr]
+**Claim:** When a form's save is disabled until a change, ask what the empty create case does: a new record's blank form equals "saved", so it can never be created.
+**Saw it in:** `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.tsx:624`
+**Context:** `changed` compares to `alumniToForm(null)`, so a first create needs a typed value (AC24).
+
+## CAND-048 [review-corr]
+**Claim:** Every control that resets a form must also be off while a save runs, or the save's answer silently undoes it.
+**Saw it in:** `frontend/src/components/profile/AlumniProfileCard/AlumniProfileCard.tsx:715`
+**Context:** Discard during a running save: values reset, then the render-time reset refills them from the answer.
+
+## CAND-049 [review-corr]
+**Claim:** Move focus off a button before the render that disables it, and do it in the same tick as the state change that disables it.
+**Saw it in:** `frontend/src/components/profile/AccountCard/AccountCard.tsx:322`
+**Context:** The store answer renders while `busy` is still true, so the button is still enabled when the focus check runs; this order is what makes it work.

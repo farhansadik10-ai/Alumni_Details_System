@@ -50,3 +50,10 @@ Implementation notes (TASK-012, 2026-10-08):
 ## Related
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
+
+## Fix round 1 - batch E
+
+- m4 leftover (CORR-004, ARCH-005): `clearMyAlumniAtom` in `store/alumniAtoms.ts` cancels `myAlumniRequest` and sets `myAlumniAtom` to idle. `MyProfilePage` calls it from `useEffect(() => () => clearMyAlumni(), [clearMyAlumni])`, the same shape as DirectoryPage and AlumniProfilePage. Only on close, so the band's "See my public profile" link keeps working after a save. `AlumniProfileCard` is unchanged: it treats idle like loading, and its `key={session.userId}` (ADV-001) is untouched. Under StrictMode the cleanup cancels the card's first load, and the card's second effect run starts a new one.
+- Docs (after m7): `docs/frontend-patterns.md` patterns 9 and 28 now point to `lib/saveFailure.ts` and `lib/loadFailure.ts` (`CallFailure`) and say the lib check covers them; pattern 23 describes the three clear-on-close atoms. Every file path in that doc was checked to exist (123 paths, none missing).
+- Not changed: the historical mentions of `saveFailureText.ts` / `LoadFailure` in architecture.md, lesson-candidates.md and the task notes (they record what was true then).
+- Checks: `npm run build`, `node scripts/frontend-style-check.mjs` (no findings) and `npx tsx scripts/frontend-lib-check.ts` (326 passed) all pass. Not checked in a browser.

@@ -56,3 +56,9 @@ Implementation notes (TASK-010, 2026-10-08):
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-004-2-one-rule-one-function-in-lib|L-REQ-fs-004-2]]
+
+## Fix round 1 - batch C
+
+- m7 (Q-1, ARCH-003): the save rule is now `frontend/src/lib/saveFailure.ts`; the shape (`CallFailure`, was `LoadFailure`) and 403/404/409/500 are named once in `lib/loadFailure.ts`. `components/profile/saveFailureText.ts` is no longer imported but still on disk: the owner deletes it (agents may not delete files). `store/alumniAtoms.ts:87` still writes its own 404 (batch A's file): follow-up.
+- m9 (REFL-001): `presentText` (now also takes undefined) replaces `textOrNull` and the `.trim() || null` copies in alumniActions, sessionActions (sign-up: same meaning, an absent name or photo becomes null), Header and PhoneMenu. Search after: one definition.
+- Library check: 12 save-words, 5 same-text/present and 7 same-form cases appended; one expectation flipped to prove a case fails, then put back.

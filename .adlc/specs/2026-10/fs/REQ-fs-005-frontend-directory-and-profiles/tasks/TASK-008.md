@@ -62,3 +62,9 @@ Implementation notes (TASK-008, 2026-10-08):
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-004-1-router-state-survives-a-reload|L-REQ-fs-004-1]], [[knowledge/lessons/LESSON-REQ-fs-004-4-check-focus-for-real|L-REQ-fs-004-4]], [[knowledge/concepts/paged-list-query]]; gotchas G48, G49
+
+## Fix round 1 - batch A
+
+- m2 (CORR-002): `writeControl` sets `page: 1` whenever it sends a waiting search text that differs from the address, so a page click within 300 ms of typing lands on page 1 (AC6). ADV-003 is kept: the live query is still read at write time.
+- m3 (CORR-003): the clamp effect clears `clampedKey` whenever the page is not past the end, and marks the key only when `writeAddress` actually moved it, so each past-the-end episode is fixed and the skeleton cannot stay.
+- m4 (CORR-004, ARCH-005): new `clearDirectoryAtom` (store/alumniAtoms.ts) cancels the list call and sets the list to idle; the page calls it on unmount. A Back from a profile now shows the skeleton from the first frame instead of one frame of the old list, then the skeleton (no extra skeleton; the old frame is gone). Filter options are kept.

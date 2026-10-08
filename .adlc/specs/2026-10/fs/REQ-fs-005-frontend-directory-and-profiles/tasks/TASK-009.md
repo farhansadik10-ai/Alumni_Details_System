@@ -57,3 +57,8 @@ Implementation notes (TASK-009, 2026-10-08):
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-004-1-router-state-survives-a-reload|L-REQ-fs-004-1]]; gotchas G42, G49
+
+## Fix round 1 - batch A
+
+- m1 (CORR-001): new `lib/mailtoLink.ts` `mailtoHref(email)`: null unless the trimmed email passes `validateEmail`, is at most 100 characters and matches a plain address (letters, digits, `. _ + -`, a dotted domain); the parts are encoded with `encodeURIComponent`. The band hides "Email Name" and the Details row shows the email as text when it is null. 20 cases in scripts/frontend-lib-check.ts. Not put in lib/alumniDisplay.ts as the finding suggested: that file belongs to another fix batch.
+- m4 (CORR-004, ARCH-005): new `clearViewedAlumniAtom` cancels the profile call and sets the viewed profile to idle; the page calls it on unmount, so the next visit (also your own profile after a save) starts from "loading", never from an old error, "not found" or old data.

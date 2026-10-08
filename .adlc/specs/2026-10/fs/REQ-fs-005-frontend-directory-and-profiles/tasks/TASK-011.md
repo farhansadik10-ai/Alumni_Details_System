@@ -60,3 +60,19 @@ Implementation notes (TASK-011, 2026-10-08):
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
 - Lessons checked: [[knowledge/concepts/partial-update-sent-fields]]; gotchas G34, G37
+
+## Fix round 1 - batch C
+
+- M1 (UI-001): `changed = !sameAlumniForm(values, saved)` (Account: `sameText` on name and photo link). Save and Discard changes use the native `disabled` (Button overwrites `aria-disabled` with its busy flag, and `components/ui` is out of this batch). While busy the save stays enabled-and-busy. Enter in a field cannot submit, and the submit also returns early when nothing changed. Spaces around text do not count as a change.
+- A switched-off button would drop focus to the page: after a clean save, or Discard, focus moves to the card heading (`tabIndex={-1}`, `align-self: flex-start` so the ring hugs the words).
+- m5 (CORR-005): AlumniProfileCard keeps `sent`; the render-time reset from the store applies only if the form still equals `sent`. AccountCard resets each field only if it still equals what was sent.
+- m16: "Try again" on both load errors focuses the card heading, as AlumniProfilePage does with its h1.
+- m8 (Q-2): AccountCard.module.css owns card, heading, form and a new `ruled` block; AlumniProfileCard composes all four; `.logOut` composes `ruled`.
+- Not checked in a browser in this batch (build, style check and library check only).
+
+## Fix round 2 - batch F
+
+- n1 (R2-001): `canSaveAlumniForm(isNew, values, saved)` in `lib/alumniForm.ts` is `isNew || !sameAlumniForm(values, saved)`. The card passes `mine.status === "none"`. Save's `disabled` and the early return in `handleSubmit` both use it; Discard keeps `changed`. An empty first save sends the nine keys (null / false) as before. After the create the store is `ready`, the form equals the saved one, Save goes off and focus moves to the heading as before.
+- n2 (R2-002): Discard is `disabled={!changed || busy}`. It cannot hold focus when a save starts (Enter on it discards, it does not submit), so no focus handling was needed. AccountCard has no Discard button: nothing to fix there.
+- Kept: native `disabled`, heading focus after a clean save and after Discard, error focus after a failed save, typing during a save, the key on the session user id.
+- Checks: 8 new lib-check cases (333 pass); flipping "new profile, empty form" to false fails as expected, restored. `npm run build` and the style check pass. Not checked in a browser in this batch.

@@ -59,3 +59,11 @@ Rules for every task of this REQ: see TASK-001. Colors for tags on the band come
 
 - Architecture: [[specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles/architecture]]
 - Lessons checked: [[knowledge/lessons/LESSON-REQ-fs-002-3-new-helper-convert-every-sibling|L-REQ-fs-002-3]]; gotchas G45, G46, G49
+
+## Fix round 1 - batch D
+
+- m11 (UI-002): `ProfileBand.module.css` `.tag` slot sets `--action: var(--band-text)` and `--on-action: var(--band)`. Only the Admin tag reads those two tokens, so Alumni, Student and mentoring tags in the slot and every Tag on a card are unchanged. Chose an inverted fill over the suggested outline: it matches the filled Alumni tag of my-profile.html and the dark theme's existing light box, and an outline in band-text looks like the band's outline buttons. Contrast: #161616 on #FFFFFF 18:1 (light), #262624 on #F2F1EC about 13:1 (dark). Checked in headless Chrome against the scratchpad mock: `ui-evidence/review/fixD-admin-band-light-1280.png`, `fixD-admin-band-dark-1280.png`. Mock, Vite and Chrome stopped by PID.
+- m12 (ARCH-001): rule k in `scripts/frontend-style-check.mjs`: a file under `lib/` may not import `react`, `react-dom`, `react-router-dom`, or a relative path through `services/` or `store/`. 0 findings on the repo. Proof it can fail: the script and a copy of `frontend/src` in the scratchpad (`k-proof/`), plus a planted `lib/zzViolation.ts`; it reported 4 findings (react, react-router-dom, ../services, ../store) and skipped `@alumni/shared`, `../config` and a commented-out import. Exit 1.
+- Not done (outside the dispatch): the reviewer also suggested `jotai` in lib/ and "store/ may not import components/ or pages/". Left for the owner to decide.
+- `docs/frontend-patterns.md`: "eleven rules, a to k", rule k listed, the checks table says eleven, pattern 1's guard line names rule k.
+- Build, style check and lib check (302 passed) all exit 0.
