@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] spec-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | calls taken: 409 text names alumni profile too (A3), About for logged-in only (A5), no toast on unchanged save (A7)
+
 ## [2026-10-08] req-archived | REQ-fs-006-frontend-feed-and-dashboard
 
 ## [2026-10-08] req-merged | REQ-fs-006-frontend-feed-and-dashboard | merge commit b4c31a97 on redesign (the feature branch was deleted by the owner)
