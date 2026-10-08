@@ -1,5 +1,5 @@
-// Kept as it is for the legacy frontend, which imports it by file path.
-// It has `password`, so it is not in index.ts. New code uses `PublicUser`.
+// A full "User" row, with `password`, so it is not exported from index.ts.
+// The old app that imported it is gone. New code uses `PublicUser`.
 export interface User {
   id: number;
   name: string;
@@ -13,8 +13,8 @@ export interface User {
   updated_at?: Date;
 }
 
-// Kept as it is for the legacy frontend, which imports it by file path.
-// New code uses `SignUpUserDTO` and `UpdateUserDTO`.
+// It has `password`, so it is not exported from index.ts. The old app that
+// imported it is gone. New code uses `SignUpUserDTO` and `UpdateUserDTO`.
 export interface CreateUserDTO {
   name: string;
   email: string;
@@ -29,8 +29,8 @@ export interface LoginUserDTO {
 }
 
 // A user as the API answers it: every "User" column except password.
-// New code uses this type, not `User` above (kept as it is for the legacy
-// screens). The four dates travel as JSON, so they are ISO date strings.
+// New code uses this type, not `User` above (it carries `password`).
+// The four dates travel as JSON, so they are ISO date strings.
 export interface PublicUser {
   id: number;
   name: string | null;

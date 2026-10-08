@@ -6,9 +6,15 @@ import { Band } from "../Band/Band";
 import styles from "./PageLayout.module.css";
 
 export type PageLayoutProps = {
-  /** The page heading. Also the browser tab title. */
+  /** The page heading. Also the browser tab title, with or without `band`. */
   heading: string;
   sub?: string;
+  /**
+   * A band drawn in place of the default one, for example a ProfileBand. It
+   * must hold the page's one <h1> itself; `heading` and `sub` then only set
+   * the tab title.
+   */
+  band?: ReactNode;
   /** The page content. The first child overlaps the band. */
   children: ReactNode;
 };
@@ -17,12 +23,12 @@ export type PageLayoutProps = {
  * The frame of every page inside the shell: the band, then one content
  * column whose first child is pulled up over the band (AC34).
  */
-export function PageLayout({ heading, sub, children }: PageLayoutProps) {
+export function PageLayout({ heading, sub, band, children }: PageLayoutProps) {
   useDocumentTitle(heading);
 
   return (
     <>
-      <Band heading={heading} sub={sub} />
+      {band ?? <Band heading={heading} sub={sub} />}
       <div className={styles.content}>{children}</div>
     </>
   );

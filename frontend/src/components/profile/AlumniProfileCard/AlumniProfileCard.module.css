@@ -1,0 +1,58 @@
+/*
+ * The Alumni profile card of my-profile.html. Tokens only. The card's frame
+ * is Card; the card, heading, form and ruled blocks are the Account card's,
+ * taken with "composes", so the two cards cannot drift.
+ */
+.card {
+  composes: card from "../AccountCard/AccountCard.module.css";
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heading {
+  composes: heading from "../AccountCard/AccountCard.module.css";
+}
+
+.intro {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--muted);
+}
+
+.form {
+  composes: form from "../AccountCard/AccountCard.module.css";
+}
+
+/* The short fields side by side while the card is wide enough, one per row
+ * when it is not (a phone, or a narrow card). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(calc(var(--space-8) * 4), 100%), 1fr));
+  gap: var(--space-5);
+}
+
+/* A failed save: the message, and under it the reload for a profile that
+ * can no longer be saved. */
+.failure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* As wide as its words, not the card. */
+.failureAction {
+  display: flex;
+}
+
+/* The two buttons under the thin line, as drawn. */
+.actions {
+  composes: ruled from "../AccountCard/AccountCard.module.css";
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

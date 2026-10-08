@@ -989,6 +989,9 @@ Where each old item went:
 
 **Update 2026-10-07 (REQ-fs-004):** The legacy frontend is deleted. Nothing under `frontend/src` imports `User` or `CreateUserDTO` any more, and the new frontend reads only `shared/index.ts`. The lines in `shared/types/user.types.ts` that say "kept for the legacy frontend" are now stale; removing them (and the two legacy types) is shared code and waits for the owner (review finding m18).
 
+
+**Update 2026-10-08 (REQ-fs-005):** The "kept for the legacy frontend" comments in `shared/types/user.types.ts` and `shared/index.ts` were rewritten (AC46); a search of `shared/` finds no "legacy frontend" left. The compiled `.js` / `.d.ts` copies carry no comments, so none of them is stale in that way. They are still older than the `.ts` sources in other ways, as above.
+
 ---
 
 ## G39 — List order and filter rules differ per endpoint ^g39
@@ -1084,6 +1087,9 @@ Where each old item went:
 **Don't:** Don't show the email on a public-facing card without asking the owner. Don't rely on "no role" meaning "cannot log in".
 
 **Related:** [[knowledge/concepts/user-join-read-shape]], [[architecture/adr-01-sign-up-role-is-student-or-alumni|ADR-01]].
+
+
+**Update 2026-10-08 (REQ-fs-005):** The alumni profile page now shows the email: a `mailto:` button in the band and a row in the Details card (`frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`). The owner chose to keep it as drawn in `profile.html`; the question of who may see it is still open. The link is built only from a plain address (`frontend/src/lib/mailtoLink.ts`), otherwise the email shows as text.
 
 ---
 
@@ -1205,6 +1211,9 @@ Where each old item went:
 
 **Related:** [[knowledge/concepts/frontend-session-flow]], G41
 
+
+**Update 2026-10-08 (REQ-fs-005):** To test an axios error path without a network, pass a per-call `adapter` that throws an `AxiosError`; an adapter that returns a 500 response resolves instead, because it skips axios's own status check. An already-aborted `signal` rejects before the adapter runs. `isCancelled` in `frontend/src/services/apiError.ts` was checked this way. Axios already takes a `signal` on every call; `apiClient.ts` needed no change for cancellation.
+
 ---
 
 ## G48 — Store traps: updates after `await`, StrictMode effects, other tabs, hot reload ^g48
@@ -1276,3 +1285,126 @@ Where each old item went:
 **Don't:** Don't read one headless result as proof; re-run in a fresh browser before calling it a page bug.
 
 **Related:** [[knowledge/lessons/LESSON-REQ-fs-004-4-check-focus-for-real]], [[knowledge/lessons/LESSON-REQ-fs-004-5-find-out-what-listens-on-the-api-port]]
+
+**Update 2026-10-08 (REQ-fs-005):** Two more. If a tab stops answering mouse and key events after full-page screenshots, open a fresh tab with `/json/new`; it works at once. When a script looks for "the button with aria-expanded", scope it to its form: the header's phone-menu button also has `aria-expanded` and comes first, so an unscoped query reported the Filters panel closed when it was open.
+
+
+---
+
+## G51 — Directory address traps: a repeated key and the spaces-only trim ^g51
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-005 |
+| Component | `frontend/src/lib/directoryQuery.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) `URLSearchParams.get` returns the first value of a key sent twice, while a request builder may send the other: `?q=a&q=b` shows one thing and asks for another. The reader treats a repeated key as absent. (2) The server compares `department` and `field` with `btrim`, which removes spaces only. A JavaScript `trim()` also removes tabs and other white space, so an option that contains a tab no longer matches the value the server sent. `q` is trimmed with `trim()`; `department` and `field` are stripped of spaces only.
+
+**Where:** `readDirectoryQuery` in `frontend/src/lib/directoryQuery.ts`; `queryFilterValue` and `queryText` in `backend/src/api/utils/requestHelpers.ts`.
+
+**Why it's surprising:** Both read as harmless clean-up; a normal trim is what most code does.
+
+**Why it exists:** SQL and JavaScript define "white space" differently (see the paged-list concept).
+
+**Don't:** Don't "simplify" the department and field handling to `trim()`, and don't read a repeated key with `get`.
+
+**Related:** [[knowledge/concepts/paged-list-query]], [[knowledge/gotchas#^g39|G39]]
+
+---
+
+## G52 — CSS traps from the profile band: token order, Tag colour, composes order, first-child overlap ^g52
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-005 |
+| Component | `frontend/src/styles/tokens.css`, `components/shell/ProfileBand/`, `PageLayout` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) A phone value for a token added under "Added by later tasks" must sit in a phone block *after* it; same-weight `:root` rules are won by the later one, so a value in the earlier phone block (section 4) is silently ignored (`--avatar-xl`). (2) A plain `Tag` writes `color: var(--text)`, which equals the band colour in the light theme; scope `--text: var(--band-text)` on the row that holds it. The Admin tag uses `--action` (also the band colour in light), so the band slot redefines `--action` and `--on-action`. (3) When a class `composes` one from another stylesheet, add only properties the composed class does not set; which stylesheet loads first is not the author's to control. (4) `PageLayout` pulls up only its first child over the band, so a page that wraps its cards in one box overlaps with the whole box.
+
+**Where:** `frontend/src/styles/tokens.css` (the `--avatar-xl` phone block), `frontend/src/components/shell/ProfileBand/ProfileBand.module.css`, `frontend/src/components/shell/PageLayout/PageLayout.module.css`.
+
+**Why it's surprising:** Each looks right in one theme or one width and wrong in the other.
+
+**Why it exists:** Cascade order and token reuse; the design uses the same colour for the band and the "action" tokens.
+
+**Don't:** Don't move the phone value up, don't give `Tag` a band-specific colour, don't override a composed property.
+
+**Related:** [[knowledge/gotchas#^g45|G45]], [[knowledge/gotchas#^g46|G46]]
+
+---
+
+## G53 — Form control traps: Button overwrites aria-disabled, and maxLength hides the message ^g53
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-005 |
+| Component | `frontend/src/components/ui/Button/Button.tsx`, the two profile cards |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `Button` passes `disabled` through but replaces a caller's `aria-disabled` with its own busy flag, so a focusable "disabled" button needs a change to `Button`; the cards use the plain `disabled` attribute and move focus to the card heading first, because a disabled button drops focus to the page. Separately, a `maxLength` on a field whose validator has a length message cuts pasted text off silently and the message never shows; the name field has none on purpose.
+
+**Where:** `Button.tsx`; `AccountCard.tsx` and `AlumniProfileCard.tsx` (`keepFocusFrom`).
+
+**Why it's surprising:** Both look like the obvious accessible choices.
+
+**Why it exists:** `Button` owns `aria-disabled` for its busy state (pattern 16).
+
+**Don't:** Don't add `aria-disabled` to a `Button` and expect it to stay; don't add `maxLength` to a validated field.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-005-1-disable-until-changed-has-three-traps|L-REQ-fs-005-1]]
+
+---
+
+## G54 — Work-tree files are CRLF: a scripted rewrite flips every line ending ^g54
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-005 |
+| Component | whole repo on Windows (`core.autocrlf`) |
+| Status | confirmed |
+| Severity | trivia (good to know) |
+
+**What:** Source and vault files are CRLF in the working tree. A script that rewrites a file with Python's default `open()` (or a Node string split on "\n") turns every line into LF and shows the whole file as changed. `git add` also prints "LF will be replaced by CRLF" for LF files; that warning is normal.
+
+**Where:** `frontend/src/store/sessionActions.ts` was rewritten this way once during REQ-fs-005 and caught in the diff.
+
+**Why it's surprising:** The diff of a one-line change shows the entire file.
+
+**Why it exists:** `core.autocrlf` on Windows; the Edit tool keeps the endings.
+
+**Don't:** Don't rewrite whole files by script; use the Edit tool, or pass `newline=""` (Python) / keep `\r\n` (Node).
+
+**Related:** [[knowledge/gotchas#^g50|G50]]
+
+---
+
+## G55 — Library check traps: JSON-text compare, no type-check, and proving it can fail ^g55
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-08 |
+| REQ | REQ-fs-005 |
+| Component | `scripts/frontend-lib-check.ts` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** `check(name, got, want)` compares the two values as JSON text, so an expected object's keys must be typed in the order the code adds them. The script runs through `tsx`, which strips types without checking them, and `npm run build` type-checks `frontend/src` only, so a type error in the script is found by nobody. To prove a case can fail, change one expectation in place and change it back, or run a copy that lives outside the repo; a scratch copy inside `scripts/` has to be deleted afterwards, which the owner's rules forbid outside `.adlc/` (one agent did this once and said so).
+
+**Where:** `scripts/frontend-lib-check.ts`.
+
+**Why it's surprising:** A correct result can fail on key order alone; a wrong type passes.
+
+**Why it exists:** The script was written without a test framework (pattern 16).
+
+**Don't:** Don't leave scratch files in `scripts/`; don't trust "it passes" without the fail run (L-REQ-fs-004-6).
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-004-6-a-check-that-reads-only-tracked-files|L-REQ-fs-004-6]], [[knowledge/lessons/LESSON-REQ-fs-003-4-a-check-must-be-able-to-fail|L-REQ-fs-003-4]]

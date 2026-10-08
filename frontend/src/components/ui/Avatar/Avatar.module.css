@@ -29,6 +29,15 @@
   font-size: var(--text-h2);
 }
 
+/* The initials are a third of the box, as for "lg": 40 at 120 and 32 at 96,
+   as drawn in profile.html and my-profile.html. */
+.xl {
+  width: var(--avatar-xl);
+  height: var(--avatar-xl);
+  font-size: calc(var(--avatar-xl) / 3);
+  letter-spacing: var(--tracking-snug);
+}
+
 .photo {
   display: block;
   width: 100%;

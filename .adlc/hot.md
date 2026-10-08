@@ -17,6 +17,32 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] ship-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | roadmap F6 and F7 marked Done; root CLAUDE.md frontend line, docs/frontend-patterns.md (patterns 25 and 28, counts, open points) and the vault pages (frontend-app, design-system, project-overview) brought up to date
+
+## [2026-10-08] req-ready-to-merge | REQ-fs-005-frontend-directory-and-profiles | frontend part 2 (roadmap F6 and F7): alumni directory, alumni profile, My profile; 2 review rounds of 5 reviewers; build, style check (11 rules) and library check (333 cases) pass; browser-checked on a mock API only, not yet against the real backend
+## [2026-10-08] lesson | L-REQ-fs-005-5 — before the architecture says "no change needed" to a reused part, check it can carry everything the design asks
+## [2026-10-08] lesson | L-REQ-fs-005-4 — a layer check must encode every sentence of the layer rule, and a rule moved into lib/ brings its cases
+## [2026-10-08] lesson | L-REQ-fs-005-3 — build a mailto: or other link from stored text only after checking and encoding it
+## [2026-10-08] lesson | L-REQ-fs-005-2 — state kept in a store atom outlives the page: clear it on close and never trust a matching key
+## [2026-10-08] lesson | L-REQ-fs-005-1 — a "Save is off until something changed" button has three traps: the create case, focus, and Discard
+## [2026-10-08] gotcha | G55 — library check traps: JSON-text compare, no type-check, and proving it can fail
+## [2026-10-08] gotcha | G54 — work-tree files are CRLF: a scripted rewrite flips every line ending
+## [2026-10-08] gotcha | G53 — form control traps: Button overwrites aria-disabled, and maxLength hides the message
+## [2026-10-08] gotcha | G52 — CSS traps from the profile band: token order, Tag colour, composes order, first-child overlap
+## [2026-10-08] gotcha | G51 — directory address traps: a repeated key and the spaces-only trim
+## [2026-10-08] gotcha-status | G38, G42, G47, G50 got update lines (comments rewritten, email now shown on the profile page, axios error test, headless Chrome tab)
+## [2026-10-08] concept | address-as-state, latest-request-wins — first captured
+
+## [2026-10-08] verify-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | findings: C0/M1/m15 open (M1 is a stale vault page, decided at wrapup); 2 review rounds, 5 reviewers each; fix rounds resolved the bugs and the regression found in round 2; library check 333 cases
+
+## [2026-10-08] implement-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 15 tasks done (14 planned plus a cleanup task); build, style check and library check (282 cases) pass; browser review on a mock API only (the real backend on port 3000 was never called); 5 findings go to review
+
+## [2026-10-08] architect-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | 14 tasks in 5 stages, no ADR; stress test found 0 critical, 3 major, 5 minor, all fixed in the plan; 7 small deviations accepted by the owner
+
+## [2026-10-08] work-path-set | REQ-fs-005-frontend-directory-and-profiles | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-005-frontend-directory-and-profiles, off redesign); the only uncommitted files were this REQ's own vault records
+
+## [2026-10-08] spec-gate-cleared | REQ-fs-005-frontend-directory-and-profiles | roadmap F6 and F7 (request said F6 to F8; F8 is the feed, left out); 52 criteria, 25 standard choices listed in the spec
+
 ## [2026-10-07] req-archived | REQ-fs-004-frontend-foundation-shell-auth
 
 ## [2026-10-07] req-merged | REQ-fs-004-frontend-foundation-shell-auth | merge commit 3f636a36 on redesign

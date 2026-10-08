@@ -34,3 +34,8 @@ One row per lesson file. Title is the H1 without its `^L…` anchor. Superseded 
 | LESSON-REQ-fs-004-5 | Before any browser check, find out what listens on the API port; check against a mock with no proxy | browser-checks, proxy, database, safety | critical (must never repeat) | REQ-fs-004 |
 | LESSON-REQ-fs-004-6 | A check that reads only tracked files, or only the output, can pass for the wrong reason: prove it finds something | checks, git, verification, build | guideline (a rule to follow) | REQ-fs-004 |
 | LESSON-REQ-fs-004-7 | When a REQ deletes a module, close every mention of it in the same REQ | vault, legacy, cleanup, docs | guideline (a rule to follow) | REQ-fs-004 |
+| LESSON-REQ-fs-005-1 | A "Save is off until something changed" button has three traps: the create case, focus, and Discard | forms, accessibility, focus, frontend | trap (cost real time before) | REQ-fs-005 |
+| LESSON-REQ-fs-005-2 | State kept in a store atom outlives the page: clear it on close and never trust a matching key | state, jotai, frontend, stale-data | trap (cost real time before) | REQ-fs-005 |
+| LESSON-REQ-fs-005-3 | Build a mailto: or other link from stored text only after checking and encoding it | security, links, frontend, input | guideline (a rule to follow) | REQ-fs-005 |
+| LESSON-REQ-fs-005-4 | A layer check must encode every sentence of the layer rule, and a rule moved into lib/ brings its cases | layers, checks, lib, frontend | guideline (a rule to follow) | REQ-fs-005 |
+| LESSON-REQ-fs-005-5 | Before the architecture says "no change needed" to a reused part, check it can carry everything the design asks | architecture, reuse, components, exploration | guideline (a rule to follow) | REQ-fs-005 |

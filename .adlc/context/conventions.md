@@ -91,8 +91,13 @@ _From the owner, 2026-10-05. The frontend was rebuilt from scratch in `frontend/
 
 ## Comments
 
-- _(When are comments expected? When are they noise?)_
-- _(TODO/FIXME format — must include a tracking link?)_
+> **STATUS: needs verification** — drafted in REQ-fs-005 from how the code is written today. Review and edit; remove this banner when confirmed.
+
+- **Expected:** a comment says *why* the code is this way, or points to the rule behind it — a spec item (`AC12`), an ADR, a gotcha (`G38`) or a lesson. A short comment above an exported type or a group of constants saying what it is for is also welcome.
+- **Noise:** a comment that repeats what the code already says, and any comment that has gone stale. When you change code, fix or delete the comments that describe it.
+- **No commented-out code.** Delete it; git keeps it.
+- **TODO / FIXME:** only with a tracking reference, as `// TODO(REQ-xxx): …` or `// TODO(G##): …`. A TODO with no REQ or gotcha is not allowed.
+- Plain English, short sentences, as in the rest of the code.
 
 ## Git
 

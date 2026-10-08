@@ -1,0 +1,174 @@
+/*
+ * The band of profile.html and my-profile.html. Tokens only.
+ * The look, the paddings, the heading and the sub line come from Band with
+ * "composes", so the two bands cannot drift. The rules below only add
+ * properties those classes do not set, so the order of the two stylesheets
+ * does not matter.
+ */
+.band {
+  composes: band from "../Band/Band.module.css";
+}
+
+/* A column with a --space-3 gap, the paddings of Band and room at the bottom
+   for the first card, which PageLayout pulls up over the band. */
+.inner {
+  composes: inner from "../Band/Band.module.css";
+}
+
+/* 44px high, in band colors (profile.html). The negative top margin brings it
+   up to where it is drawn (about 16px from the top, 8px on a phone), out of
+   Band's top padding (--space-7, --space-5 on a phone). The bottom margin
+   adds to the column gap: 24px to the row, as drawn. */
+.back {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  margin-top: calc(-1 * var(--space-6));
+  margin-bottom: var(--space-3);
+  color: var(--band-text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+.back:hover {
+  color: var(--band-muted);
+}
+
+/* The down chevron, turned to point left: no second icon file. */
+.backIcon {
+  display: inline-flex;
+  transform: rotate(90deg);
+}
+
+/* Person on the left, actions on the right; the actions wrap under the
+   person when the line is too short (a long name, a phone, 200% zoom). */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5) var(--space-6);
+}
+
+.person {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* min-width: 0 lets a long name shrink the column, so the heading wraps. */
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* The Admin tag is filled with --action, which on the light theme is the
+   band's own color, so it lost its box (review UI-002). In this slot only it
+   is filled with the band's text color and written in the band's color: a
+   light box on the band in both themes (18:1 light, 13:1 dark). Tags on cards
+   keep --action. The other role tags do not read these two tokens. */
+.tag {
+  --action: var(--band-text);
+  --on-action: var(--band);
+
+  max-width: 100%;
+}
+
+/* As wide as its words, so the focus ring it gets on a page change hugs them. */
+.heading {
+  composes: heading from "../Band/Band.module.css";
+}
+
+.sub {
+  composes: sub from "../Band/Band.module.css";
+  overflow-wrap: anywhere;
+}
+
+/* The loading line takes the width of the column, not of its own content. */
+.subLoading {
+  display: block;
+  align-self: stretch;
+}
+
+/* The plain tags take the band's text color: a Tag writes var(--text), which
+   is near black on the light theme's band. Only this row is changed, so the
+   role and mentoring tags above the heading keep their own colors. */
+.tags {
+  --text: var(--band-text);
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  max-width: 100%;
+}
+
+.avatarLoading {
+  composes: skeleton from "../../ui/Skeleton/Skeleton.module.css";
+  width: var(--avatar-xl);
+  height: var(--avatar-xl);
+}
+
+/* A link drawn as a button. A min-height, so a label that wraps at 200% zoom
+   is not cut off. */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: var(--control-h);
+  padding: var(--space-1) var(--space-5);
+  border: var(--border-edge) solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.actionPrimary {
+  border-color: var(--accent-edge);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: var(--weight-bold);
+}
+
+.actionPrimary:hover {
+  background: var(--accent-hover);
+  color: var(--on-accent);
+}
+
+.actionOutline {
+  border-color: var(--band-text);
+  background: transparent;
+  color: var(--band-text);
+  font-weight: var(--weight-semibold);
+}
+
+.actionOutline:hover {
+  color: var(--band-text);
+  text-decoration: underline;
+}
+
+@media (max-width: 767.98px) {
+  .back {
+    margin-top: calc(-1 * var(--space-4));
+  }
+}

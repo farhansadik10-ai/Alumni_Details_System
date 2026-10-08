@@ -4,6 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { APP_NAME } from "../../../config/app";
 import { PHONE_LAYOUT_QUERY } from "../../../config/layout";
 import { useModalDialog } from "../../../hooks/useModalDialog";
+import { presentText } from "../../../lib/alumniDisplay";
 import { CloseIcon } from "../../../icons/CloseIcon";
 import { PATHS } from "../../../routes/paths";
 import type { Profile } from "../../../store/profileAtoms";
@@ -50,7 +51,7 @@ function Person({ profile }: { profile: Profile }) {
     return null;
   }
 
-  const name = user.name?.trim() || null;
+  const name = presentText(user.name);
 
   return (
     <div className={styles.person}>

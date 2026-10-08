@@ -151,7 +151,7 @@ Checked by the owner, 2026-10-06:
 
 ## Components
 
-Before building a new component, check this list. All are drawn in `docs/design/screens/system.html` (light) and `docs/design/screens/system-dark.html` (dark). Built in REQ-fs-004; the paths are in the Path column. Every component here is shown on the development-only page `/dev/components`.
+Before building a new component, check this list. All are drawn in `docs/design/screens/system.html` (light) and `docs/design/screens/system-dark.html` (dark). Built in REQ-fs-004 (the base set) and REQ-fs-005 (the last five rows); the paths are in the Path column. Every component here is shown on the development-only page `/dev/components`.
 
 | Component | Path | Variants / states | Notes |
 |---|---|---|---|
@@ -164,7 +164,7 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Tag, plain | `frontend/src/components/ui/Tag/` | — | 1px `--line` outline. For facts: department, class year, field |
 | Tag, mentoring | `frontend/src/components/ui/Tag/` | — | `--accent-soft` background, text "Open to mentoring" |
 | Tag, role | `frontend/src/components/ui/Tag/ (RoleTag)` | Student, Alumni, Admin | Student `--sunken`, Alumni `--accent`, Admin `--action` |
-| Avatar | `frontend/src/components/ui/Avatar/` | initials, photo | Square, `--accent-soft`, initials. Shows the photo when `photo_url` is set ([[architecture/adr-04-profile-photo-is-a-url-field\|ADR-04]]) |
+| Avatar | `frontend/src/components/ui/Avatar/` | initials, photo; sizes sm, md, lg, xl (120px, 96px on a phone) | Square, `--accent-soft`, initials. Shows the photo when `photo_url` is set ([[architecture/adr-04-profile-photo-is-a-url-field\|ADR-04]]) |
 | Card | `frontend/src/components/ui/Card/` | — | `--surface`, 1.5px `--edge` border, 24 to 32px padding |
 | Table | `frontend/src/components/ui/Table/` | desktop table, phone cards | Head row `--sunken`, 1px row dividers. On phone each row becomes a card |
 | Pagination | `frontend/src/components/ui/Pagination/` | current page | Previous, page numbers, Next, "Page 1 of 25". Current page uses `--action` |
@@ -178,6 +178,11 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Band | `frontend/src/components/shell/Band/, PageLayout/` | page heading; avatar and name on profile pages | See "Page pattern" |
 | Footer | `frontend/src/components/shell/Footer/` | before and after the About page exists | App name on the left. The "About" link on the right is not rendered until the About page exists; the About REQ adds it. No dead links |
 | Icons | `frontend/src/icons/` | — | Simple line icons, 2px stroke, `currentColor`. No emoji. Drawn in the repo as small React components; no icon package |
+| AlumniCard | `frontend/src/components/alumni/AlumniCard/` | with or without optional parts, mentoring | A result of the directory: avatar, name, "Title at Company", plain tags, "View profile" link (the card is not one big link) |
+| DirectoryFilters | `frontend/src/components/alumni/DirectoryFilters/` | wide, phone (closed, open), options loading, options failed | Search, three selects and the mentoring checkbox; on a phone the "Filters (n)" button opens the panel (CSS only) |
+| ProfileBand | `frontend/src/components/shell/ProfileBand/` | loading, ready, with or without back link | The band of a person: back link, avatar xl, tags, one `<h1>`, contact links; shares the band look with `Band` through composes |
+| AccountCard | `frontend/src/components/profile/AccountCard/` | loading, error, ready, saving, failed | Name, disabled email, role, photo link, Save account, Log out; `primary` is off next to the alumni card |
+| AlumniProfileCard | `frontend/src/components/profile/AlumniProfileCard/` | loading, error, new, existing, saving, 409, gone | The alumni profile form; Save profile is the view's one primary button; stays mounted when the profile appears |
 
 ## Patterns
 

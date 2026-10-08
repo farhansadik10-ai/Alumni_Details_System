@@ -1,0 +1,37 @@
+/*
+ * The cards of My profile (my-profile.html). Tokens only.
+ * The Alumni profile card is the wide one and the Account card the narrow
+ * one, side by side while both fit (480 and 320 at the least, as drawn), one
+ * under the other when they do not: no breakpoint decides it. min-width: 0
+ * lets a card be narrower than its widest word on a 360px phone.
+ */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.main {
+  flex: 2 1 calc(var(--space-8) * 7.5);
+  min-width: 0;
+}
+
+.side {
+  flex: 1 1 calc(var(--space-8) * 5);
+  min-width: 0;
+}
+
+/* A student's page has only the Account card: a form column, not the full
+ * width of the page. */
+.alone {
+  width: 100%;
+  max-width: var(--measure);
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .cards {
+    gap: var(--space-5);
+  }
+}
