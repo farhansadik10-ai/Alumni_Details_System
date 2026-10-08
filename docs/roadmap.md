@@ -14,8 +14,8 @@
 | F3 | Base components | Button, input, tag, card, table, dialog, messages | Done (REQ-fs-004) |
 | F4 | App shell | Header, band, footer, phone menu | Done (REQ-fs-004) |
 | F5 | Log in and sign-up | | Done (REQ-fs-004) |
-| F6 | Alumni directory | | To do |
-| F7 | Alumni profile and My profile | | To do |
+| F6 | Alumni directory | | Done (REQ-fs-005) |
+| F7 | Alumni profile and My profile | | Done (REQ-fs-005) |
 | F8 | Post feed | | To do |
 | F9 | Dashboard and admin users | | To do |
 | F10 | Polish and performance | | To do |

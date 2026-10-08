@@ -181,6 +181,13 @@ There is no test runner (conventions.md, Testing). Proof, in this order:
 - API calls only in `services/`, called only from `store/`.
 - **Deviations, each listed for the gate:** (1) validator messages stay in `lib/validation.ts`, not `config/text.ts`; (2) search typing replaces the history entry; (3) directory card avatar is 44px, not the picture's 56px (nearest token step, as part 1 did); (4) `validateName` and `validatePhotoLink` gain a length limit, so sign-up now also refuses over-long values; (5) the profile band avatar is 120px (96px on a phone), My profile uses the same (the picture shows 96px); (6) `field` is capped at 100 characters although its column is `text` (it follows the other fields; the spec's choice 15 already says so); (7) two spec sentences were clarified, not changed in meaning: AC7 (a `graduation_year` that is not four digits is ignored; a well-formed value missing from the options is kept and shown) and AC21 (the avatar and name are in the band as drawn; the Account card has the read-only Role row).
 
+### Deviations found during build and review (added at wrap-up)
+
+- (8) Save profile and Save account, and Discard changes, are disabled until a value differs from the saved one (a new profile can always be saved). Not in the plan; the UI reviewer asked for it (UI-001) and the owner approved the fix round.
+- (9) Enter and the Search button also replace the history entry, not only typing (ARCH-002; open item m10).
+- (10) The pages clear their stored data when they close (`clearDirectoryAtom`, `clearViewedAlumniAtom`, `clearMyAlumniAtom`), so the "kept when the user comes back" reason for storing the list in an atom no longer holds; the reasons now are one reader for list, count line and retry, and the session reset (pattern 23).
+- Blast radius additions: `lib/mailtoLink.ts`, `lib/profileId.ts`, `lib/loadFailure.ts`, `lib/saveFailure.ts`, `ui/Link/Link.tsx` (router `state`), `shell/Header` and `PhoneMenu` (the shared trimmed-text helper), `shared/index.ts` (one comment), `scripts/frontend-style-check.mjs` (rule k). `components/profile/saveFailureText.ts` was planned, built and then removed.
+
 ## Stress test (architecture-adversary, full pass)
 
 8 findings: 0 critical, 3 major, 5 minor. All 8 are fixed in the tasks; none is only accepted. The adversary also checked, and found nothing in: the backend contract, the validator limits against `db/schema.md`, the `Pagination` focus order, the CSS-only phone panel on resize, StrictMode with `latestRequest`.

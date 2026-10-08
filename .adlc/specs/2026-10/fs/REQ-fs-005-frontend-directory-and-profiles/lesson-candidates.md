@@ -279,3 +279,71 @@
 **Claim:** Move focus off a button before the render that disables it, and do it in the same tick as the state change that disables it.
 **Saw it in:** `frontend/src/components/profile/AccountCard/AccountCard.tsx:322`
 **Context:** The store answer renders while `busy` is still true, so the button is still enabled when the focus check runs; this order is what makes it work.
+
+
+## Candidate verdicts
+
+The candidate numbers repeat across the reviewers (three agents each wrote a CAND-029), so each row names its source in brackets. L-fs5-n means LESSON-REQ-fs-005-n; the lessons are in `knowledge/lessons/`. "merged" means added as a "Saw it in" line to the lesson named, not a new file. Dedup basis: `ls knowledge/lessons/` on this branch only. Cross-branch dedup skipped: no remote branch was fetched in this session (origin/redesign not checked).
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 [implement] | discard | merged into LESSON-REQ-fs-004-7 (comments in another workspace) |
+| CAND-002 [implement] | discard | one-off; the design README already says it wins over the spec's wording |
+| CAND-003 [implement] | demote-to-gotcha | G47 update (axios error path test) |
+| CAND-004 [implement] | demote-to-gotcha | ^g55 |
+| CAND-005 [implement] | demote-to-gotcha | ^g52 |
+| CAND-006 [implement] | demote-to-gotcha | ^g52 |
+| CAND-007 [implement] | demote-to-gotcha | ^g52 |
+| CAND-008 [implement] | demote-to-gotcha | ^g51 |
+| CAND-009 [implement] | demote-to-gotcha | ^g51 |
+| CAND-010 [implement] | promote | concept latest-request-wins (cancel retires the ticket) |
+| CAND-011 [implement] | demote-to-gotcha | ^g54 |
+| CAND-012 [implement] | promote | concept latest-request-wins (a save cancels the load of its atom) |
+| CAND-013 [implement] | discard | design-system.md already says one primary button per view; the `primary` prop is in the components table |
+| CAND-014 [implement] | demote-to-gotcha | ^g53 |
+| CAND-015 [implement] | discard | fixed in code (`lib/profileId.ts`); counted in LESSON-REQ-fs-002-3 |
+| CAND-016 [implement] | discard | fixed in code (`lib/loadFailure.ts`); counted in LESSON-REQ-fs-002-3 |
+| CAND-017 [implement] | promote | L-fs5-5 |
+| CAND-018 [implement] | discard | fixed in code (`presentText`); counted in LESSON-REQ-fs-002-3 |
+| CAND-019 [implement] | promote | concept address-as-state (DOM order equals screen order) |
+| CAND-020 [implement] | discard | already in `docs/frontend-patterns.md` pattern 25 (values reset in place) |
+| CAND-021 [implement] | demote-to-gotcha | ^g52 |
+| CAND-022 [implement] | promote | concept address-as-state (last committed value in a ref) |
+| CAND-023 [implement] | promote | concept address-as-state (focus from the parent's effect) |
+| CAND-024 [implement] | promote | L-fs5-5 (no heading ref on ProfileBand) |
+| CAND-025 [implement] | promote | L-fs5-5 (`showClear`) |
+| CAND-026 [implement] | demote-to-gotcha | G50 update |
+| CAND-027 [implement] | demote-to-gotcha | ^g55 |
+| CAND-028 [implement] | demote-to-gotcha | G50 update |
+| CAND-034 [implement] | promote | L-fs5-1 and ^g53 |
+| Q-a [quality bullet 1] | promote | L-fs5-4 |
+| Q-b [quality bullet 2] | discard | merged into LESSON-REQ-fs-002-3 (partial composes) |
+| Q-c [quality bullet 3] | discard | trivial; the count in the docs was corrected in the fix round |
+| CAND-029 [review-corr] | promote | L-fs5-3 |
+| CAND-030 [review-corr] | promote | L-fs5-2 |
+| CAND-031 [review-corr] | promote | L-fs5-2 (the once-per-key guard) |
+| CAND-032 [review-corr] | discard | open decision m6 in `verification.md` (a default timeout); revisit when the owner decides |
+| CAND-047 [review-corr] | promote | L-fs5-1 |
+| CAND-048 [review-corr] | promote | L-fs5-1 |
+| CAND-049 [review-corr] | promote | L-fs5-1 |
+| CAND-029 [review-reflect] | discard | open decision m14 (comments cite spec numbers without a REQ id); settle with the Comments rule |
+| CAND-035 [review-reflect] | discard | merged into LESSON-REQ-fs-002-3 (two forms, two mechanisms) |
+| CAND-036 [review-reflect] | discard | merged into LESSON-REQ-fs-002-3 (constants moved, a local 404 left) |
+| CAND-037 [review-reflect] | promote | L-fs5-4 |
+| CAND-029 [review-arch] | promote | L-fs5-4 |
+| CAND-030 [review-arch] | discard | merged into LESSON-REQ-fs-002-3 (failure shape declared three times) |
+| CAND-031 [review-arch] | discard | open decision m10 (history entry on Enter) |
+| CAND-032 [review-arch] | promote | L-fs5-2 |
+| CAND-033 [review-arch] | discard | open decision m13 (move debounce logic into a hook) |
+| CAND-041 [review-arch] | promote | L-fs5-4 |
+| CAND-042 [review-arch] | discard | merged into LESSON-REQ-fs-002-3 (neutral file for a shared shape) |
+| CAND-043 [review-arch] | discard | merged into LESSON-REQ-fs-002-3 (two mechanisms for one rule) |
+| CAND-044 [review-arch] | discard | merged into LESSON-REQ-fs-002-3 (shared CSS in a neutral module) |
+| CAND-045 [review-arch] | promote | L-fs5-2 (clear must stop non-request writers) |
+| CAND-046 [review-arch] | discard | process detail; the architecture reason was reworded in the patterns doc |
+| CAND-035 [review-qual] | discard | open decision m14/n7 (finding ids in comments) |
+| CAND-036 [review-qual] | discard | merged into LESSON-REQ-fs-002-3 |
+| CAND-037 [review-qual] | discard | covered by L-fs5-4 |
+| CAND-038 [review-qual] | discard | trivial habit; the stale counts were fixed |
+
+Totals: 5 lessons promoted (L-fs5-1 to L-fs5-5), 2 concept pages (latest-request-wins, address-as-state), 5 new gotchas (^g51 to ^g55) and update lines on G38, G42, G47, G50, 2 existing lessons extended, the rest discarded with a reason.

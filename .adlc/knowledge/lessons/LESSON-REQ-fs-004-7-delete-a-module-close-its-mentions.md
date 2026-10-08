@@ -17,4 +17,5 @@ After removing a whole old module (here the Ant Design frontend), grep the code,
 ## Saw it in
 
 - `shared/types/user.types.ts` lines 1, 16, 32 (`User`, `CreateUserDTO` "kept for the legacy frontend"), G34, G38, ADR-07 (lines 49, 65), root `CLAUDE.md` lines 46 and 74 — all still said the legacy frontend exists after REQ-fs-004 deleted it (REFL-003; the vault and doc lines are fixed at wrap-up; the shared types comments are shared code and wait for the owner).
+- **Again in REQ-fs-005 (2026-10-08).** Three comments in another workspace (`shared/types/user.types.ts`, `shared/index.ts`) still gave the deleted legacy frontend as the reason a type was kept; they were missed by REQ-fs-004's sweep because the sweep did not search `shared/`. When a module or a whole app is removed, search every workspace, not only the folder it lived in. A file removed in a fix round (`components/profile/saveFailureText.ts`) left two mentions in `docs/frontend-patterns.md`; caught by the same search.
 

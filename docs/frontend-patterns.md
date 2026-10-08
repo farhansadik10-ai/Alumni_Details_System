@@ -435,7 +435,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (282 cases after part 2; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -628,6 +628,8 @@ The rules of the form are in `lib/`: `alumniToForm` (a profile into text values)
 
 The form element stays mounted across the first create and the 409 reload. The card remembers which profile it was filled from; when the store holds another one, the values are reset in place during render. The page keys the card on the session's user id, so another user always gets a fresh card. The Account card follows the same skeleton, with its own error message, so one card's failure never touches the other.
 
+Save profile and Discard changes are off until a value differs from the saved one (`canSaveAlumniForm` and `sameAlumniForm` in `frontend/src/lib/alumniForm.ts`; spaces around text do not count as a change). A profile that does not exist yet can always be saved, so a new alumnus is not locked out by an empty form. Discard is also off while a save runs, or the save's answer would undo it. Text typed during a save is kept: the form takes the saved values only if it still holds what was sent. A button that holds keyboard focus and is about to switch itself off first hands focus to the card heading, because a disabled button drops focus to the page. Known gap: after a 409 on create the focus is not moved.
+
 **Where it lives.**
 
 - The rules: `frontend/src/lib/alumniForm.ts`, the validators in `frontend/src/lib/validation.ts`
@@ -687,6 +689,7 @@ We did not put the directory query into the profile's address (it would make eve
 - "trimmed text, or null when empty": `presentText` in `frontend/src/lib/alumniDisplay.ts` (with `displayName`, `jobLine`, `classLabel`, `orNotGiven`, `firstName`)
 - "which words for a failed load": `loadFailureText` in `frontend/src/lib/loadFailure.ts`. It declares its own failure shape, so `lib/` does not import `services/`.
 - "is this a profile id": `readProfileId` in `frontend/src/lib/profileId.ts`
+- "is this email a safe link": `mailtoHref` in `frontend/src/lib/mailtoLink.ts` (a plain address is encoded into a `mailto:` link; anything else is shown as text, because the server accepts any email string)
 
 The validators are shared the same way: sign-up and the two My profile cards use the same `validateName` and `validatePhotoLink` from `frontend/src/lib/validation.ts`. Validator messages stay there as exported constants (pattern 16); page words are in `frontend/src/config/text.ts`, grouped by page.
 
@@ -746,4 +749,4 @@ Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-
 - The API client has no general timeout. Only log out has one (5 seconds); other calls wait for the server.
 - The checks on the store (401 handling, start-up check, and in part 2 the latest-request and save actions) were run from scratch files and are not in `scripts/`.
 - ESLint is not installed, so nothing lints the code.
-- Part 2: the "Try again" buttons of the two My profile cards' load errors disappear when pressed, and focus falls to the page. `ProfileBand` takes no heading ref, so the profile page reaches its `<h1>` through a wrapper element.
+- Part 2: `ProfileBand` takes no heading ref, so the profile page reaches its `<h1>` through a wrapper element. After a 409 on create the focused Save button switches off with no focus move. Other review items left open are listed in the REQ-fs-005 `verification.md`.

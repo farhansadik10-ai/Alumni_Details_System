@@ -20,6 +20,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ-fs-002 | Close the security and data-loss gaps in the backend | merged | `specs/_archive/2026-10/fs/REQ-fs-002-backend-security-data-loss-gaps` |
 | REQ-fs-003 | Finish the backend API: class controllers, shared errors, alumni search, feed data | merged | `specs/_archive/2026-10/fs/REQ-fs-003-finish-backend-api` |
 | REQ-fs-004 | New frontend part 1 of 4: foundation, theme, base components, app shell, log in and sign-up | merged | `specs/_archive/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth` |
+| REQ-fs-005 | New frontend part 2 of 4: alumni directory, alumni profile and My profile | ready to merge | `specs/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles` |
 
 ## ADRs
 
@@ -50,6 +51,8 @@ Patterns, rules that must always hold, domain models.
 | [[knowledge/concepts/partial-update-sent-fields]] | An update writes only the fields that were sent; `null` clears; column names never come from the request |
 | [[knowledge/concepts/paged-list-query]] | A paged list answers `{ items, total, page, limit }`; one WHERE shared by a count and a page query |
 | [[knowledge/concepts/frontend-session-flow]] | One token, one way to end a session, one place that navigates after a log in |
+| [[knowledge/concepts/latest-request-wins]] | Abort the older call, ignore its late answer, clear the atom when the page closes |
+| [[knowledge/concepts/address-as-state]] | Search, filters and page live in the URL; pure reader and writer; debounce and focus rules |
 
 ## Components
 
