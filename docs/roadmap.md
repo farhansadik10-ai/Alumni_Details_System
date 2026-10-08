@@ -16,8 +16,8 @@
 | F5 | Log in and sign-up | | Done (REQ-fs-004) |
 | F6 | Alumni directory | | Done (REQ-fs-005) |
 | F7 | Alumni profile and My profile | | Done (REQ-fs-005) |
-| F8 | Post feed | | To do |
-| F9 | Dashboard and admin users | | To do |
+| F8 | Post feed | | Done (REQ-fs-006) |
+| F9 | Dashboard and admin users | Dashboard done (REQ-fs-006); admin Users page still to do | In progress |
 | F10 | Polish and performance | | To do |
 | F11 | About page | | To do |
 | Last | Pull request to main | | To do |

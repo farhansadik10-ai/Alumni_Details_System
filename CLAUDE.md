@@ -44,7 +44,7 @@ Holds cross-cutting TypeScript types (`shared/types/*.types.ts`) consumed by wor
 
 ### Frontend (`frontend/`, workspace `@alumni/frontend`)
 
-React + TypeScript + Vite, with `jotai` for state, `react-router-dom` for routing and one `axios` client in `src/services/`. Styles are CSS Modules on the design tokens in `src/styles/tokens.css`; there is no UI library. Parts 1 and 2 of the rebuild (REQ-fs-004, REQ-fs-005) are done: foundation, theme, base components, app shell, log in, sign-up, the alumni directory, the alumni profile and My profile; the feed, dashboard and users pages are still "This page is being built" placeholders. The structure and the patterns are in `docs/frontend-patterns.md`; the rules are in "Conventions (redesign)" below.
+React + TypeScript + Vite, with `jotai` for state, `react-router-dom` for routing and one `axios` client in `src/services/`. Styles are CSS Modules on the design tokens in `src/styles/tokens.css`; there is no UI library. Parts 1 to 3 of the rebuild (REQ-fs-004, REQ-fs-005, REQ-fs-006) are done: foundation, theme, base components, app shell, log in, sign-up, the alumni directory, the alumni profile, My profile, the feed and the dashboard; the users page is still a "This page is being built" placeholder. The structure and the patterns are in `docs/frontend-patterns.md`; the rules are in "Conventions (redesign)" below.
 
 ### Ignored files
 
