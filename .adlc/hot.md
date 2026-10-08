@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-08] architect-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | 14 tasks, no ADR; owner approved: Directory moves to a shared useListAddress hook, post pictures in a fixed 4:3 box, no list reload after a delete; n2 skipped
+
+## [2026-10-08] work-path-set | REQ-fs-007-frontend-users-about-polish-perf | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-007-frontend-users-about-polish-perf, off redesign)
+
 ## [2026-10-08] spec-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | calls taken: 409 text names alumni profile too (A3), About for logged-in only (A5), no toast on unchanged save (A7)
 
 ## [2026-10-08] req-archived | REQ-fs-006-frontend-feed-and-dashboard
