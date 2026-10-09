@@ -22,7 +22,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ-fs-004 | New frontend part 1 of 4: foundation, theme, base components, app shell, log in and sign-up | merged | `specs/_archive/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth` |
 | REQ-fs-005 | New frontend part 2 of 4: alumni directory, alumni profile and My profile | merged | `specs/_archive/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles` |
 | REQ-fs-006 | New frontend part 3 of 4: feed, dashboard and Recent posts on the alumni profile | merged | `specs/_archive/2026-10/fs/REQ-fs-006-frontend-feed-and-dashboard` |
-| REQ-fs-007 | New frontend part 4 of 4: admin Users page, About page, phone polish and performance | ready to merge | `specs/2026-10/fs/REQ-fs-007-frontend-users-about-polish-perf` |
+| REQ-fs-007 | New frontend part 4 of 4: admin Users page, About page, phone polish and performance | merged | `specs/_archive/2026-10/fs/REQ-fs-007-frontend-users-about-polish-perf` |
 
 ## ADRs
 

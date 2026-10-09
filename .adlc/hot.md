@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-09] req-archived | REQ-fs-007-frontend-users-about-polish-perf
+
+## [2026-10-09] req-merged | REQ-fs-007-frontend-users-about-polish-perf | merge commit 0f2946ff on redesign (the feature branch was deleted by the owner)
+
 ## [2026-10-09] ship-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | wrap-up committed on the feature branch (no push); owner runs the merge checklist and the manual checklist
 
 ## [2026-10-09] req-ready-to-merge | REQ-fs-007-frontend-users-about-polish-perf | frontend part 4 (roadmap F9 rest, F10, F11): admin Users page, About page and footer link, phone audit and fixes, performance; 2 review rounds, 14 tasks, 11 commits; library check 565 cases
