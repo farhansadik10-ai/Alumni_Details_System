@@ -71,8 +71,8 @@ Until they exist (owner, 2026-10-06):
 
 ## Open questions
 
-- [ ] The About page layout. Decide in the REQ that builds it.
-- [ ] Where the app version on the About page comes from. Decide in the REQ that builds it.
+- [x] The About page layout. Decided in REQ-fs-007: two cards on the page frame.
+- [x] Where the app version on the About page comes from. Decided in REQ-fs-007: it is not shown (see the update below).
 - [ ] How the alumni office resets a password for a user today. Decide in the REQ that builds it.
 
 ## Related
@@ -83,3 +83,10 @@ Until they exist (owner, 2026-10-06):
 - Lessons: (none)
 - ADRs: [[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]
 - Context: [[context/design-system]]
+
+## Update 2026-10-09 (REQ-fs-007)
+
+The About page is built (`/about`, logged-in users only, linked from the footer). Its words are in `frontend/src/config/text.ts`.
+
+- **Deviation from the content listed above:** the page shows no "who can join" and no app version. The spec (AC14) forbids facts the system cannot keep true, and nothing in the repo keeps a version number or a join rule current. The page says what the system is for, what you can do in it, and how to contact the alumni office (the contact email constant). Adding either later is a small text change.
+- The About page is for logged-in users only. A public About page (readable before sign-up) is a separate decision.

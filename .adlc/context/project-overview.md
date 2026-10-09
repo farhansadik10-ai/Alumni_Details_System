@@ -40,7 +40,7 @@ _(Who the real-world audience is — which institution, how many users — is no
 
 | Layer | Tech |
 |---|---|
-| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). No UI library: we build our own components on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]). The Ant Design app was deleted in REQ-fs-004; foundation, shell, log in, sign-up, the alumni directory, the alumni profile, My profile, the feed and the dashboard are built ([[knowledge/components/frontend-app]]). |
+| Frontend | React + Vite + TypeScript, rebuilt from scratch; Jotai for state. Design: "Oak, ink band", light / dark / system themes with system as the default, font Hanken Grotesk ([[context/design-system]]). No UI library: we build our own components on the design tokens ([[architecture/adr-07-design-direction-oak-ink-band\|ADR-07]]). The Ant Design app was deleted in REQ-fs-004; foundation, shell, log in, sign-up, the alumni directory, the alumni profile, My profile, the feed, the dashboard, the admin Users page and the About page are built ([[knowledge/components/frontend-app]]). |
 | Backend | Node.js + Express, TypeScript, run with `tsx watch` in dev; three workspaces: `@alumni/api`, `@alumni/businesslogic`, `@alumni/dal` |
 | Shared | `@alumni/shared` — cross-cutting TypeScript types |
 | Database | PostgreSQL through a shared `pg` `Pool` |
@@ -67,7 +67,7 @@ Out-of-scope adjacencies. Worth listing because they recur as suggestions.
 
 - Not branded for one university: no logo.
 - Not an Ant Design app any more.
-- No Privacy page and no password reset in the redesign; both are later work. Until reset exists, the log-in page tells the user to contact the alumni office. The About page is planned and built last, and the footer has no "About" link until then ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]).
+- No Privacy page and no password reset in the redesign; both are later work. Until reset exists, the log-in page tells the user to contact the alumni office. The About page was built last (REQ-fs-007) and the footer links to it ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]).
 
 _(nothing else written down — fill in)_
 
@@ -88,4 +88,4 @@ _(nothing else written down — fill in)_
 | Started | 2026-10-05 |
 | Repo | C:/Users/Lenovo/Alumni_Details_System |
 
-_"Started" is the date this vault was created, not the date the project began. As of 2026-10-08 the backend is finished for the redesign (REQ-fs-001 to REQ-fs-003, roadmap B1 to B5) and the frontend is built through part 3 of 4 (REQ-fs-004: roadmap F1 to F5, foundation to log in and sign-up; REQ-fs-005: F6 and F7, the alumni directory, the alumni profile and My profile; REQ-fs-006: F8 and the Dashboard half of F9, the feed and the dashboard). The admin Users page is next (rest of F9)._
+_"Started" is the date this vault was created, not the date the project began. As of 2026-10-09 the backend is finished for the redesign (REQ-fs-001 to REQ-fs-003, roadmap B1 to B5) and the frontend is built through part 4 of 4 (REQ-fs-004: roadmap F1 to F5, foundation to log in and sign-up; REQ-fs-005: F6 and F7, the alumni directory, the alumni profile and My profile; REQ-fs-006: F8 and the Dashboard half of F9, the feed and the dashboard; REQ-fs-007: the admin Users page, the About page, phone polish and performance, F9 rest, F10 and F11). Next is the pull request to main._

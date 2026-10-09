@@ -90,3 +90,9 @@ Built, with no migration.
 - **Comment delete is one statement, not a transaction.** `CommentQuery.deleteComment` is a single recursive `DELETE` that removes the comment and every reply under it. One statement is all-or-nothing by itself, so the decision's intent holds; only its wording ("in one transaction") differs.
 - **Users:** `DELETE /api/users/:id` answers 409 with the message above when the user has posts, comments or an alumni profile, and deletes nothing. The database's own foreign keys make the refusal; `UserManager` gives it the message.
 - Still open: how an admin removes a user who has content.
+
+## Update 2026-10-09 (REQ-fs-007)
+
+The admin Users page shows the 409 as a message in the delete dialog. Its words differ from the text quoted above, on purpose: "{name} cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed." It names the person and says nothing was changed. The facts are the same: the refusal is for posts, comments or an alumni profile. The words live in `frontend/src/config/text.ts` (`userDeleteBlockedText`). The server's own message is never shown to the user (ADR-11).
+
+- Still open: how an admin removes a user who has content.

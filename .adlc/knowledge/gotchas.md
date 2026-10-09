@@ -1289,6 +1289,8 @@ Where each old item went:
 **Update 2026-10-08 (REQ-fs-005):** Two more. If a tab stops answering mouse and key events after full-page screenshots, open a fresh tab with `/json/new`; it works at once. When a script looks for "the button with aria-expanded", scope it to its form: the header's phone-menu button also has `aria-expanded` and comes first, so an unscoped query reported the Filters panel closed when it was open.
 
 
+**Update 2026-10-09 (REQ-fs-007):** Three more. (1) "Will not go narrower than about 500 px" holds for the window, not for the screen: `Emulation.setDeviceMetricsOverride` with `setScrollbarsHidden` reaches 360 px in headless Chrome without an iframe. (2) Close every tab a CDP script opened, also when it crashes: open tabs share localStorage and reload on a token change, so they add requests to the mock's log and later key presses miss. (3) In Git Bash set `MSYS_NO_PATHCONV=1` before passing an app path such as `/feed` to a script, or it arrives as `C:/Program Files/Git/feed` and Chrome says "invalid URL".
+
 ---
 
 ## G51 — Directory address traps: a repeated key and the spaces-only trim ^g51
@@ -1384,6 +1386,8 @@ Where each old item went:
 **Don't:** Don't rewrite whole files by script; use the Edit tool, or pass `newline=""` (Python) / keep `\r\n` (Node).
 
 **Related:** [[knowledge/gotchas#^g50|G50]]
+
+**Update 2026-10-09 (REQ-fs-007):** The Write tool also saves LF. After writing a whole file with it, convert it back (`sed -i 's/\r\?$/\r/' file`) and check with `file`. The Edit tool keeps CRLF.
 
 ---
 
@@ -1481,3 +1485,50 @@ Where each old item went:
 
 **Related:** [[knowledge/lessons/LESSON-REQ-fs-005-4-a-layer-check-must-say-every-sentence|L-REQ-fs-005-4]]
 
+---
+
+## G59 — Throwaway checks outside the repo: relative imports, the tsx loader, jotai's path, type-only files, shape drift ^g59
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-09 |
+| REQ | REQ-fs-007 |
+| Component | `scripts/frontend-lib-check.ts`, store harnesses in the scratchpad |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** Five traps when a check lives outside the repo. (1) A copy of the library check cannot resolve its `../frontend/` imports from the scratchpad: rewrite them to absolute paths with `sed` in the same pass that flips an expectation, to prove a case can fail. (2) Load a store harness with `node --import <repo>/node_modules/tsx/dist/loader.mjs --import ./register.mjs`: the ESM-only `tsx/dist/esm/index.mjs` leaves the store's CommonJS `require` of `../services/x` unresolved, because the repo has no `"type": "module"` (G56). (3) A broken copy of a store file must also point `jotai` at `<repo>/node_modules/jotai`. (4) tsx erases types, so neither the build nor tsx catches a words object in `config/text.ts` that no longer matches the lib interface it is passed to until a component joins them: check the shape with a scratchpad `tsc --strict` file. (5) A `store/` file whose imports are all types (`peopleBlockState.ts`) can be imported by the library check with no atom or axios loaded: look at the imports before calling a function "not checkable".
+
+**Where:** `scripts/frontend-lib-check.ts:15`, `frontend/src/store/peopleBlockState.ts:4`, `frontend/src/config/text.ts` (`userDeleteFailureWords`, `POST_SAVE_FAILURE_WORDS`).
+
+**Why it's surprising:** Each fails with a message that points somewhere else (an unresolved import, or a check that "passes" while the shapes disagree).
+
+**Why it exists:** The repo has no test runner (G55, G56) and `text.ts` may not import `lib/` (G58).
+
+**Don't:** Don't copy the check into the repo to make it run; don't import a store file with runtime imports into the library check.
+
+**Related:** [[knowledge/gotchas#^g55|G55]], [[knowledge/gotchas#^g56|G56]], [[knowledge/gotchas#^g58|G58]], [[knowledge/lessons/LESSON-REQ-fs-007-2-re-read-old-review-items-against-the-code|L-REQ-fs-007-2]]
+
+---
+
+## G60 — Phone UI traps from part 4: a Tag that breaks in the word, an empty card cell, img size attributes ^g60
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-10-09 |
+| REQ | REQ-fs-007 |
+| Component | `frontend/src/components/ui/Tag`, `ui/Table`, `posts/FeedPost`, `ui/Avatar` |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) A Tag that allows a break anywhere lets a wide table shrink its column until a one-word tag splits ("Alum / ni" at 1280, nothing wrong at 360): one-word tags need `overflow-wrap: normal`. (2) In phone card mode a cell whose render returns null still gets its label ("Actions" with nothing beside it): `Table.module.css` hides it with `.cell:has(> .value:empty)`, which only works while the render returns null, not whitespace or an empty wrapper (see G46). (3) An `<img>` with `width` and `height` attributes needs `height: auto` in its CSS, or `aspect-ratio` is ignored and `height="3"` draws a 3px picture. (4) A 1x1 size hint on an avatar is safe only because its CSS sets both sides to 100 percent.
+
+**Where:** `components/ui/Tag/Tag.module.css`, `components/ui/Table/Table.module.css` (phone block), `components/posts/FeedPost/FeedPost.module.css` (`.image`), `components/ui/Avatar/Avatar.module.css`.
+
+**Why it's surprising:** Each shows only at one width or in one state.
+
+**Why it exists:** Browser defaults for wrapping, empty elements and replaced elements.
+
+**Don't:** Don't return `<></>` or whitespace from a column render to mean "nothing"; don't drop `height: auto` from an image that has size attributes.
+
+**Related:** [[knowledge/gotchas#^g46|G46]], [[knowledge/gotchas#^g52|G52]], [[knowledge/lessons/LESSON-REQ-fs-007-5-a-reserved-image-box-and-hide-on-error-decide-together|L-REQ-fs-007-5]]

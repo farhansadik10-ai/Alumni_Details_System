@@ -26,3 +26,12 @@ The directory's search text, filters, mentoring switch and page number are kept 
 - Lessons: [[knowledge/lessons/LESSON-REQ-fs-004-1-router-state-survives-a-reload|L-REQ-fs-004-1]]
 - Gotchas: [[knowledge/gotchas#^g51|G51]]
 - Components: [[knowledge/components/frontend-app]]
+
+## Shared hook (REQ-fs-007)
+
+The Directory and the Users page both keep search, filters and page in the address, so the code that does it is one hook: `frontend/src/hooks/useListAddress.ts`. A page gives it `read`, `write`, a default query and its list state; it returns the query, `queryKey`, `current` (the list, only when it belongs to this address), `pageCount`, `pastTheEnd`, the search box state and the handlers. The page keeps its own load effect, its clear on close and its views.
+
+- The hook runs its effects before the page's own effects; this is safe because the page's load effect runs only when `queryKey` changes, when `current` is null and the past-the-end fix is idle.
+- It returns `current`, not just flags, so no page repeats `list.queryKey === queryKey`.
+- `hooks/` may not import `services/` (style rule d), so the list state is an argument. Parsing helpers: `frontend/src/lib/addressParams.ts` (`singleParam`, `readPageParam`, `PAGE_KEY`); `lastPage` is in `frontend/src/lib/pageRange.ts`.
+- A delete that empties page 1 is not covered by the past-the-end rule (`page > lastPage`): the store reloads (L-REQ-fs-007-4).

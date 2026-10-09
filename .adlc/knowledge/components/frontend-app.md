@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Component | `@alumni/frontend` — React 18 + Vite 5 + TypeScript, Jotai, react-router 7, axios, CSS Modules on design tokens |
-| Status | current as of REQ-fs-006 (2026-10-08); log in, sign-up, shell, base components, the alumni directory, the alumni profile, My profile, the feed and the dashboard are built; the users page is "being built" |
+| Status | current as of REQ-fs-007 (2026-10-09); log in, sign-up, shell, base components, the alumni directory, the alumni profile, My profile, the feed, the dashboard, the admin Users page and the About page are built |
 | Created | 2026-10-07 |
 
 The new frontend, rebuilt from scratch with no UI library ([[architecture/adr-07-design-direction-oak-ink-band|ADR-07]]); the Ant Design app is deleted. Four layers that depend one way: pages and components → `store/` (Jotai atoms and write-only actions) → `services/` (one axios client) → the API; `lib/` holds pure functions and may not touch the browser at import. Styles are CSS Modules reading tokens from `styles/tokens.css` ([[architecture/adr-13-frontend-structure-css-modules-on-tokens|ADR-13]]). The token and the theme choice live in `localStorage` ([[architecture/adr-14-session-and-theme-kept-in-the-browser|ADR-14]]). The patterns, one by one, with their reasons: `docs/frontend-patterns.md`.
@@ -20,12 +20,12 @@ The new frontend, rebuilt from scratch with no UI library ([[architecture/adr-07
 | `routes/` | `paths.ts`, `RequireAuth`, `RequireAdmin`, `PublicOnly` |
 | `hooks/` | `useDocumentTitle`, `useModalDialog`, `useFormError` |
 | `components/ui/` | Button, ButtonLink (part 3), Link (takes router `state`), Field, TextInput, PasswordInput, Select, Textarea, Checkbox, RadioCards, Tag + RoleTag, Avatar (size `xl`), Card, Table, Pagination, Skeleton, EmptyState (optional link action), ErrorState, Dialog + ConfirmDialog, Message, Toast |
-| `components/shell/` | AppShell, Header, PhoneMenu, Band, ProfileBand (+ `ProfileBandAction`), Footer, SkipLink, PageLayout (optional `band` slot), ThemeSwitch, BeingBuilt, navLabels |
+| `components/shell/` | AppShell, Header, PhoneMenu, Band, ProfileBand (+ `ProfileBandAction`), Footer, SkipLink, PageLayout (optional `band` slot), ThemeSwitch, navLabels |
 | `components/alumni/` | AlumniCard + AlumniCardSkeleton, DirectoryFilters (`showClear`, `searchRef`, phone panel in CSS only) |
 | `components/posts/` | PostByline, PostText, PostForm, CommentForm, FeedPost, CommentsPanel, CommentItem, PostSummaryCard (part 3) |
 | `components/dashboard/` | CountsBlock, RecentPostsBlock, YourProfileBlock (part 3); `components/alumni/PeopleBlock` is shared by the Feed and the Dashboard |
 | `components/profile/` | AccountCard (`primary` prop), AlumniProfileCard (creates or edits; stays mounted) |
-| `pages/` | LoginPage, SignUpPage, DirectoryPage, AlumniProfilePage, MyProfilePage, FeedPage, DashboardPage, one "being built" page (users), NotFoundPage, NoAccessPage, `dev/ComponentsPage` (development only) |
+| `pages/` | LoginPage, SignUpPage, DirectoryPage, AlumniProfilePage, MyProfilePage, FeedPage, DashboardPage, UsersPage, AboutPage, NotFoundPage, NoAccessPage, `dev/ComponentsPage` (development only) |
 
 ## Checks
 
@@ -35,7 +35,8 @@ The new frontend, rebuilt from scratch with no UI library ([[architecture/adr-07
 
 - REQ-fs-004 — foundation, tokens and theme, base components, app shell, log in and sign-up.
 - REQ-fs-005 — the alumni directory, the alumni profile and My profile (roadmap F6, F7); the shared parts above marked "from part 2". Part 3 is REQ-fs-006.
-- REQ-fs-006 — the feed and the dashboard (roadmap F8 and the Dashboard half of F9) and the Recent posts block on the alumni profile; the parts marked "from part 3". The users page (admin) is the last "being built" page.
+- REQ-fs-006 — the feed and the dashboard (roadmap F8 and the Dashboard half of F9) and the Recent posts block on the alumni profile; the parts marked "from part 3".
+- REQ-fs-007 — the admin Users page, the About page and the footer link, phone polish, and performance (roadmap F9 rest, F10, F11); `components/users/`, `hooks/useListAddress.ts`, `store/usersAtoms.ts` and `store/userActions.ts`, `lib/usersQuery.ts`, `lib/addressParams.ts`. The placeholder `BeingBuilt` was deleted. Every page is built.
 
 ## Related
 

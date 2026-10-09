@@ -224,3 +224,57 @@
 **Claim:** Table hides an empty phone cell through `.value:empty`; a column render that returns whitespace or an empty fragment wrapper instead of null brings the empty "label + box" line back.
 **Saw it in:** `frontend/src/components/ui/Table/Table.module.css` (phone block, `.cell:has(> .value:empty)`)
 **Context:** UI-002 fix; the value div must stay the only child of the td with no text around the render call (G46).
+
+## Candidate verdicts
+
+Decided at wrap-up, 2026-10-09. Candidate numbers repeat in this file (parallel agents took the same numbers); rows name the reviewer tag where needed.
+
+| Candidate | Verdict | Target / Reason |
+|---|---|---|
+| CAND-001 | promote | LESSON-REQ-fs-007-1 (with CAND-027) |
+| CAND-002 | demote-to-gotcha | ^g59 (outside-repo checks) |
+| CAND-003 | demote-to-gotcha | ^g59 (words object shape, with CAND-010) |
+| CAND-004 | demote-to-gotcha | ^g54 update line (the Write tool saves LF) |
+| CAND-005 | promote | LESSON-REQ-fs-007-2 (with CAND-033 review-qual) |
+| CAND-006 | discard | duplicate of CAND-002 |
+| CAND-007 | discard | repeats LESSON-REQ-fs-002-3 (convert every sibling); fixed in the fix round (REFL-003) |
+| CAND-008 | demote | concept: address-as-state, "Shared hook" section (effect order) |
+| CAND-009 | demote | concept: address-as-state, "Shared hook" section (return the matched list) |
+| CAND-010 | demote-to-gotcha | ^g59 |
+| CAND-011 | demote-to-gotcha | ^g59 |
+| CAND-012 | demote-to-gotcha | ^g59 |
+| CAND-013 | promote | LESSON-REQ-fs-007-3 (with CAND-034 review-corr) |
+| CAND-014 | promote | LESSON-REQ-fs-007-4 (with CAND-032 review-arch) |
+| CAND-015 | discard | repeats LESSON-REQ-fs-006-5 (dev page shows every state) |
+| CAND-016 | discard | repeats LESSON-REQ-fs-006-5 |
+| CAND-017 | demote-to-gotcha | ^g50 update line |
+| CAND-018 | demote-to-gotcha | ^g60 |
+| CAND-019 | demote-to-gotcha | ^g50 update line (corrects its 500 px claim) |
+| CAND-020 | demote-to-gotcha | ^g50 update line |
+| CAND-021 | promote | LESSON-REQ-fs-007-5 (with CAND-022; also ^g60) |
+| CAND-022 | promote | LESSON-REQ-fs-007-5 |
+| CAND-023 | promote | LESSON-REQ-fs-007-6 (how to count renders) |
+| CAND-024 | promote | LESSON-REQ-fs-007-6 |
+| CAND-025 | promote | LESSON-REQ-fs-007-6 |
+| CAND-026 | discard | open point, not a lesson: listed in the PR follow-ups and `performance.md` (page stores reach the entry through the session reset, about 2.5 KB gzip) |
+| CAND-027 | promote | LESSON-REQ-fs-007-1 |
+| CAND-028 | discard | moot: the comment was fixed in the implement gate; repeats LESSON-REQ-fs-006-4 |
+| CAND-029 | discard | repeats LESSON-REQ-fs-004-7 (delete a module, close its mentions); BeingBuilt.tsx deleted with the owner's yes |
+| CAND-030 (review-arch) | discard | fixed in the fix round (ARCH-003); one remaining copy accepted (ARCH-004) |
+| CAND-031 (review-arch) | promote | LESSON-REQ-fs-007-7 (with CAND-037) |
+| CAND-032 (review-arch) | promote | LESSON-REQ-fs-007-4 |
+| CAND-030 (review-qual) | discard | repeats LESSON-REQ-fs-002-3; fixed (asRole) |
+| CAND-031 (review-qual) | discard | open follow-up (m8b), listed in the PR draft |
+| CAND-032 (review-qual) | discard | repeats LESSON-REQ-fs-006-4 |
+| CAND-033 (review-qual) | promote | LESSON-REQ-fs-007-2 |
+| CAND-034 (review-corr) | promote | LESSON-REQ-fs-007-3 |
+| CAND-035 (review-corr) | demote-to-gotcha | ^g60 (1x1 avatar hint) |
+| CAND-036 (review-reflect) | discard | repeats LESSON-REQ-fs-006-2 (every branch of an async handler); fixed (m2) |
+| CAND-037 (review-reflect) | promote | LESSON-REQ-fs-007-7 |
+| CAND-038 (review-reflect) | discard | repeats LESSON-REQ-fs-006-4 |
+| CAND-039 (ui-review) | discard | open design item (toasts on a phone), listed in `skipped.md` and the PR follow-ups |
+| CAND-040 (ui-review) | demote-to-gotcha | ^g60 (empty card cell) |
+| CAND-041 | demote-to-gotcha | ^g59 (type-only store files can be checked) |
+| CAND-042 | demote-to-gotcha | ^g60 |
+
+Totals: 45 candidates; 7 promoted to lessons (LESSON-REQ-fs-007-1 to 7); 2 added to the address-as-state concept; 2 new gotchas (G59, G60) and 2 gotcha update lines (G50, G54); the rest discarded as duplicates or open follow-ups.
