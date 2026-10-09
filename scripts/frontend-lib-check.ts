@@ -5,13 +5,16 @@
 // The cases are written from the spec (REQ-fs-004: AC42, AC46, AC53 and the
 // TASK-003 list; REQ-fs-005: choices 13 to 17, AC2, AC5, AC7, AC15, AC17,
 // AC18, AC25, AC26, TASK-015; REQ-fs-006: C3, C7, C9, AC8, AC10 to AC15,
-// AC18, AC36), not from the code. The expected messages are typed out here
+// AC18, AC36; REQ-fs-007: the TASK-002 and TASK-003 lists), not from the code. The expected messages are typed out here
 // on purpose: importing the constants would compare the code with itself.
 //
-// It imports only from frontend/src/lib/ and the plain words of
-// frontend/src/config/text.ts. It reads no file and calls no API.
+// It imports only from frontend/src/lib/, the plain words of
+// frontend/src/config/text.ts, and frontend/src/store/peopleBlockState.ts
+// (type-only imports, so no atom or service loads). It reads no file and
+// calls no API.
 
 import type { Alumni } from "@alumni/shared";
+import { readPageParam, singleParam } from "../frontend/src/lib/addressParams.ts";
 import {
   alumniFormToBody,
   alumniToForm,
@@ -31,7 +34,6 @@ import {
   activeFilterCount,
   DEFAULT_DIRECTORY_QUERY,
   hasCriteria,
-  lastPage,
   readDirectoryQuery,
   toListParams,
   writeDirectoryQuery,
@@ -40,7 +42,7 @@ import { directoryReturnState, readDirectorySearch } from "../frontend/src/lib/d
 import { initialsOf } from "../frontend/src/lib/initials.ts";
 import { loadFailureText } from "../frontend/src/lib/loadFailure.ts";
 import { mailtoHref } from "../frontend/src/lib/mailtoLink.ts";
-import { pageRange } from "../frontend/src/lib/pageRange.ts";
+import { lastPage, pageRange } from "../frontend/src/lib/pageRange.ts";
 import { readProfileId } from "../frontend/src/lib/profileId.ts";
 import { readReturnAddress } from "../frontend/src/lib/returnAddress.ts";
 import { isAdmin, isExpired, isLiveSession, readToken } from "../frontend/src/lib/token.ts";
@@ -560,6 +562,38 @@ check("lastPage(13, 12)", lastPage(13, 12), 2);
 check("lastPage(86, 12)", lastPage(86, 12), 8);
 check("lastPage: page size 0", lastPage(13, 0), 1);
 
+// ---- REQ-fs-007: shared address helpers (TASK-002) --------------------------
+
+function addressOf(search: string): URLSearchParams {
+  return new URLSearchParams(search);
+}
+
+check("single: one value", singleParam(addressOf("role=admin"), "role"), "admin");
+check("single: absent is null", singleParam(addressOf("q=x"), "role"), null);
+check("single: sent twice is null", singleParam(addressOf("role=admin&role=student"), "role"), null);
+check("single: sent twice with the same value is null", singleParam(addressOf("role=admin&role=admin"), "role"), null);
+check("single: empty value is the empty text", singleParam(addressOf("role="), "role"), "");
+check("single: no address is null", singleParam(addressOf(""), "role"), null);
+check("single: value is not trimmed", singleParam(addressOf("q=%20a%20"), "q"), " a ");
+
+check("page param: absent is 1", readPageParam(addressOf("")), 1);
+check("page param: page=1", readPageParam(addressOf("page=1")), 1);
+check("page param: page=5", readPageParam(addressOf("page=5")), 5);
+check("page param: page=10", readPageParam(addressOf("page=10")), 10);
+check("page param: page=9999999 is kept", readPageParam(addressOf("page=9999999")), 9999999);
+check("page param: page=10000000 is 1 (too big)", readPageParam(addressOf("page=10000000")), 1);
+check("page param: page=0 is 1", readPageParam(addressOf("page=0")), 1);
+check("page param: page=05 is 1 (leading zero)", readPageParam(addressOf("page=05")), 1);
+check("page param: page=-2 is 1", readPageParam(addressOf("page=-2")), 1);
+check("page param: page=+2 is 1", readPageParam(addressOf("page=%2B2")), 1);
+check("page param: page=2.0 is 1", readPageParam(addressOf("page=2.0")), 1);
+check("page param: page=1e3 is 1", readPageParam(addressOf("page=1e3")), 1);
+check("page param: page=x is 1", readPageParam(addressOf("page=x")), 1);
+check("page param: empty page is 1", readPageParam(addressOf("page=")), 1);
+check("page param: trailing space is 1", readPageParam(addressOf("page=2%20")), 1);
+check("page param: sent twice is 1", readPageParam(addressOf("page=2&page=2")), 1);
+check("page param: other keys are ignored", readPageParam(addressOf("q=x&page=4&role=admin")), 4);
+
 // ---- REQ-fs-005: display lines (AC2, AC15) ----------------------------------
 
 check("name: shown trimmed", displayName("  Nadia Rahman "), "Nadia Rahman");
@@ -1035,6 +1069,198 @@ check(
 // A held count that is not a real count is read as none held: page 1.
 check("next page: -5 held", nextFeedPage(-5, 12), 1);
 check("next page: NaN held", nextFeedPage(Number.NaN, 12), 1);
+
+// ---- REQ-fs-007 TASK-003: the Users address (q, role, page) ----------------
+// Typed from the TASK-003 list, not from the code. A role is kept only when it
+// is exactly one of the three stored words; anything else is "all roles".
+
+import {
+  DEFAULT_USERS_QUERY,
+  hasUsersCriteria,
+  readUsersQuery,
+  toUserListParams,
+  writeUsersQuery,
+} from "../frontend/src/lib/usersQuery.ts";
+
+const NO_USERS_QUERY = { q: "", role: "", page: 1 };
+function readUsersText(search: string): unknown {
+  return readUsersQuery(new URLSearchParams(search));
+}
+
+check("users read: the default query is nothing set", DEFAULT_USERS_QUERY, NO_USERS_QUERY);
+check("users read: no address", readUsersText(""), NO_USERS_QUERY);
+check("users read: every key empty", readUsersText("q=&role=&page="), NO_USERS_QUERY);
+check("users read: page=0 is 1", readUsersText("page=0"), NO_USERS_QUERY);
+check("users read: page=01 is 1 (leading zero)", readUsersText("page=01"), NO_USERS_QUERY);
+check("users read: page=abc is 1", readUsersText("page=abc"), NO_USERS_QUERY);
+check("users read: page=2", readUsersText("page=2"), { q: "", role: "", page: 2 });
+check("users read: page=99999999 is 1 (too big)", readUsersText("page=99999999"), NO_USERS_QUERY);
+check("users read: repeated q counts as absent", readUsersText("q=ab&q=cd"), NO_USERS_QUERY);
+check("users read: role=ADMIN is all roles", readUsersText("role=ADMIN"), NO_USERS_QUERY);
+check("users read: role=teacher is all roles", readUsersText("role=teacher"), NO_USERS_QUERY);
+check("users read: role=admin", readUsersText("role=admin"), { q: "", role: "admin", page: 1 });
+check("users read: role=student", readUsersText("role=student"), { q: "", role: "student", page: 1 });
+check("users read: role=alumni", readUsersText("role=alumni"), { q: "", role: "alumni", page: 1 });
+check("users read: role with a space is all roles", readUsersText("role=admin%20"), NO_USERS_QUERY);
+check("users read: repeated role counts as absent", readUsersText("role=admin&role=admin"), NO_USERS_QUERY);
+check("users read: q of only spaces is no search", readUsersText("q=%20%20%20"), NO_USERS_QUERY);
+check("users read: q is trimmed", readUsersText("q=%20nadia%20"), { q: "nadia", role: "", page: 1 });
+check(
+  "users read: everything set",
+  readUsersText("page=4&role=alumni&q=nadia"),
+  { q: "nadia", role: "alumni", page: 4 },
+);
+
+const FULL_USERS_QUERY = { q: "nadia rahman", role: "student" as const, page: 3 };
+check("users write: the defaults are an empty address", writeUsersQuery(DEFAULT_USERS_QUERY).toString(), "");
+check("users write: page 1 is left out", writeUsersQuery({ q: "x", role: "", page: 1 }).toString(), "q=x");
+check("users write: only a role", writeUsersQuery({ q: "", role: "admin", page: 1 }).toString(), "role=admin");
+check(
+  "users write: everything set, in the order q, role, page",
+  writeUsersQuery(FULL_USERS_QUERY).toString(),
+  "q=nadia+rahman&role=student&page=3",
+);
+check("users round trip: everything set", readUsersQuery(writeUsersQuery(FULL_USERS_QUERY)), FULL_USERS_QUERY);
+check("users round trip: nothing set", readUsersQuery(writeUsersQuery(DEFAULT_USERS_QUERY)), NO_USERS_QUERY);
+check("users round trip: only q", readUsersQuery(writeUsersQuery({ q: "a & b", role: "", page: 1 })), { q: "a & b", role: "", page: 1 });
+check("users round trip: only role", readUsersQuery(writeUsersQuery({ q: "", role: "alumni", page: 1 })), { q: "", role: "alumni", page: 1 });
+check("users round trip: only page", readUsersQuery(writeUsersQuery({ q: "", role: "", page: 2 })), { q: "", role: "", page: 2 });
+
+check("users params: nothing set sends nothing", toUserListParams(DEFAULT_USERS_QUERY), {});
+check("users params: everything set", toUserListParams(FULL_USERS_QUERY), { q: "nadia rahman", role: "student", page: 3 });
+check("users params: page 1 is not sent", toUserListParams({ q: "", role: "admin", page: 1 }), { role: "admin" });
+check("users params: no limit", "limit" in toUserListParams(FULL_USERS_QUERY), false);
+
+check("users criteria: nothing set", hasUsersCriteria(DEFAULT_USERS_QUERY), false);
+check("users criteria: only a page", hasUsersCriteria({ q: "", role: "", page: 2 }), false);
+check("users criteria: search text", hasUsersCriteria({ q: "x", role: "", page: 1 }), true);
+check("users criteria: a role", hasUsersCriteria({ q: "", role: "student", page: 1 }), true);
+
+// ---- REQ-fs-007 TASK-004: words for a refused user delete ------------------
+// 409 has its own words; every other answer keeps the existing write rules.
+
+import { userDeleteFailureText } from "../frontend/src/lib/writeFailure.ts";
+
+const USER_DELETE_WORDS = { ...WRITE_WORDS, blocked: "blocked" };
+check("user delete words: 409 is blocked", userDeleteFailureText({ kind: "http", status: 409 }, USER_DELETE_WORDS), "blocked");
+check(
+  "user delete words: 409 is blocked even with conflict save words",
+  userDeleteFailureText({ kind: "http", status: 409 }, { ...WRITE_WORDS_CONFLICT, blocked: "blocked" }),
+  "blocked",
+);
+check("user delete words: 404 is not found", userDeleteFailureText({ kind: "http", status: 404 }, USER_DELETE_WORDS), "notFound");
+check("user delete words: 403 is forbidden", userDeleteFailureText({ kind: "http", status: 403 }, USER_DELETE_WORDS), "forbidden");
+check("user delete words: no answer", userDeleteFailureText({ kind: "network" }, USER_DELETE_WORDS), "noAnswer");
+check("user delete words: 500", userDeleteFailureText({ kind: "http", status: 500 }, USER_DELETE_WORDS), "server");
+check("user delete words: 400", userDeleteFailureText({ kind: "http", status: 400 }, USER_DELETE_WORDS), "general");
+
+// ---- REQ-fs-007 fix round: the Users and About words (QUAL-004) ------------
+// Typed from the spec (AC9, A3, TASK-008 list) and the design intent, not
+// worked out with the code. The functions take a name the caller has already
+// chosen (displayName gives "Name not given"); they add no fallback of their own.
+
+import {
+  aboutPurposeText,
+  aboutSub,
+  userDeleteBlockedText,
+  userDeleteBody,
+  userDeletedToast,
+  userDeleteFailureWords,
+  usersCount,
+  usersDeleteButtonName,
+} from "../frontend/src/config/text.ts";
+
+check("users count: 0", usersCount(0), "0 users");
+check("users count: 1", usersCount(1), "1 user");
+check("users count: 2", usersCount(2), "2 users");
+check("users count: 124", usersCount(124), "124 users");
+check("users delete button: read out with the name", usersDeleteButtonName("Nadia Rahman"), "Delete Nadia Rahman");
+check("users delete button: no name given", usersDeleteButtonName("Name not given"), "Delete Name not given");
+check(
+  "user delete body: names the person",
+  userDeleteBody("Nadia Rahman"),
+  "The account of Nadia Rahman will be removed for everyone. This cannot be undone.",
+);
+check("user deleted toast", userDeletedToast("Nadia Rahman"), "Nadia Rahman was deleted");
+check(
+  "user delete 409: names posts, comments and an alumni profile",
+  userDeleteBlockedText("Nadia Rahman"),
+  "Nadia Rahman cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed.",
+);
+check(
+  "user delete words: blocked names the person",
+  userDeleteFailureWords("Tanvir Ahmed").blocked,
+  "Tanvir Ahmed cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed.",
+);
+check(
+  "user delete words: 404 is the already-gone toast",
+  userDeleteFailureWords("Tanvir Ahmed").notFound,
+  "This user had already been deleted, so they were removed from the list.",
+);
+check("about sub: uses the app name given", aboutSub("Nordlys Alumni"), "What Nordlys Alumni is for, and who to ask.");
+check(
+  "about purpose: uses the app name given",
+  aboutPurposeText("Nordlys Alumni"),
+  "Nordlys Alumni helps graduates and students stay in touch with each other.",
+);
+
+// ---- REQ-fs-007 fix round: asRole (QUAL-003) --------------------------------
+// Only the three stored words, exactly, in lower case. Anything else is null.
+
+import { asRole } from "../frontend/src/lib/token.ts";
+
+check("role: student", asRole("student"), "student");
+check("role: alumni", asRole("alumni"), "alumni");
+check("role: admin", asRole("admin"), "admin");
+check("role: Admin (capital) is none", asRole("Admin"), null);
+check("role: ADMIN is none", asRole("ADMIN"), null);
+check("role: leading space is none", asRole(" admin"), null);
+check("role: trailing space is none", asRole("admin "), null);
+check("role: empty is none", asRole(""), null);
+check("role: teacher is none", asRole("teacher"), null);
+check("role: alumnus is none", asRole("alumnus"), null);
+
+// ---- REQ-fs-007 fix round: toPeopleBlockState (QUAL-005, REQ-fs-006 n6) ------
+// The file lives in store/ but imports types only, which tsx erases, so no atom,
+// service or axios is loaded. Idle, or loaded for the other kind, is "loading"
+// with no items, so a page never shows the other page's list (pattern 23).
+
+import { toPeopleBlockState } from "../frontend/src/store/peopleBlockState.ts";
+
+const PERSON = { id: 5, full_name: "Nadia Rahman" } as unknown as Alumni;
+const PEOPLE_LOADING = { status: "loading", items: [], failure: null };
+const PEOPLE_FAILURE = { kind: "http" as const, status: 500 };
+
+check(
+  "people block: idle is loading",
+  toPeopleBlockState({ status: "idle", kind: null, items: [], failure: null }, "newest"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: loading for this kind",
+  toPeopleBlockState({ status: "loading", kind: "mentoring", items: [], failure: null }, "mentoring"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: ready for this kind keeps the items",
+  toPeopleBlockState({ status: "ready", kind: "newest", items: [PERSON], failure: null }, "newest"),
+  { status: "ready", items: [PERSON], failure: null },
+);
+check(
+  "people block: error for this kind keeps the failure",
+  toPeopleBlockState({ status: "error", kind: "mentoring", items: [], failure: PEOPLE_FAILURE }, "mentoring"),
+  { status: "error", items: [], failure: PEOPLE_FAILURE },
+);
+check(
+  "people block: ready for the other kind is loading, no items",
+  toPeopleBlockState({ status: "ready", kind: "mentoring", items: [PERSON], failure: null }, "newest"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: error for the other kind is loading, no failure",
+  toPeopleBlockState({ status: "error", kind: "newest", items: [], failure: PEOPLE_FAILURE }, "mentoring"),
+  PEOPLE_LOADING,
+);
 
 // ---- Result ---------------------------------------------------------------
 

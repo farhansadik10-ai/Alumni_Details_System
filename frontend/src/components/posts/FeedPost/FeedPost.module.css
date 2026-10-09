@@ -6,11 +6,18 @@
   min-width: 0;
 }
 
-/* Hidden on a load error (onError), so a broken link leaves no empty box. */
+/*
+ * Hidden on a load error (onError), so a broken link leaves no empty box.
+ * A fixed 4:3 box (no "auto" in aspect-ratio), so the page does not move when
+ * the picture arrives, whatever its shape; another shape is letterboxed on
+ * the sunken background (AC25, ADV-004). height stays auto: without it the
+ * img's height attribute would set the height.
+ */
 .image {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 3;
   max-height: calc(var(--space-8) * 8);
   object-fit: contain;
   border: var(--border-line) solid var(--line);

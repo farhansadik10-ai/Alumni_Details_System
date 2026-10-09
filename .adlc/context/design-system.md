@@ -176,7 +176,7 @@ Before building a new component, check this list. All are drawn in `docs/design/
 | Theme switch | `frontend/src/components/shell/ThemeSwitch/` | light, dark, system; pressed | Three icon buttons in the header; three text buttons (Light, Dark, System) in the phone menu. The pressed one uses `--action` |
 | Header | `frontend/src/components/shell/Header/, PhoneMenu/` | desktop, phone | See "Page pattern" |
 | Band | `frontend/src/components/shell/Band/, PageLayout/` | page heading; avatar and name on profile pages | See "Page pattern" |
-| Footer | `frontend/src/components/shell/Footer/` | before and after the About page exists | App name on the left. The "About" link on the right is not rendered until the About page exists; the About REQ adds it. No dead links |
+| Footer | `frontend/src/components/shell/Footer/` | built in REQ-fs-007 | App name on the left, "About" link on the right (to `/about`). No dead links |
 | Icons | `frontend/src/icons/` | — | Simple line icons, 2px stroke, `currentColor`. No emoji. Drawn in the repo as small React components; no icon package |
 | AlumniCard | `frontend/src/components/alumni/AlumniCard/` | with or without optional parts, mentoring | A result of the directory: avatar, name, "Title at Company", plain tags, "View profile" link (the card is not one big link) |
 | DirectoryFilters | `frontend/src/components/alumni/DirectoryFilters/` | wide, phone (closed, open), options loading, options failed | Search, three selects and the mentoring checkbox; on a phone the "Filters (n)" button opens the panel (CSS only) |
@@ -194,7 +194,7 @@ Every main page after log in has the same three parts:
 2. **Band.** Full-width `--band` block. Inside: a 72×8px accent bar, the page heading, one line of sub text.
 3. **First card overlaps the band** by 56px (`margin-top: -56px`, 52px on phone). On the Profile and My profile pages the band holds the avatar and name instead, and the cards start below it.
 
-Footer: app name on the left, "About" link on the right. The link is added by the About REQ; it is not rendered before the About page exists. No dead links.
+Footer: app name on the left, "About" link on the right. The link goes to the About page (built in REQ-fs-007). No dead links.
 
 Phone and other narrow screens: the header is 60px with the app name and a menu button. The menu opens full screen with large links, the theme switch as three text buttons (Light, Dark, System), the user block and Log out. The band heading drops to 36px. Cards stack in one column. Screens without a phone picture follow these rules.
 
@@ -214,9 +214,9 @@ Names, companies and numbers in the screen files are sample data.
 | `my-profile.html` | My profile | Logged in | Edit own alumni profile and account, Log out |
 | `phone-directory.html`, `phone-menu.html` | Phone size, 390px | Logged in | Directory and the open menu |
 
-Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]): About page (planned, built last), Privacy page, password reset.
+Not designed yet ([[architecture/adr-10-about-page-last-privacy-and-password-reset-later|ADR-10]]): Privacy page, password reset. (The About page was built in REQ-fs-007.)
 
-The About page will say: what the system is, who can join, how to contact the alumni office (the contact email), and the app version. _(Owner, 2026-10-06.)_ Its layout: decide in the REQ that builds it.
+The About page (REQ-fs-007) says what the system is for, what you can do in it, and how to contact the alumni office (the contact email). It shows no "who can join" and no app version, to avoid facts the system cannot keep true: see the deviation in ADR-10. Layout: two cards on the page frame.
 
 ### Loading, empty and error states
 
@@ -244,7 +244,7 @@ The About page will say: what the system is, who can join, how to contact the al
 - Nav links: Dashboard, Directory, Feed, plus Users for admins.
 - On phone the directory filters sit behind a "Filters" button. Search stays visible.
 - The Field filter lists the distinct non-empty values of `alumni.field`, sorted A to Z. The Department and Graduation year filters work the same way, from `alumni.department` and `alumni.graduation_year`. _(Owner, 2026-10-06.)_
-- The footer's "About" link is not rendered until the About page exists. No dead links.
+- The footer's "About" link goes to the About page (REQ-fs-007). No dead links.
 
 ### Fields the screens need that the database does not have yet
 

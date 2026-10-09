@@ -17,6 +17,40 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-09] ship-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | wrap-up committed on the feature branch (no push); owner runs the merge checklist and the manual checklist
+
+## [2026-10-09] req-ready-to-merge | REQ-fs-007-frontend-users-about-polish-perf | frontend part 4 (roadmap F9 rest, F10, F11): admin Users page, About page and footer link, phone audit and fixes, performance; 2 review rounds, 14 tasks, 11 commits; library check 565 cases
+
+## [2026-10-09] lesson | L-REQ-fs-007-7 — when a spec or screen departs from words an accepted ADR fixes, write the deviation in the ADR at that gate
+
+## [2026-10-09] lesson | L-REQ-fs-007-6 — memo only skips a row whose props are stable: count renders first
+
+## [2026-10-09] lesson | L-REQ-fs-007-5 — a reserved picture box and hide-on-error must be decided together
+
+## [2026-10-09] lesson | L-REQ-fs-007-4 — a delete can empty page one: reload from the store action
+
+## [2026-10-09] lesson | L-REQ-fs-007-3 — one dialog for many rows: track the row, clear the flag on unmount
+
+## [2026-10-09] lesson | L-REQ-fs-007-2 — re-read old review items against the code before carrying them
+
+## [2026-10-09] lesson | L-REQ-fs-007-1 — measure build size one way and compare by group
+
+## [2026-10-09] gotcha | G59 — throwaway checks outside the repo; G60 — phone UI traps from part 4; update lines on G50 and G54
+
+## [2026-10-09] concept | address-as-state — "Shared hook" section added (useListAddress)
+
+## [2026-10-09] adr-updated | ADR-06 (409 words) and ADR-10 (About content, version) deviation lines
+
+## [2026-10-09] verify-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | findings: C0/M0/m4 (2 review rounds, fix all done; BeingBuilt.tsx deleted by owner yes; ADR-06 and ADR-10 deviation lines to be added at wrap-up)
+
+## [2026-10-09] implement-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | 14 tasks done, 536 library cases, build and style pass; browser checks in headless Chrome against a mock API; broken post picture stays hidden (option A); one scratch file made and removed inside frontend/src by a task agent (rule slip, told to the owner)
+
+## [2026-10-08] architect-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | 14 tasks, no ADR; owner approved: Directory moves to a shared useListAddress hook, post pictures in a fixed 4:3 box, no list reload after a delete; n2 skipped
+
+## [2026-10-08] work-path-set | REQ-fs-007-frontend-users-about-polish-perf | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-007-frontend-users-about-polish-perf, off redesign)
+
+## [2026-10-08] spec-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | calls taken: 409 text names alumni profile too (A3), About for logged-in only (A5), no toast on unchanged save (A7)
+
 ## [2026-10-08] req-archived | REQ-fs-006-frontend-feed-and-dashboard
 
 ## [2026-10-08] req-merged | REQ-fs-006-frontend-feed-and-dashboard | merge commit b4c31a97 on redesign (the feature branch was deleted by the owner)

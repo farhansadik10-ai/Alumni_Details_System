@@ -14,6 +14,7 @@ import { REMEMBERED_EMAIL_STORAGE_KEY } from "../../config/storageKeys";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useFormError } from "../../hooks/useFormError";
 import { readStored } from "../../lib/browserStorage";
+import { mailtoHref } from "../../lib/mailtoLink";
 import {
   GENERAL_ERROR_MESSAGE,
   MAX_EMAIL_LENGTH,
@@ -89,6 +90,9 @@ export default function LoginPage() {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // A plain address is a link; anything else shows as text (as on About).
+  const contactHref = mailtoHref(CONTACT_EMAIL);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -204,7 +208,7 @@ export default function LoginPage() {
           </p>
           <p>
             {FORGOT_PASSWORD_TEXT}
-            <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link>
+            {contactHref !== null ? <Link href={contactHref}>{CONTACT_EMAIL}</Link> : CONTACT_EMAIL}
           </p>
         </div>
       </form>

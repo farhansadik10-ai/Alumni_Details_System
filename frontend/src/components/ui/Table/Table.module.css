@@ -113,6 +113,19 @@
     border-bottom: 0;
   }
 
+  /*
+   * A cell whose render gave nothing (the own row's Actions) is not drawn: a
+   * label beside an empty box reads as a missing control. The cell before an
+   * empty last cell then ends the card, so it loses its divider too.
+   */
+  .cell:has(> .value:empty) {
+    display: none;
+  }
+
+  .row .cell:nth-last-child(2):has(+ .cell > .value:empty) {
+    border-bottom: 0;
+  }
+
   .value {
     overflow-wrap: anywhere;
   }

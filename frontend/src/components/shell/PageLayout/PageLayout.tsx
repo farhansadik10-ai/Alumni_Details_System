@@ -44,8 +44,8 @@ export type PageNoteProps = {
 };
 
 /**
- * A card that says one thing about the page: "This page is being built",
- * "You do not have access to this page". Used as a child of PageLayout.
+ * A card that says one thing about the page: "You do not have access to this
+ * page", "There is no page at this address". Used as a child of PageLayout.
  */
 export function PageNote({ title, text, children }: PageNoteProps) {
   const titleId = useId();

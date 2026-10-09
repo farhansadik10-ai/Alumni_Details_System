@@ -47,6 +47,10 @@ Two decision records hold the longer reasoning: `.adlc/architecture/adr-13-front
 31. [One owner rule for posts and comments](#31-one-owner-rule-for-posts-and-comments)
 32. [Shared forms for create and edit: PostForm and CommentForm](#32-shared-forms-for-create-and-edit-postform-and-commentform)
 33. [Small blocks that fail on their own, one atom per kind with a key](#33-small-blocks-that-fail-on-their-own-one-atom-per-kind-with-a-key)
+34. [An admin list and its delete](#34-an-admin-list-and-its-delete)
+35. [One hook for a list kept in the address](#35-one-hook-for-a-list-kept-in-the-address)
+36. [The About page and the footer link](#36-the-about-page-and-the-footer-link)
+37. [Phone and performance rules](#37-phone-and-performance-rules)
 
 ---
 
@@ -60,6 +64,8 @@ pages, components, store   ->  lib (pure functions)
 ```
 
 A page or a component never imports `axios` and never imports anything from `services/`, not even a type. It reads atoms and calls actions. `services/` knows nothing about the store. `lib/` knows nothing about React or the browser at import time.
+
+`hooks/` holds React hooks that pages share. A hook follows the same rule as a component: no `axios`, no `services/`. The list-address hook (pattern 35) also stays out of `store/`: the page reads its list from the store and hands it to the hook, so the hook works for any list.
 
 **Where it lives.**
 
@@ -201,7 +207,7 @@ Atoms are grouped by topic, one file per topic. State that belongs to one screen
 
 - The store: `frontend/src/store/appStore.ts`
 - Given to React in `frontend/src/main.tsx`
-- Topics: `frontend/src/store/sessionAtoms.ts`, `frontend/src/store/sessionActions.ts`, `frontend/src/store/profileAtoms.ts`, `frontend/src/store/themeAtoms.ts`, `frontend/src/store/toastAtoms.ts`, and from part 2 `frontend/src/store/alumniAtoms.ts`, `frontend/src/store/alumniActions.ts`, `frontend/src/store/latestRequest.ts`
+- Topics: `frontend/src/store/sessionAtoms.ts`, `frontend/src/store/sessionActions.ts`, `frontend/src/store/profileAtoms.ts`, `frontend/src/store/themeAtoms.ts`, `frontend/src/store/toastAtoms.ts`, and from part 2 `frontend/src/store/alumniAtoms.ts`, `frontend/src/store/alumniActions.ts`, `frontend/src/store/latestRequest.ts`, and from part 4 `frontend/src/store/usersAtoms.ts` and `frontend/src/store/userActions.ts` (pattern 34)
 - Used from outside React in `frontend/src/store/wireApi.ts` and `frontend/src/store/themeAtoms.ts`
 
 **Why we chose it.** The project rule is "state in Jotai atoms". Jotai's default store is hidden inside React, so the API client could not tell it "this user is logged out". With our own store, one line does it.
@@ -234,6 +240,7 @@ Trimming happens twice, on purpose. The pages trim the email, name and photo lin
 - `frontend/src/store/toastAtoms.ts` (`showToastAtom`, `dismissToastAtom`)
 - A caller: `frontend/src/pages/LoginPage/LoginPage.tsx`
 - From part 3, the writes of the feed: `frontend/src/store/postActions.ts` (`publishPostAtom`, `savePostAtom`, `deletePostAtom`, `addCommentAtom`, `saveCommentAtom`, `deleteCommentAtom`). Each returns `{ ok: true }` or `{ ok: false, failure }`. The page or the component shows the toast and moves focus; the action does neither. A write remembers the user and the visit when it starts, and patches nothing if either changed before the answer came (pattern 30).
+- From part 4, the one write of the Users page: `deleteUserAtom` in `frontend/src/store/userActions.ts`, with the same result shape and the same "same user, same visit" rule (pattern 34).
 
 **Why we chose it.** When a log in works, the log-in page may be gone before the action returns. Work that must happen (save the remembered email, set the token) is therefore inside the action, not in the page. A result object makes every outcome visible in the type, so a screen cannot forget one.
 
@@ -258,6 +265,7 @@ Each service file is a thin list of calls: one function per endpoint, relative `
 - The hand-over, called once before the first render: `frontend/src/store/wireApi.ts`
 - Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`, `frontend/src/services/alumniService.ts` (part 2; the three loaders that can be cancelled take a `signal`, see pattern 23; from part 3 its list takes an optional `limit`, so the small lists ask for 3)
 - From part 3: `frontend/src/services/postService.ts` (list, create, edit, delete a post; it owns `POSTS_PATH`), `frontend/src/services/commentService.ts` (a post's comments, create, edit, delete; it imports `POSTS_PATH` for `/api/posts/:id/comments`), `frontend/src/services/statsService.ts` (`GET /api/stats`). The list loaders take a `signal`; the deletes return nothing.
+- From part 4: `listUsers(params, signal)` (`GET /api/users`, admin only; `limit` is not sent, so the server's page size is used) and `deleteUser(id)` (`DELETE /api/users/:id`) in `frontend/src/services/userService.ts`.
 - The dev proxy that sends `/api` to the backend: `frontend/vite.config.ts`
 
 **Why we chose it.** If the client imported the store, and the store imports the services, the two would import each other. Handing the functions in keeps the arrow pointing one way (pattern 1) and lets the client be tried with a fake token and a fake handler.
@@ -287,6 +295,7 @@ The server's own error text is never shown. Each screen picks its words from `ki
 - `frontend/src/services/apiError.ts` (`ApiFailure`, `toApiFailure`, and `isCancelled`: a call this app cancelled is not a failure and shows nothing, pattern 23)
 - From part 2, two shared word rules, both pure and both with cases in `scripts/frontend-lib-check.ts`: `frontend/src/lib/loadFailure.ts` (a failed load; it also owns the failure shape `CallFailure` and the status numbers 403, 404, 409 and 500) and `frontend/src/lib/saveFailure.ts` (a failed save: `saveFailureReason` and `saveFailureText`; each card passes its own words)
 - From part 3, a third word rule: `frontend/src/lib/writeFailure.ts` (a failed edit, delete or publish in the feed). `writeFailureText` checks 403 first, then 404, then hands the rest to `saveFailureText`; `isGone` is the one "the server said 404" test. A new comment or reply has its own rule in the same file: `commentAddFailureText` reads a 400 on a reply as "the comment replied to is gone" (`isReplyTargetGone`), then 404 as "the post is gone", then 403, then hands the rest to `saveFailureText`. The caller passes its own words. Callers: `FeedPost`, `CommentItem`, `CommentsPanel`, `FeedPage` and `frontend/src/store/postActions.ts`.
+- From part 4, a fourth rule in the same file: `userDeleteFailureText` (a failed user delete). A 409 gives the caller's `blocked` words; anything else goes to `writeFailureText`. The words, `userDeleteFailureWords(name)`, are in `frontend/src/config/text.ts`; the 409 words name posts, comments and an alumni profile (pattern 34).
 - Turned into results in `frontend/src/store/sessionActions.ts`
 - Words chosen in `frontend/src/pages/LoginPage/LoginPage.tsx` and `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 
@@ -361,6 +370,8 @@ We did not check the session inside each page (easy to forget on a new page), an
 
 A link to one alumni profile needs the id filled in (`/directory/:id`). `alumniProfilePath(id)`, next to `PATHS`, builds it (pattern 27).
 
+Part 4 added `PATHS.about` (`/about`, pattern 36).
+
 ---
 
 ## 13. Pages loaded on demand
@@ -369,18 +380,18 @@ A link to one alumni profile needs the id filled in (`/directory/:id`). `alumniP
 
 While a page's file is fetched, the shell stays on screen: the header and footer do not move, and the page area shows a skeleton. The public pages (log in, sign-up) have their own plain waiting state.
 
-Every route has its own page file, even the pages that only say "being built". So the build really has one file per page, and a later part replaces one file.
+Every route has its own page file. Until part 4 some only said "being built"; a later part replaced one file at a time. After part 4 every page is real, and the two new ones, the Users page and the About page, are their own lazy files like the rest (`UsersPage-*.js`, `AboutPage-*.js` in the build).
 
 **Where it lives.**
 
-- The lazy imports: `frontend/src/App.tsx` (and `frontend/src/routes/RequireAdmin.tsx` for the no-access page)
+- The lazy imports: `frontend/src/App.tsx` (and `frontend/src/routes/RequireAdmin.tsx` for the no-access page). From part 4 also `frontend/src/pages/AboutPage/AboutPage.tsx`, routed inside the shell.
 - The waiting state inside the shell: `frontend/src/components/shell/AppShell/AppShell.tsx`
 - The waiting state for the public pages: `frontend/src/routes/PublicOnly.tsx`
 - A page file: `frontend/src/pages/DashboardPage/DashboardPage.tsx`
 
 **Why we chose it.** A visitor who only logs in should not download the directory, the feed and the admin screens. The check is simple: after `npm run build`, `frontend/dist/assets` has a file for each page, plus a few shared files.
 
-We did not split by hand in the Vite config, and we did not preload every page after log in. That can come in the polish part (F10) if moving between pages feels slow.
+We did not split by hand in the Vite config, and we did not preload every page after log in. The polish part (F10, REQ-fs-007) measured the build and checked that no page file is in the entry script; it still preloads no page (pattern 37).
 
 ---
 
@@ -392,7 +403,7 @@ We did not split by hand in the Vite config, and we did not preload every page a
 - `PageLayout`: the band (accent bar, the one `<h1>`, a line of sub text) and a content column. The first child of the column overlaps the band. It also sets the browser tab title from the heading.
 - `PageNote`: a card that says one thing about the page, with an optional link or button under it.
 
-The being-built page, the no-access page and the not-found page are all `PageLayout` with one `PageNote`. `BeingBuilt` is that pair with fixed words; each unbuilt route has a thin page file that gives it a heading and a sub text.
+The no-access page and the not-found page are `PageLayout` with one `PageNote`. Until part 4, a `BeingBuilt` component drew that pair with fixed words for each unbuilt route. The last unbuilt page went in part 4, and the component was deleted.
 
 Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel beside the form, two columns that wrap into one on a narrow screen.
 
@@ -401,18 +412,18 @@ Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel
 - `frontend/src/components/shell/AppShell/AppShell.tsx`
 - `frontend/src/components/shell/PageLayout/PageLayout.tsx` (holds both `PageLayout` and `PageNote`) and `frontend/src/components/shell/PageLayout/PageLayout.module.css`
 - `frontend/src/components/shell/Band/Band.tsx`, `frontend/src/components/shell/Header/Header.tsx`, `frontend/src/components/shell/Footer/Footer.tsx`, `frontend/src/components/shell/SkipLink/SkipLink.tsx`, `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx`
-- `frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx`
-- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`, `frontend/src/pages/UsersPage/UsersPage.tsx` (still being built after part 3)
+- `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`
+- Real pages built in part 4 on the same frame: `frontend/src/pages/UsersPage/UsersPage.tsx` (pattern 34) and `frontend/src/pages/AboutPage/AboutPage.tsx` (pattern 36). The footer now holds the About link: `frontend/src/components/shell/Footer/Footer.tsx`.
 - Real pages built in part 3 on the same frame: `frontend/src/pages/FeedPage/FeedPage.tsx` and `frontend/src/pages/DashboardPage/DashboardPage.tsx`. Both put one row as the frame's first child, so the row overlaps the band.
 - A link drawn as a button, for "Write a post" and the empty states: `frontend/src/components/ui/ButtonLink/ButtonLink.tsx` (takes its look from `Button.module.css` with `composes`). `frontend/src/components/ui/EmptyState/EmptyState.tsx` takes an optional `actionTo` that it draws with `ButtonLink`, so an empty state can lead to another page without a button that navigates.
 - A page that replaces the band with its own: `PageLayout`'s `band` slot, used with `ProfileBand` (pattern 26)
 - `frontend/src/components/auth/AuthLayout/AuthLayout.tsx`
 
-**Why we chose it.** The plan gave `BeingBuilt` its own stylesheet. While building, three pages turned out to need the same card (a statement, a line, a link). So the card became `PageNote` inside `PageLayout`, and `BeingBuilt` has nothing of its own to style. One frame also means the tab title, the single `<h1>` and the band overlap are right on every page without each page thinking about them.
+**Why we chose it.** The plan gave `BeingBuilt` its own stylesheet. While building, three pages turned out to need the same card (a statement, a line, a link). So the card became `PageNote` inside `PageLayout`, and the old `BeingBuilt` component (since deleted) had nothing of its own to style. One frame also means the tab title, the single `<h1>` and the band overlap are right on every page without each page thinking about them.
 
 We did not make one shared page file for all six unbuilt routes (the build could then not show one file per page).
 
-**To build a real page in parts 2 to 4:** replace the thin page file. Keep `PageLayout` as the outer element and put your cards inside it. Delete `BeingBuilt` when the last unbuilt page is gone. Log out lives in the Account card of My profile (`frontend/src/components/profile/AccountCard/AccountCard.tsx`) and in the phone menu.
+**To build a new page:** give it its own page file. Keep `PageLayout` as the outer element and put your cards inside it. The last unbuilt page went in part 4, so `BeingBuilt` was deleted. Log out lives in the Account card of My profile (`frontend/src/components/profile/AccountCard/AccountCard.tsx`) and in the phone menu.
 
 ---
 
@@ -445,7 +456,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2, 469 after part 3; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2, 469 after part 3, 565 after part 4 and its review fixes; `toPeopleBlockState` in `store/` is covered too, because its imports are types only; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -486,13 +497,16 @@ The table elements keep explicit roles (`role="table"`, `row`, `cell`), because 
 **Where it lives.**
 
 - `frontend/src/components/ui/Table/Table.tsx` and `frontend/src/components/ui/Table/Table.module.css`
-- Goes with it: `frontend/src/components/ui/Pagination/Pagination.tsx` (its `pageRange` function is pure and lives in `frontend/src/lib/pageRange.ts`; the return-address guard `readReturnAddress` lives in `lib/returnAddress.ts`; both are in the library check), `frontend/src/components/ui/EmptyState/EmptyState.tsx`, `frontend/src/components/ui/ErrorState/ErrorState.tsx`, `frontend/src/components/ui/Skeleton/Skeleton.tsx`
+- The first real user, from part 4: the Users page (pattern 34). Its five columns come from one function, `usersColumns({ selfId, onDelete })` in `frontend/src/components/users/UserCells/usersColumns.tsx`, which the dev page calls too. `Table` calls each column's `render` on every draw of the page, so `memo` helps only a cell component whose props are plain values (pattern 37).
+- Goes with it: `frontend/src/components/ui/Pagination/Pagination.tsx` (its `pageRange` function is pure and lives in `frontend/src/lib/pageRange.ts`, and since part 4 so does `lastPage`, the last page number for a total and a page size; the return-address guard `readReturnAddress` lives in `lib/returnAddress.ts`; both are in the library check), `frontend/src/components/ui/EmptyState/EmptyState.tsx`, `frontend/src/components/ui/ErrorState/ErrorState.tsx`, `frontend/src/components/ui/Skeleton/Skeleton.tsx`
 
 **Why we chose it.** One component and one set of data give both layouts, and the switch is pure CSS. A page does not need to know how wide the screen is.
 
 We did not render two different trees (a table and a card list) and pick one in JavaScript, and we did not let the table scroll sideways on a phone.
 
 Every list in parts 2 to 4 needs its three states: `Skeleton` while loading, `EmptyState` when there is nothing, `ErrorState` with "Try again" when the call failed.
+
+A role shown in a table cell is one short word: the three role variants of `Tag` never break inside the word (`frontend/src/components/ui/Tag/Tag.module.css`). Before this, a narrow column showed "Alum / ni". A plain `Tag` still breaks anywhere, so a long free text cannot push the page wider.
 
 ---
 
@@ -580,6 +594,8 @@ Part 3 added button links, the post byline and text, the post and comment forms,
 - **No request can start from them.** A small wrapper on the page, `NoRequests`, stops every click, middle click and submit in the capture phase, before it reaches a post, a comment or a block's link or retry. The keyboard is stopped too, because Enter and Space on a button fire a click. The two form samples are not wrapped: their submit is a function on the page that only shows a toast or a fixed failure.
 - **Some states are drawn from parts, not from the live component.** `FeedPost` keeps its editing state and its delete dialog in its own `useState`, so a prop cannot switch them on. The page draws them from the same parts (card, byline, `PostForm`, `ConfirmDialog` with FeedPost's words). `CommentsPanel` reads the comment thread from the store, so it is not rendered at all; its loading, error, empty and thread states are drawn from `CommentItem`, `CommentForm` and `buildThreads`. For that, the page's stylesheet takes the thread's look from `frontend/src/components/posts/CommentsPanel/CommentsPanel.module.css` with `composes` (its `panel`, `threads`, `replies` and `reply` classes, so the phone indent comes too). Nothing is copied (pattern 3).
 
+Part 4 added a "Users" section (`UserSamples`): the filters, the name cell, the actions cell, and a `Table` of invented users built with the real `usersColumns`. One thing differs from the sections above: **the delete dialog sits outside `NoRequests`**. `Dialog` opens with `showModal()` and has no portal, so inside the wrapper its own Cancel and Delete presses would be stopped too. Its openers and handlers are page-only (close, or a "Nothing was sent" toast), and its failure words come from the same `userDeleteFailureText` call as the Users page, so no request can start.
+
 ---
 
 ## 23. A list loaded into an atom; the latest request wins
@@ -603,6 +619,7 @@ When a page closes, it clears its own atom: the directory calls `clearDirectoryA
 - Readers: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/AlumniProfilePage/AlumniProfilePage.tsx`, `frontend/src/pages/MyProfilePage/MyProfilePage.tsx`
 - The clear on close: `clearDirectoryAtom`, `clearViewedAlumniAtom`, `clearMyAlumniAtom` in `frontend/src/store/alumniAtoms.ts`
 - From part 3: `frontend/src/store/postAtoms.ts` holds five more atoms with their own loaders and clears (`feedAtom`, `commentsAtom`, `recentPostsAtom`, `peopleAtom`, `statsAtom`), each with its own `createLatestRequest()`. Its `resetPostsAtom` is called in the same three places as `resetAlumniAtom` in `frontend/src/store/sessionActions.ts`. The keys are `postId` (comments), `authorId` (recent posts) and `kind` (people); see patterns 30 and 33.
+- From part 4: `frontend/src/store/usersAtoms.ts` holds `usersAtom` (shaped like the directory's state, with `queryKey`), `loadUsersAtom` with its own `createLatestRequest()`, and `clearUsersAtom` for the page's close. Its `resetUsersAtom` is the third reset in each of the same three places of `sessionActions.ts` (`clearSessionAtom`, `startSessionAtom`, `tokenChangedElsewhereAtom`). When you add a store with a list, add its reset to all three, or one user's list is shown to the next.
 
 **Why we chose it.** A search box fires several calls in a row, and the network does not answer in order. Without a ticket, a slow answer for "ab" can arrive after the answer for "abc" and replace it. React's StrictMode also starts every effect twice in development, which starts two calls. The ticket makes both harmless, and the abort saves the server the work.
 
@@ -624,11 +641,15 @@ How writes are made:
 
 On a phone the filters sit in a panel behind a "Filters" button. The panel is `display: none` while closed, so Tab skips it. There is no JavaScript media query.
 
+Since part 4 the write rules above (the timer, the live-address ref, the past-the-end move, the focus after a page change) live in one hook, `useListAddress`, and the Users page follows the same rules with its own keys (`q`, `role`, `page`). The Directory behaves as before. See pattern 35.
+
 **Where it lives.**
 
-- The rules: `frontend/src/lib/directoryQuery.ts` (`readDirectoryQuery`, `writeDirectoryQuery`, `toListParams`, `activeFilterCount`, `hasCriteria`, `lastPage`), with cases in `scripts/frontend-lib-check.ts`
-- The page: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`
+- The rules: `frontend/src/lib/directoryQuery.ts` (`readDirectoryQuery`, `writeDirectoryQuery`, `toListParams`, `activeFilterCount`, `hasCriteria`), with cases in `scripts/frontend-lib-check.ts`. Since part 4 the "one value only" and page readers are `singleParam` and `readPageParam` in `frontend/src/lib/addressParams.ts`, and `lastPage` is in `frontend/src/lib/pageRange.ts`.
+- The timer, the writes and the focus: `frontend/src/hooks/useListAddress.ts` (pattern 35)
+- The page: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx` (its load, its clear on close, its filter options and what it draws)
 - The controls: `frontend/src/components/alumni/DirectoryFilters/DirectoryFilters.tsx` (controlled; it holds only the panel's open state)
+- The Users page's twin of the rules: `frontend/src/lib/usersQuery.ts`
 
 **Why we chose it.** A search kept in the address can be shared as a link, survives a reload, and Back works as people expect. Because the reader cleans every value, an edited or old link cannot break the page.
 
@@ -710,6 +731,13 @@ We did not put the directory query into the profile's address (it would make eve
 - "is this email a safe link": `mailtoHref` in `frontend/src/lib/mailtoLink.ts` (a plain address is encoded into a `mailto:` link; anything else is shown as text, because the server accepts any email string)
 
 The validators are shared the same way: sign-up and the two My profile cards use the same `validateName` and `validatePhotoLink` from `frontend/src/lib/validation.ts`. Validator messages stay there as exported constants (pattern 16); page words are in `frontend/src/config/text.ts`, grouped by page.
+
+Part 4 did the same for four more rules, each moved or written once when the Users page needed it:
+
+- "the one value of an address key" and "the page number in the address": `singleParam` and `readPageParam` in `frontend/src/lib/addressParams.ts`, taken out of `directoryQuery.ts` so both list pages use them
+- "the last page number": `lastPage` moved from `directoryQuery.ts` to `frontend/src/lib/pageRange.ts`, beside the other page numbers
+- "the three role words": `ROLES` in `frontend/src/lib/token.ts` is now exported, and "is this string a role" is `asRole(value)` beside it (the exact lower-case word, else null), used by `usersQuery.ts`, `UsersFilters.tsx`, `usersColumns.tsx` and `RoleTag`. The shown names are `ROLE_WORDS` in `frontend/src/config/text.ts`, read by both `RoleTag` and the Users role filter.
+- "which words for a failed user delete": `userDeleteFailureText` in `frontend/src/lib/writeFailure.ts` (pattern 9)
 
 **Where it lives.** `frontend/src/lib/` and `scripts/frontend-lib-check.ts`. The rule for a failed save is there too: `saveFailureText` in `frontend/src/lib/saveFailure.ts`. It reads the failure shape `CallFailure` declared in `frontend/src/lib/loadFailure.ts`, not the store's type, so it needs nothing outside `lib/` and the library check covers it.
 
@@ -810,6 +838,8 @@ Each form hands its text field to the caller through a ref, so the caller can mo
 
 Edit has no "Save stays off until something changed" rule: a post is never new, and the form closes on Save or Cancel, so traps 1 and 2 of LESSON-REQ-fs-005-1 do not arise. Trap 3 does (a control that closes or resets the form must be off while a save runs): Cancel gets the same `busy` as the submit, so while the request runs it ignores presses and keeps focus (`aria-disabled`), and the answer never lands on an edit or reply that Cancel already closed.
 
+Since part 4, Save on an edit where nothing changed sends no request: the form closes, focus goes back to Edit as after a real save, and no toast is shown, because nothing was saved. "Nothing changed" compares trimmed text with `sameText` from `frontend/src/lib/alumniDisplay.ts`; for a post, no image link equals an empty one. The check is in the callers (`FeedPost.handleSave`, `CommentItem.handleSave`), not in the forms, because the same forms also create, and a new post is never "unchanged".
+
 The validators: `validateCaption` (a visible character, at most 2000) and `validateComment` (a visible character, at most 1000). The image link uses the existing `validatePhotoLink`.
 
 **Where it lives.**
@@ -857,9 +887,171 @@ We did not load the dashboard in one request (there is no such endpoint, and the
 
 ---
 
+## 34. An admin list and its delete
+
+**What it is.** The Users page (`/users`, admins only) lists every account in a `Table`: avatar and name, email, role, the date joined, and a Delete button. Search, role and page live in the address through the shared hook (pattern 35). The list is in `usersAtom` and loads the pattern 23 way: latest request wins, no rows while loading, cleared when the page closes and when the session changes.
+
+The admin's own row has a "You" tag and no Delete button. A user with no role shows the plain text "No role", not a tag. A missing date shows "Not given". Names are plain text, not links: a user row has no alumni id to link to.
+
+Delete opens `DeleteUserDialog`: the shared `ConfirmDialog` with the person's name in the words, plus a `Message` for a failure. Focus lands on Cancel. The rules are the ones `FeedPost` uses for a post:
+
+- **Cancel and Escape always close the dialog**, also while the delete runs. The browser closes a native dialog on a second Escape anyway, so the page never acts as if it were still open.
+- **A late failure becomes a toast.** A failure that answers while the dialog is open shows in the dialog. One that answers after the admin closed it (or opened the dialog for someone else) is shown as a toast.
+- **Busy is per user** (`deletingIds`). A second press for the same user is ignored, but the admin can close a slow delete and start another one.
+- **Focus moves through a request counter.** On success or a 404 the page raises `focusCountRequest`, and an effect moves focus to the count line. A `focus()` in the same step as the close would be swallowed by the modal, and the Delete button is gone with its row. When the dialog was already closed, focus moves only if it was lost with the row (it sits on the page body), so it is never pulled out of the search box.
+- **Success**: the dialog closes and a toast says "<name> was deleted". **404**: the person was already gone; the dialog closes, a toast says so, and the row goes. **409**: the server refuses because the user still has posts, comments or an alumni profile (ADR-06); the words name all three, and the row stays. Network, 403 and 5xx get the usual words through `writeFailureText`.
+
+After a success or a 404 the row is taken off the list in the store (`removeUserLocallyAtom`), and `total` goes down by one, never below zero. Nothing is reloaded, so the admin keeps their place. Two cases are fixed up:
+
+- The delete emptied page 2 or later and that page is now past the end: the hook's past-the-end rule moves to the last page.
+- The delete emptied a page that still has rows on the server (for example page 1 with a 13th user behind it): the page loads the same address again (`refillEmptiedPage`), so it never says "No users found" while users remain.
+
+`deleteUserAtom` returns `{ ok: true }` or `{ ok: false, failure }` and never throws (pattern 7). It remembers the user and the visit of the page when it starts, and patches nothing if either changed by the time the answer comes. `clearUsersAtom` and `resetUsersAtom` start a new visit.
+
+**Where it lives.**
+
+- The page: `frontend/src/pages/UsersPage/UsersPage.tsx` and `frontend/src/pages/UsersPage/UsersPage.module.css`
+- The parts, props only so the dev page can show them: `frontend/src/components/users/UsersFilters/UsersFilters.tsx` (search box, role `Select`, Search button), `frontend/src/components/users/UserCells/UserNameCell.tsx`, `frontend/src/components/users/UserCells/UserActionsCell.tsx`, `frontend/src/components/users/UserCells/usersColumns.tsx` (the five columns), `frontend/src/components/users/DeleteUserDialog/DeleteUserDialog.tsx`
+- The list: `frontend/src/store/usersAtoms.ts` (`usersAtom`, `loadUsersAtom`, `removeUserLocallyAtom`, `clearUsersAtom`, `resetUsersAtom`)
+- The delete: `frontend/src/store/userActions.ts` (`deleteUserAtom`)
+- The calls: `listUsers` and `deleteUser` in `frontend/src/services/userService.ts`
+- The failure rule: `userDeleteFailureText` in `frontend/src/lib/writeFailure.ts`. A 409 gives the caller's `blocked` words; anything else goes to `writeFailureText` (pattern 9).
+- The words: `frontend/src/config/text.ts` (the Users block: `userDeleteFailureWords(name)`, `userDeleteBlockedText(name)`, `userDeletedToast(name)`, `USER_ALREADY_GONE_TOAST`, the count line `usersCount`)
+- The guard, unchanged: `frontend/src/routes/RequireAdmin.tsx`. A non-admin sees the no-access page and no request is sent.
+
+**Why we chose it.** The page is the directory's twin, so it reuses the directory's parts: the address hook, a latest-request loader, `Table`, `Pagination`, and the empty and error states. The delete copies `FeedPost` because that rule was already tested: a dialog that refuses to close during a slow request can still be closed by the browser, and a late 409 would then be lost.
+
+We did not reload the list after a delete (the admin would lose their place). We did not mark Cancel `aria-disabled` while the delete runs (`ConfirmDialog` cannot, and Escape closes the dialog anyway). We did not hide Delete on rows the server would refuse: the screen does not know who owns content, so the server decides and the 409 words say why. We did not build role changes or "add user": the design has Delete only. The server does not stop an admin from deleting their own account; the screen does, by leaving out their Delete button.
+
+---
+
+## 35. One hook for a list kept in the address
+
+**What it is.** The Directory and the Users page keep their search, filters and page in the address (pattern 24). The code that does this is one hook, `useListAddress`. The page gives it four things:
+
+- `read` and `write`: the page's own address rules (for example `readUsersQuery` and `writeUsersQuery`). Pass functions defined at module level, so the query is read again only when the address changes.
+- `defaultQuery`: what Clear writes.
+- `list`: the page's list state from the store. The hook reads only `queryKey`, `status`, `total` and `limit`.
+
+It returns:
+
+- `query` (the address, read and cleaned) and `queryKey` (the address as text; the page loads on it)
+- `current`: the list, or `null` when the list belongs to another address. The page draws from `current`, so the "is this list mine" rule is written once.
+- `pageCount` and `pastTheEnd` (the list is ready, not empty, and the address asks for a page after the last one)
+- `searchText`, `searchRef` and `countRef`
+- the handlers `onSearchTextChange`, `searchNow`, `changeFilter`, `changePage`, `clear` and `retryFocus`
+
+The hook owns the 300 ms search timer, the ref to the address as it is now (so a timer never writes an old copy), "the text last sent" (so Back fills the box, but the box is not overwritten while the user types), the move from a page past the end to the last page, focus to the count line after a page change, and focus to the search box after Clear.
+
+The page keeps what is its own: the effect that loads the list when `queryKey` changes, the clear when the page closes, retry (the page starts the load, then calls `retryFocus`), and everything it draws. The Directory also keeps its filter options.
+
+**The order of effects.** The page calls the hook first, so the hook's effects run before the page's own. Before the move, the Directory's effects sat in a different order. This is safe because none of them reads what another writes in the same render, and in the render where `queryKey` changes `current` is `null`, so the past-the-end move cannot act on an old list. Keep it that way: an effect in the hook must not need an effect of the page to have run first.
+
+**Where it lives.**
+
+- The hook: `frontend/src/hooks/useListAddress.ts`
+- The two pages: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/UsersPage/UsersPage.tsx`
+- The shared address readers: `frontend/src/lib/addressParams.ts` (`singleParam`: a key sent twice counts as absent; `readPageParam`: a whole number from 1 to 9999999, else 1; `PAGE_KEY`: the one name of the page key, used by both list pages' writers)
+- `lastPage` (at least 1, also for an empty list or a page size of 0): `frontend/src/lib/pageRange.ts`. It moved there from `directoryQuery.ts`.
+- The Users rules: `frontend/src/lib/usersQuery.ts` (`readUsersQuery`, `writeUsersQuery`, `toUserListParams`, `hasUsersCriteria`, `DEFAULT_USERS_QUERY`). A role that is not exactly `student`, `alumni` or `admin` reads as "all roles". `limit` is never sent. Its type `UserListParams` has the same name as the one in `frontend/src/services/userService.ts`; a file that imports both must rename one.
+- The cases: `scripts/frontend-lib-check.ts` (`singleParam`, `readPageParam`, `lastPage` in its new home, and the Users query)
+
+**Why we chose it.** The Users page needed the same 150 or so lines the Directory had (review item m13 of REQ-fs-005). Two copies drift apart, and only one gets the fix (L-REQ-fs-002-3). The move was its own task: the Directory was changed to use the hook with no change in behaviour, and a browser run checked the timer, the filters, Back, past the end and the focus before the Users page was built on it.
+
+We did not put the list load in the hook (each page loads differently, and the hook would then need the store). We did not make one component that draws a whole list page (the two pages draw different things). We did not change any Directory behaviour during the move, not even the review items about it (Enter still replaces the history entry, REQ-fs-005 m10).
+
+---
+
+## 36. The About page and the footer link
+
+**What it is.** `/about` is a plain page on the page frame: the heading "About", a sub text, a card with two short sections (what the app is for, what you can do), and a card "Who to ask" with the contact email as a `mailto:` link. The link is made with `mailtoHref`; if the owner ever sets an address that is not a plain one, it shows as text. A long address wraps instead of making the page scroll sideways.
+
+All words come from `frontend/src/config/text.ts`. The app name and the email come from `frontend/src/config/app.ts`; the page passes `APP_NAME` into word functions such as `aboutSub(appName)` and `aboutPurposeText(appName)`, so the name is still written in one place (pattern 5). The text states no fact about any school: no year, no number, no name, no address. There is no Privacy page and no password reset (ADR-10).
+
+The route sits inside `RequireAuth` and `AppShell`, so only a logged-in user sees it. The footer is part of the shell, so its About link is on every logged-in page and not on log in or sign-up. The footer shows the app name on the left and the About link on the right; when there is no room they wrap onto two lines, with no media query. The link is the shared `Link` to `PATHS.about`, so it has the shared focus ring, and it is a 44px box (pattern 37).
+
+Two other shared pieces came with part 4:
+
+- **Role words in the words file.** `ROLE_WORDS` and `NO_ROLE` are in `frontend/src/config/text.ts`. `RoleTag` keeps only the color of each role and takes the word from `ROLE_WORDS`; the Users role filter reads the same words. `text.ts` types the three keys itself, so it gains no import (G58).
+- **One set of table columns.** `usersColumns` is used by the Users page and by the dev page (pattern 22), so the dev page shows the real table, not a copy.
+
+**Where it lives.**
+
+- The page: `frontend/src/pages/AboutPage/AboutPage.tsx` and `frontend/src/pages/AboutPage/AboutPage.module.css`
+- The route: `frontend/src/App.tsx` (lazy, inside the shell); the address: `PATHS.about` in `frontend/src/routes/paths.ts`
+- The footer: `frontend/src/components/shell/Footer/Footer.tsx` and `frontend/src/components/shell/Footer/Footer.module.css`
+- The email link: `frontend/src/lib/mailtoLink.ts`
+- The role words: `frontend/src/config/text.ts`, read by `frontend/src/components/ui/Tag/RoleTag.tsx` and `frontend/src/components/users/UsersFilters/UsersFilters.tsx`
+- The shared columns: `frontend/src/components/users/UserCells/usersColumns.tsx`, used by `frontend/src/pages/UsersPage/UsersPage.tsx` and `frontend/src/pages/dev/ComponentsPage/ComponentsPage.tsx`
+
+**Why we chose it.** ADR-10 puts the About page last and keeps Privacy and password reset for later. Inside the shell, the page gets the header, the footer, focus on its heading and the tab title "About · App name" for free. Words in `text.ts` and the name from `app.ts` keep the app white-label.
+
+We did not make About public (a visitor reading it before sign-up is a separate decision, spec A5). We did not put About in the header navigation (the header did not change). We did not write the app name or the email in `text.ts` (style rule e allows them only in `config/app.ts`). We did not keep a second copy of the role words in the filter.
+
+---
+
+## 37. Phone and performance rules
+
+**What it is.** Part 4 checked every page on a phone and measured the build before changing anything for speed. These are the rules that came out of it.
+
+**Touch targets on a phone.** Everything a user presses on a phone is at least `--control-h` (44px) tall.
+
+- In the phone media query only, so wide screens keep the design's sizes: a small `Button` gets `min-height: var(--control-h)` (on a wide screen it stays 36px, `--control-h-sm`), and the theme switch's icon buttons are 44px.
+- At every width: the footer About link, the header app name and the skip link are `inline-flex` boxes with `min-height: var(--control-h)`. The footer's padding went down by the same amount, so the footer is as tall as before.
+
+Links inside a sentence or a list (for example "Create an account") stay at text height; WCAG 2.5.8 leaves them out. A long name, email or word with no spaces wraps inside its box: the box gets `min-width: 0` and the text `overflow-wrap: anywhere`.
+
+**The font preload.** A small Vite plugin, `fontPreload()`, adds one `<link rel="preload" as="font" type="font/woff2" crossorigin>` for the Latin file of the variable font to the built `index.html`. The file name has a hash, so the plugin finds it in the bundle by name (`hanken-grotesk-latin-wght-normal`, ending in `.woff2`). If no such file is found, **the build stops with an error**, so a package update that renames the file cannot leave a preload for a file that does not exist. In dev there is no bundle and nothing is added. Only the Latin file is preloaded: all weights from 400 to 700 are in that one file, and the other subsets load only when a text needs them (`unicode-range` and `font-display: swap` come from the font package's CSS).
+
+**Image size hints.** Every `<img>` has `width`, `height`, `loading="lazy"` and `decoding="async"`. The attributes give the shape; the stylesheet gives the size:
+
+- `Avatar`: 1 by 1, a square. The token box sets the real size, so the photo cannot move the page.
+- `FeedPost`'s picture: 4 by 3, in a fixed 4:3 box (`aspect-ratio: 4 / 3` with no `auto`, `object-fit: contain`). A picture of another shape is letterboxed on the sunken background. `height: auto` stays in the stylesheet on purpose: without it, the `height` attribute would set the height. The box is drawn before the picture arrives, so a picture of any shape does not move the page.
+- Open point: a link that fails **after** the box is drawn is still hidden by `onError` (the part 3 rule "a broken link leaves no empty box"), so the page below moves up once. The owner chooses between keeping that (as built) and keeping an empty 4:3 box on failure.
+
+**`memo` only where a counter showed a saving.** Rows were counted in a dev run with a render counter injected by a throwaway Vite plugin (nothing in `frontend/`). `memo` was added only where rows that did not change were drawn again:
+
+- `FeedPost`. Opening a thread or "Load more" redrew every other post. It works because `FeedPage` passes stable handlers: `handleToggleComments` is a `useCallback` that reads the open post from the store at the press (`store.get(commentsAtom)`), so it does not change when a thread opens. **Keep the handlers of a memoized row stable.** A new inline function silently undoes the `memo`.
+- `AlumniCard`. Typing in the directory search redrew all 12 cards on every letter.
+- `UserNameCell`. Typing in the Users search, or opening and closing the delete dialog, redrew every name cell.
+
+Where `memo` cannot help, and was not added:
+
+- **Cells drawn by `Table`.** `Table` calls each column's `render` inline on every draw, so every row and cell element is rebuilt. Only a cell component whose props are plain values can skip its own work. `UserActionsCell` gets a new `() => onDelete(user)` on each draw and is a single button; making it skip needs a new prop shape, which was not worth it.
+- **`CommentItem`.** It draws once more per other comment per action. A comment with replies gets them as `children`, new JSX on every draw, so `memo` would not skip it, and it would need four more `useCallback`s.
+
+**The entry script.** No page is in the entry script: every page is a `React.lazy` import (pattern 13). Three page stores are in it on purpose: `postAtoms`, `alumniAtoms` and `usersAtoms` (and their services), because `sessionActions.ts` resets them on a log out or a change of user. Taking them out would be a design change (a list of resets, or a reset that loads lazily); a trial build showed it would move about 2.5 KB gzip from the entry into the pages, not save it. Do not import a page-only module from the shell or the store's session code without a reason, and check the entry's size when you do.
+
+**Motion.** `base.css` turns off every animation and transition under `prefers-reduced-motion: reduce`, and nothing in `frontend/src` animates (the skeleton, the toast and the dialog have no animation of their own). Keep it so.
+
+**How to run the phone audit with a mock API.** Everything goes in a scratch folder outside the repo:
+
+- A mock API: a Node script that uses only `http`, holds invented data, listens on 127.0.0.1 on a port that is **not 3000**, and imports nothing from `backend/`, no `pg`, no `dotenv`.
+- A throwaway Vite config: `root` is `frontend/`, `envDir` points at an empty scratch folder (so no `.env` file is read), `cacheDir` is in the scratch folder, and the `/api` proxy points at the mock.
+- Headless Chrome with its own profile, on 127.0.0.1.
+
+Before you start, find out what listens on port 3000; it may be the real backend on the real database. Never point anything at it. Measure `document.documentElement.scrollWidth` against `clientWidth` at 360px, 390px and 200% zoom of a 1280 window (a 640 by 400 viewport at device scale 2), in both themes. Move focus with a real Tab key, never `element.focus()`. Use invented data with a 60-character name, a 60-character word with no spaces and a 60-character email. Two traps: open a fresh tab for each pass (tabs share browser storage and react to the token), and in Git Bash set `MSYS_NO_PATHCONV=1`, or an argument like `/feed` becomes a Windows path. Write one line per screen, width and theme in the REQ folder.
+
+**Where it lives.**
+
+- The touch-target fixes: `frontend/src/components/ui/Button/Button.module.css`, `frontend/src/components/shell/ThemeSwitch/ThemeSwitch.module.css`, `frontend/src/components/shell/Footer/Footer.module.css`, `frontend/src/components/shell/Header/Header.module.css`, `frontend/src/components/shell/SkipLink/SkipLink.module.css`; the long-name wrap of the Users name cell: `frontend/src/components/users/UserCells/UserNameCell.module.css`
+- The phone query they all use: `frontend/src/config/layout.ts` (style rule j)
+- The font preload: `fontPreload()` in `frontend/vite.config.ts`
+- The image hints: `frontend/src/components/ui/Avatar/Avatar.tsx`, `frontend/src/components/posts/FeedPost/FeedPost.tsx` and `frontend/src/components/posts/FeedPost/FeedPost.module.css`
+- `memo`: `frontend/src/components/posts/FeedPost/FeedPost.tsx`, `frontend/src/components/alumni/AlumniCard/AlumniCard.tsx`, `frontend/src/components/users/UserCells/UserNameCell.tsx`; the stable handler in `frontend/src/pages/FeedPage/FeedPage.tsx`
+- The resets that keep three stores in the entry: `frontend/src/store/sessionActions.ts`
+- Reduced motion: `frontend/src/styles/base.css`
+- The numbers: `performance.md`, `phone-audit.md` and `build-size.md` in the REQ-fs-007 folder of the vault
+
+**Why we chose it.** Each change was measured first and listed with what it saved, so none of them is a guess. A size that only a phone needs is in the phone media query, so the desktop design keeps its small buttons. A build that fails on a missing font file is louder than a preload that quietly points at nothing.
+
+We did not preload every page after log in, or the other font subsets. We did not add an image service or new image formats (out of scope). We did not wrap every component in `memo` (it costs a comparison on every draw and breaks quietly when a prop is a new function). We did not use a JavaScript media query for touch sizes, and we did not make the small buttons 44px on wide screens. We did not move the three stores out of the entry script.
+
+---
+
 ## How to add to this file
 
-For parts 2 to 4 (directory and profiles, My profile, feed, dashboard, users):
+For any later work on the frontend (parts 2 to 4 followed these rules too):
 
 1. **A new pattern gets a new numbered section** at the end of the list, with the same three parts: What it is, Where it lives, Why we chose it. Add it to "Contents". Write it after the code works, from the code.
 2. **Use real paths**, written in full from the repo root (starting with `frontend/`, `scripts/` or `docs/`), and check that each one exists before you finish.
@@ -867,8 +1059,9 @@ For parts 2 to 4 (directory and profiles, My profile, feed, dashboard, users):
 4. **If you extend a pattern, add to "Where it lives"**. A new service file, a new store file or a new guard is a line there, not a new section.
 5. **Say what you did not choose.** That sentence is what stops the next person from trying it again.
 6. **Plain words, short sentences.** The reader is the owner and whoever builds the next part.
+7. **When something moves or is removed, search for its old wording.** Grep this file, the other docs and the header comments of the code for the old name or the old place, and fix every hit in the same piece of work (L-REQ-fs-006-4).
 
-Part 2 wrote sections 23 to 28. Part 3 (the feed and the dashboard) wrote sections 29 to 33; the owner check expected here became pattern 31, and dates written as "3 October 2026" are `dateText` in `frontend/src/lib/postDisplay.ts` (pattern 30). Likely new sections in part 4 (the users page), so nobody is surprised: an admin-only list with role changes.
+Part 2 wrote sections 23 to 28. Part 3 (the feed and the dashboard) wrote sections 29 to 33; the owner check expected here became pattern 31, and dates written as "3 October 2026" are `dateText` in `frontend/src/lib/postDisplay.ts` (pattern 30). Part 4 (REQ-fs-007: the Users page, the About page, phone polish and performance) wrote sections 34 to 37 and updated patterns 1, 6 to 9, 12 to 14, 16, 18, 22 to 24, 28 and 32. The role changes expected here were not built: the design has Delete only.
 
 ## Checks to run
 
@@ -878,21 +1071,24 @@ Run all four from the repo root before you say a piece of work is done. All must
 |---|---|
 | `npm run build` | The code compiles (type errors fail it) and the production build works. |
 | `node scripts/frontend-style-check.mjs` | The eleven style and layer rules of pattern 3. |
-| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers (469 cases after part 3). |
+| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers (565 cases after part 4 and its review fixes). |
 | `git grep -n --untracked "antd" -- frontend/src frontend/package.json` | Prints nothing: the old UI library is gone. Keep `--untracked`; without it git skips files that are not committed yet. |
 
-After the build, two looks at the output:
+After the build, three looks at the output:
 
 - `ls frontend/dist/assets` shows one `.js` file for each page, plus a few shared files.
 - `grep -rlF "Compare each section with" frontend/dist` prints nothing: the components page is not in the build.
+- The font preload (pattern 37): `grep -c 'rel="preload"' frontend/dist/index.html` prints `1`, and `grep -o 'hanken-grotesk-latin-wght-normal-[^.]*\.woff2' frontend/dist/index.html frontend/dist/assets/index-*.css` prints the same file name for both files, so the preloaded file is the one the page asks for.
+
+To measure the build size, do it the same way every time, or the numbers cannot be compared: run `npm run build --workspace=@alumni/frontend`, then for each file of `frontend/dist` take `wc -c < <file>` (raw bytes) and `gzip -c <file> | wc -c` (gzip bytes, GNU gzip at its default level). Do not use the kB that Vite prints. `gzip -c` stores the file name in its output, so the same file under a new name can differ by a few bytes. Part 4's numbers, before and after, are in `build-size.md` in the REQ-fs-007 folder of the vault.
 
 When you add a validator or another pure function, add its cases to `scripts/frontend-lib-check.ts`. Write the expected answer from the spec, not from the code. Prove once that a new case can fail: run a copy of the script with one wrong expectation and see `FAIL` and exit 1. Make the copy outside the repo (rewrite its `../frontend/src/` imports to full paths), so nothing has to be deleted from the repo after.
 
 The build type-checks `frontend/src` only. The library check runs through `tsx`, which strips types without checking them, so a type error in `scripts/` is not caught.
 
-Screens are checked in a browser against a mock API: a throwaway script outside the repo, and a throwaway Vite config that points the `/api` proxy at it. Before you start, find out what listens on port 3000; it may be the real backend on a real database. Never point anything at it for a review.
+Screens are checked in a browser against a mock API: a throwaway script outside the repo, and a throwaway Vite config that points the `/api` proxy at it and reads no `.env` file. Before you start, find out what listens on port 3000; it may be the real backend on a real database. Never point anything at it for a review. The full method, with its traps, is in pattern 37.
 
-What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault; part 2's is in the REQ-fs-005 folder; part 3's is in the REQ-fs-006 folder.
+What these checks cannot prove (how a screen looks, a real log in, a screen reader) goes on a manual checklist for the owner. Part 1's is `manual-checklist.md` in the REQ-fs-004 folder of the vault; part 2's is in the REQ-fs-005 folder; part 3's is in the REQ-fs-006 folder; part 4's goes in the REQ-fs-007 folder.
 
 ## Files added in review round 1
 
@@ -910,3 +1106,9 @@ Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-
   - Saving or deleting a comment that is not in the open thread patches nothing on this screen: the store cannot tell which post it belongs to. Today a comment's buttons are only shown inside the open thread, so this cannot happen from the screen.
   - The browser checks (focus rings by a real Tab key, 360px and 200% zoom, screenshots in both themes) were done in the review phase of REQ-fs-006 against a mock API; the screenshots are in the `ui-evidence/` folder of that REQ.
   - ADV-001: a post that another user deletes while the feed is open can make "Load more" miss one post until the page is opened again (pattern 29).
+- Part 4 (REQ-fs-007), known gaps after the implement phase. The review items it left open, each with its reason, are in `skipped.md` in the REQ-fs-007 folder.
+  - A post picture link that fails after its 4:3 box is drawn is hidden, so the page below moves up once. The owner chooses: keep it (as built) or keep an empty 4:3 box (pattern 37).
+  - Three page stores sit in the entry script so that log out can reset them (pattern 37). Moving them out is a design change for a later REQ.
+  - "Load more" can show a total one too low after a delete that races a load (REQ-fs-006 n2). The browser cannot tell the two orders apart, so there is no safe small fix.
+  - Links inside a sentence or a list are below 44px on a phone (allowed by WCAG 2.5.8). A toast can cover a button that sits exactly on the bottom edge of a phone screen, until it leaves after 5 seconds or is dismissed.
+  - 200% zoom was checked by emulation in headless Chrome, not by a real browser zoom. A real phone, a real 409 from the server on a user with content, and a screen reader on the delete dialog are on the owner's manual checklist.

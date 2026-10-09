@@ -1,7 +1,7 @@
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import type { ComponentType, ReactNode, SyntheticEvent } from "react";
-import type { Alumni, AlumniFilters, Comment, Post, Stats } from "@alumni/shared";
+import type { Alumni, AlumniFilters, Comment, Post, PublicUser, Stats } from "@alumni/shared";
 import { AlumniCard } from "../../../components/alumni/AlumniCard/AlumniCard";
 import { AlumniCardSkeleton } from "../../../components/alumni/AlumniCard/AlumniCardSkeleton";
 import { DirectoryFilters } from "../../../components/alumni/DirectoryFilters/DirectoryFilters";
@@ -44,6 +44,11 @@ import { RoleTag } from "../../../components/ui/Tag/RoleTag";
 import { Tag } from "../../../components/ui/Tag/Tag";
 import { Textarea } from "../../../components/ui/Textarea/Textarea";
 import { TextInput } from "../../../components/ui/TextInput/TextInput";
+import { DeleteUserDialog } from "../../../components/users/DeleteUserDialog/DeleteUserDialog";
+import { UserActionsCell } from "../../../components/users/UserCells/UserActionsCell";
+import { UserNameCell } from "../../../components/users/UserCells/UserNameCell";
+import { usersColumns } from "../../../components/users/UserCells/usersColumns";
+import { UsersFilters } from "../../../components/users/UsersFilters/UsersFilters";
 import { APP_NAME } from "../../../config/app";
 import {
   CANCEL_LABEL,
@@ -88,21 +93,28 @@ import {
   PROFILE_POSTS_EMPTY_TEXT,
   PROFILE_POSTS_ERROR_HEADING,
   PROFILE_POSTS_HEADING,
+  ROLE_WORDS,
   SAVE_LABEL,
   SAVING_LABEL,
+  USERS_HEADING,
   myProfileSub,
   postDeleteBody,
   profileEmailLink,
   profilePostsEmptyHeading,
+  userDeleteFailureWords,
 } from "../../../config/text";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { buildThreads, countReplies } from "../../../lib/commentThread";
 import { DEFAULT_DIRECTORY_QUERY } from "../../../lib/directoryQuery";
 import type { DirectoryQuery } from "../../../lib/directoryQuery";
-import { loadFailureText } from "../../../lib/loadFailure";
+import { displayName } from "../../../lib/alumniDisplay";
+import { HTTP_CONFLICT, loadFailureText } from "../../../lib/loadFailure";
 import { commentCountText } from "../../../lib/postDisplay";
 import { saveFailureText } from "../../../lib/saveFailure";
 import type { Session } from "../../../lib/token";
+import { DEFAULT_USERS_QUERY } from "../../../lib/usersQuery";
+import type { UsersQuery } from "../../../lib/usersQuery";
+import { userDeleteFailureText } from "../../../lib/writeFailure";
 import { AlertIcon } from "../../../icons/AlertIcon";
 import { CheckIcon } from "../../../icons/CheckIcon";
 import { ChevronDownIcon } from "../../../icons/ChevronDownIcon";
@@ -216,10 +228,12 @@ const DEPARTMENTS = [
 
 type SampleRole = "student" | "alumni";
 
-const ROLE_OPTIONS: { value: SampleRole; label: string }[] = [
-  { value: "student", label: "Student" },
-  { value: "alumni", label: "Alumni" },
-];
+// The sign-up choices; the words come from ROLE_WORDS.
+const SAMPLE_ROLES: readonly SampleRole[] = ["student", "alumni"];
+const ROLE_OPTIONS: { value: SampleRole; label: string }[] = SAMPLE_ROLES.map((value) => ({
+  value,
+  label: ROLE_WORDS[value],
+}));
 
 type SampleUser = {
   id: number;
@@ -451,6 +465,63 @@ const MY_ALUMNI_READY: MyAlumniState = { status: "ready", alumni: FULL_ALUMNI, f
 const MY_ALUMNI_NONE: MyAlumniState = { status: "none", alumni: null, failure: null };
 const MY_ALUMNI_ERROR: MyAlumniState = { status: "error", alumni: null, failure: SERVER_FAILURE };
 
+// ----- Users (REQ-fs-007) -----
+
+// Exactly 60 characters, to see the name wrap inside its cell.
+const LONG_USER_NAME = "Amira Haddad-Karlsson Abdel-Rahman Lindqvist-Oyelaran Nordby";
+
+// The sample admin is the viewer: their own row shows "You" and no Delete.
+const SELF_USER_ID = ADMIN_SESSION.userId;
+
+const SAMPLE_PUBLIC_USER: PublicUser = {
+  id: 1,
+  name: SAMPLE_NAME,
+  email: SAMPLE_USERS[0].email,
+  role: "alumni",
+  photo_url: null,
+  login_at: null,
+  logout_at: null,
+  created_at: SAMPLE_DATE,
+  updated_at: null,
+};
+
+// Four invented accounts: a student with a long name, the viewer (admin, with
+// a photo), an alumnus, and an account with no name, no role and no date.
+function samplePublicUsers(origin: string): PublicUser[] {
+  return [
+    {
+      ...SAMPLE_PUBLIC_USER,
+      id: 2,
+      name: LONG_USER_NAME,
+      email: "amira.haddad-karlsson.abdel-rahman.lindqvist@example.com",
+      role: "student",
+      created_at: LATER_DATE,
+    },
+    {
+      ...SAMPLE_PUBLIC_USER,
+      id: SELF_USER_ID,
+      name: "Amira Haddad",
+      email: SAMPLE_USERS[2].email,
+      role: "admin",
+      photo_url: `${origin}${WORKING_PHOTO_PATH}`,
+    },
+    SAMPLE_PUBLIC_USER,
+    {
+      ...SAMPLE_PUBLIC_USER,
+      id: 8,
+      name: null,
+      email: "no.name@example.com",
+      role: null,
+      created_at: null,
+    },
+  ];
+}
+
+const USERS_QUERY_SEARCH: UsersQuery = { ...DEFAULT_USERS_QUERY, q: "nadia" };
+const USERS_QUERY_ROLE: UsersQuery = { ...DEFAULT_USERS_QUERY, role: "alumni" };
+
+const CONFLICT_FAILURE: ApiFailure = { kind: "http", status: HTTP_CONFLICT };
+
 export default function ComponentsPage() {
   useDocumentTitle(PAGE_TITLE);
 
@@ -509,7 +580,8 @@ export default function ComponentsPage() {
           <h1 className={styles.title}>{APP_NAME} components</h1>
           <p className={styles.sub}>
             Development only. Compare each section with system.html and system-dark.html; the
-            post, comment and dashboard sections with feed.html, dashboard.html and profile.html.
+            post, comment and dashboard sections with feed.html, dashboard.html and profile.html;
+            the users sections with users.html.
           </p>
         </div>
         <ThemeSwitch variant="icons" />
@@ -1110,6 +1182,7 @@ export default function ComponentsPage() {
       <FeedPostSamples />
       <CommentSamples />
       <DashboardBlockSamples />
+      <UserSamples />
 
       <ConfirmDialog
         open={dialogOpen}
@@ -1817,5 +1890,136 @@ function DashboardBlockSamples() {
         </div>
       </section>
     </NoRequests>
+  );
+}
+
+type DeleteDialogSample = "closed" | "idle" | "busy" | "blocked" | "network";
+
+function UserSamples() {
+  const showToast = useSetAtom(showToastAtom);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogSample>("closed");
+
+  const origin = window.location.origin;
+  const users = samplePublicUsers(origin);
+  // The Table's Delete never fires here: NoRequests stops the press.
+  const columns = usersColumns({ selfId: SELF_USER_ID, onDelete: () => undefined });
+
+  // The dialog's words for a failed delete, from the same functions as the
+  // Users page, with a fixed failure (nothing is sent).
+  const deleteName = displayName(SAMPLE_PUBLIC_USER.name);
+  const failureWords = userDeleteFailureWords(deleteName);
+  const errorText = {
+    closed: null,
+    idle: null,
+    busy: null,
+    blocked: userDeleteFailureText(CONFLICT_FAILURE, failureWords),
+    network: userDeleteFailureText(NETWORK_FAILURE, failureWords),
+  }[deleteDialog];
+
+  const dialogSamples: { label: string; state: DeleteDialogSample }[] = [
+    { label: "Open the delete dialog", state: "idle" },
+    { label: "Open it busy", state: "busy" },
+    { label: "Open it refused (409)", state: "blocked" },
+    { label: "Open it with no answer", state: "network" },
+  ];
+
+  return (
+    <section className={styles.section} aria-labelledby="dev-users">
+      <h2 id="dev-users" className={styles.sectionTitle}>
+        Users
+      </h2>
+      <p className={styles.note}>
+        The viewer is the admin Amira Haddad. Presses on the filters, the cells and the table are
+        stopped here. The delete dialog is drawn with the Users page's words; nothing is sent.
+      </p>
+      <NoRequests>
+        <Sample caption="Search and role: nothing set">
+          <UsersFilters
+            query={DEFAULT_USERS_QUERY}
+            searchText=""
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => undefined}
+            onRoleChange={() => undefined}
+          />
+        </Sample>
+        <Sample caption="With a search">
+          <UsersFilters
+            query={USERS_QUERY_SEARCH}
+            searchText={USERS_QUERY_SEARCH.q}
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => undefined}
+            onRoleChange={() => undefined}
+          />
+        </Sample>
+        <Sample caption="With a role">
+          <UsersFilters
+            query={USERS_QUERY_ROLE}
+            searchText=""
+            onSearchTextChange={() => undefined}
+            onSearchNow={() => undefined}
+            onRoleChange={() => undefined}
+          />
+        </Sample>
+        <div className={styles.blocks}>
+          <Sample caption="Name cell: with a photo">
+            <UserNameCell
+              name={SAMPLE_PUBLIC_USER.name}
+              photoUrl={`${origin}${WORKING_PHOTO_PATH}`}
+              isSelf={false}
+            />
+          </Sample>
+          <Sample caption="Name cell: no photo">
+            <UserNameCell name={SAMPLE_PUBLIC_USER.name} photoUrl={null} isSelf={false} />
+          </Sample>
+          <Sample caption="Name cell: the viewer's own row, with You">
+            <UserNameCell name="Amira Haddad" photoUrl={null} isSelf />
+          </Sample>
+          <Sample caption="Name cell: a 60-character name, no photo">
+            <UserNameCell name={LONG_USER_NAME} photoUrl={null} isSelf={false} />
+          </Sample>
+          <Sample caption="Name cell: no name">
+            <UserNameCell name={null} photoUrl={null} isSelf={false} />
+          </Sample>
+          <Sample caption="Actions cell: Delete">
+            <UserActionsCell name={SAMPLE_PUBLIC_USER.name} isSelf={false} onDelete={() => undefined} />
+          </Sample>
+          <Sample caption="Actions cell: the viewer's own row has none (nothing below)">
+            <UserActionsCell name="Amira Haddad" isSelf onDelete={() => undefined} />
+          </Sample>
+        </div>
+        <Sample caption="The table: four users, the viewer's row without Delete">
+          <Table columns={columns} rows={users} rowKey={(user) => user.id} caption={USERS_HEADING} />
+        </Sample>
+      </NoRequests>
+      <Sample caption="Delete a user: the dialog idle, busy, refused and with no answer">
+        <div className={styles.wrapRow}>
+          {dialogSamples.map((sample) => (
+            <Button
+              key={sample.state}
+              variant="quiet"
+              tone="danger"
+              onClick={() => setDeleteDialog(sample.state)}
+            >
+              {sample.label}
+            </Button>
+          ))}
+        </div>
+      </Sample>
+
+      <DeleteUserDialog
+        open={deleteDialog !== "closed"}
+        name={deleteName}
+        busy={deleteDialog === "busy"}
+        errorText={errorText}
+        onClose={() => setDeleteDialog("closed")}
+        onConfirm={() => {
+          if (deleteDialog === "busy") {
+            return;
+          }
+          setDeleteDialog("closed");
+          showToast(NOTHING_SENT);
+        }}
+      />
+    </section>
   );
 }

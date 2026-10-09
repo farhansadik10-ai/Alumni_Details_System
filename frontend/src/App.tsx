@@ -18,6 +18,7 @@ const AlumniProfilePage = lazy(() => import("./pages/AlumniProfilePage/AlumniPro
 const FeedPage = lazy(() => import("./pages/FeedPage/FeedPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage/MyProfilePage"));
 const UsersPage = lazy(() => import("./pages/UsersPage/UsersPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage/AboutPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
 
 // Development only. In a production build the condition is false at build
@@ -63,6 +64,7 @@ export default function App() {
             <Route element={<RequireAdmin />}>
               <Route path={PATHS.users} element={<UsersPage />} />
             </Route>
+            <Route path={PATHS.about} element={<AboutPage />} />
             <Route path={ANY_OTHER_PATH} element={<NotFoundPage />} />
           </Route>
         </Route>

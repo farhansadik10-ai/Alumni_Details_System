@@ -1,6 +1,6 @@
 // Words the app shows or reads out in more than one place, and every word of
-// the directory, alumni profile, My profile, feed and dashboard pages
-// (grouped by page below).
+// the directory, alumni profile, My profile, feed, dashboard, users and about
+// pages (grouped by page below).
 // Plain values only: no DOM, no React. The one import is the plural rule from
 // lib/postDisplay.ts, a plain function that itself imports nothing (the Vite
 // config reads config/app.ts and config/storageKeys.ts, not this file).
@@ -20,6 +20,17 @@ export const JOB_LINE_JOINER = " at ";
 export const CLASS_OF_PREFIX = "Class of";
 export const OPEN_TO_MENTORING = "Open to mentoring";
 export const RETRY_LABEL = "Try again";
+
+// The name of each stored role, read by the role tag and the Users role
+// filter. The keys are the words in the "User".role column. Typed here, not
+// with lib/token's Role, so this file gains no import (G58).
+export const ROLE_WORDS: Record<"student" | "alumni" | "admin", string> = {
+  student: "Student",
+  alumni: "Alumni",
+  admin: "Admin",
+};
+// A user whose role is empty: plain muted text, not a tag.
+export const NO_ROLE = "No role";
 
 // ----- Failure words: one pair for every load that can fail (pattern 9) -----
 
@@ -419,3 +430,113 @@ export function postSummaryLinkContext(authorName: string, date: string | null):
     ? `, on the post by ${authorName} from ${date}`
     : `, on the post by ${authorName}`;
 }
+
+// ----- Users (/users, admin only) ------------------------------------------
+
+export const USERS_HEADING = "Users";
+export const USERS_SUB = "Everyone with an account.";
+
+export const USERS_SEARCH_LABEL = "Search";
+export const USERS_SEARCH_PLACEHOLDER = "Name or email";
+export const USERS_SEARCH_BUTTON = "Search";
+export const USERS_ROLE_LABEL = "Role";
+export const USERS_ALL_ROLES = "All roles";
+export const USERS_CLEAR_BUTTON = "Clear search and role";
+
+// The table column heads.
+export const USERS_COLUMN_NAME = "Name";
+export const USERS_COLUMN_EMAIL = "Email";
+export const USERS_COLUMN_ROLE = "Role";
+export const USERS_COLUMN_JOINED = "Joined";
+export const USERS_COLUMN_ACTIONS = "Actions";
+
+// The tag beside the logged-in admin's own name (that row has no Delete).
+export const USERS_YOU_TAG = "You";
+
+// The row's Delete button. Seen as "Delete"; read out with the person's name.
+export const USERS_DELETE_BUTTON = DELETE_LABEL;
+export function usersDeleteButtonName(name: string): string {
+  return `${USERS_DELETE_BUTTON} ${name}`;
+}
+
+// The count line (a polite live region): "124 users", "1 user".
+export function usersCount(total: number): string {
+  return countText(total, "user", "users");
+}
+export const USERS_COUNT_LOADING = "Loading users";
+export const USERS_COUNT_NONE = "No users found";
+export const USERS_COUNT_FAILED = "Could not load users";
+
+// Empty result, with search or role set.
+export const USERS_EMPTY_MATCH_HEADING = "No users match your search";
+export const USERS_EMPTY_MATCH_TEXT =
+  "Try a different name or email, or clear the search and role.";
+// Empty result, with nothing set.
+export const USERS_EMPTY_NONE_HEADING = "No users yet";
+export const USERS_EMPTY_NONE_TEXT = "Nobody has an account yet. Check back later.";
+
+// The list failed. The text is FAILURE_NO_ANSWER_TEXT or FAILURE_SERVER_TEXT.
+export const USERS_ERROR_HEADING = "The users could not be loaded";
+
+// The delete dialog. The body names the person and says what goes.
+export const USER_DELETE_TITLE = "Delete this user?";
+export function userDeleteBody(name: string): string {
+  return `The account of ${name} will be removed for everyone. This cannot be undone.`;
+}
+export const USER_DELETE_CONFIRM = "Delete user";
+export function userDeletedToast(name: string): string {
+  return `${name} was deleted`;
+}
+// 404 on delete: the person was already gone, so the row is removed.
+export const USER_ALREADY_GONE_TOAST =
+  "This user had already been deleted, so they were removed from the list.";
+
+// 409 on delete: the server refuses while the person still owns content
+// (ADR-06; spec A3 names all three). Nothing was removed and the row stays.
+export function userDeleteBlockedText(name: string): string {
+  return `${name} cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed.`;
+}
+const USER_DELETE_FORBIDDEN_TEXT = "Only admins can delete users. Nothing was changed.";
+const USER_GONE_TEXT =
+  "This user can no longer be deleted. They may have been deleted already, or you may no longer have access.";
+
+// The words of a failed user delete, shaped as lib/writeFailure's
+// UserDeleteFailureWords (WriteFailureWords plus `blocked` for the 409).
+export function userDeleteFailureWords(name: string) {
+  return {
+    blocked: userDeleteBlockedText(name),
+    forbidden: USER_DELETE_FORBIDDEN_TEXT,
+    notFound: USER_ALREADY_GONE_TOAST,
+    save: {
+      noAnswer: WRITE_FAILED_NO_ANSWER,
+      server: WRITE_FAILED_SERVER,
+      gone: USER_GONE_TEXT,
+      general: WRITE_FAILED_GENERAL,
+    },
+  };
+}
+
+// ----- About (/about) and its footer link ----------------------------------
+
+// The app name is not typed here: the page passes APP_NAME from config/app.ts
+// into the functions below, and the contact email is CONTACT_EMAIL from there.
+// No fact about any school: no year, no number, no name, no address.
+export const FOOTER_ABOUT_LINK = "About";
+export const ABOUT_HEADING = "About";
+export function aboutSub(appName: string): string {
+  return `What ${appName} is for, and who to ask.`;
+}
+
+export const ABOUT_PURPOSE_HEADING = "What it is for";
+export function aboutPurposeText(appName: string): string {
+  return `${appName} helps graduates and students stay in touch with each other.`;
+}
+
+export const ABOUT_USE_HEADING = "What you can do here";
+export const ABOUT_USE_TEXT =
+  "Find alumni in the directory and see who is open to mentoring. Read news, job openings and events in the feed, and comment on them. Keep your own profile up to date, so other people can find you.";
+
+export const ABOUT_CONTACT_HEADING = "Who to ask";
+// Followed by the contact email as a link.
+export const ABOUT_CONTACT_TEXT =
+  "For a question about your account or this site, write to";

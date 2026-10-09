@@ -12,6 +12,8 @@ export const PATHS = {
   feed: "/feed",
   myProfile: "/profile",
   users: "/users",
+  // Inside the app shell, so for logged-in users only (spec A5).
+  about: "/about",
   // Development build only (TASK-010 adds the route).
   devComponents: "/dev/components",
 } as const;

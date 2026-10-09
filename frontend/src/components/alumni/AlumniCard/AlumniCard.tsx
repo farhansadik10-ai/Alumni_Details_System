@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { memo, useId } from "react";
 import type { Alumni } from "@alumni/shared";
 import {
   DIRECTORY_VIEW_PROFILE,
@@ -26,8 +26,11 @@ export type AlumniCardProps = {
 /**
  * One result of the directory (directory.html, AC2). The card is not one big
  * link: "View profile" is the link, and its accessible name has the name.
+ *
+ * memo: typing in the search box draws the page on every letter; the cards,
+ * whose props have not changed, are skipped (AC26, performance.md).
  */
-export function AlumniCard({ alumni, directorySearch }: AlumniCardProps) {
+export const AlumniCard = memo(function AlumniCard({ alumni, directorySearch }: AlumniCardProps) {
   const nameId = useId();
   const name = displayName(alumni.name);
   const job = jobLine(alumni.job_title, alumni.current_company);
@@ -76,4 +79,4 @@ export function AlumniCard({ alumni, directorySearch }: AlumniCardProps) {
       </div>
     </Card>
   );
-}
+});

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import type { To } from "react-router-dom";
 import { PeopleBlock } from "../../components/alumni/PeopleBlock/PeopleBlock";
 import { FeedPost } from "../../components/posts/FeedPost/FeedPost";
@@ -90,6 +90,7 @@ const MENTORING_DIRECTORY: To = mentoringDirectoryAddress(PATHS.directory);
  * list load when the page opens and are forgotten when it closes.
  */
 export default function FeedPage() {
+  const store = useStore();
   const session = useAtomValue(sessionAtom);
   const feed = useAtomValue(feedAtom);
   const comments = useAtomValue(commentsAtom);
@@ -160,13 +161,18 @@ export default function FeedPage() {
 
   const retryPeople = useCallback(() => void loadPeople("mentoring"), [loadPeople]);
 
-  function handleToggleComments(postId: number) {
-    if (comments.postId === postId) {
-      closeComments();
-    } else {
-      void openComments(postId);
-    }
-  }
+  // Stable, so a memoized FeedPost does not draw again when another post's
+  // thread opens (AC26): the open post is read from the store at the press.
+  const handleToggleComments = useCallback(
+    (postId: number) => {
+      if (store.get(commentsAtom).postId === postId) {
+        closeComments();
+      } else {
+        void openComments(postId);
+      }
+    },
+    [store, closeComments, openComments],
+  );
 
   function retryFeed() {
     void loadFeed();

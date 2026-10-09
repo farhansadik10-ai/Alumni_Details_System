@@ -523,9 +523,13 @@
     grid-column: auto;
   }
 
-  /* The row name takes its own line; the three states share the next one. */
+  /*
+   * The row name takes its own line; the three states share the next one. A
+   * column never gets narrower than its button: the busy "Deleting" is wider
+   * than a third at 360, so the other two give it the room.
+   */
   .buttonGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(min-content, 1fr));
     gap: var(--space-2);
   }
 

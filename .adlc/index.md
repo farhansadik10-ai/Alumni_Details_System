@@ -22,6 +22,7 @@ _(REQ pages by id, with a one-line summary)_
 | REQ-fs-004 | New frontend part 1 of 4: foundation, theme, base components, app shell, log in and sign-up | merged | `specs/_archive/2026-10/fs/REQ-fs-004-frontend-foundation-shell-auth` |
 | REQ-fs-005 | New frontend part 2 of 4: alumni directory, alumni profile and My profile | merged | `specs/_archive/2026-10/fs/REQ-fs-005-frontend-directory-and-profiles` |
 | REQ-fs-006 | New frontend part 3 of 4: feed, dashboard and Recent posts on the alumni profile | merged | `specs/_archive/2026-10/fs/REQ-fs-006-frontend-feed-and-dashboard` |
+| REQ-fs-007 | New frontend part 4 of 4: admin Users page, About page, phone polish and performance | ready to merge | `specs/2026-10/fs/REQ-fs-007-frontend-users-about-polish-perf` |
 
 ## ADRs
 
@@ -53,7 +54,7 @@ Patterns, rules that must always hold, domain models.
 | [[knowledge/concepts/paged-list-query]] | A paged list answers `{ items, total, page, limit }`; one WHERE shared by a count and a page query |
 | [[knowledge/concepts/frontend-session-flow]] | One token, one way to end a session, one place that navigates after a log in |
 | [[knowledge/concepts/latest-request-wins]] | Abort the older call, ignore its late answer, clear the atom when the page closes |
-| [[knowledge/concepts/address-as-state]] | Search, filters and page live in the URL; pure reader and writer; debounce and focus rules |
+| [[knowledge/concepts/address-as-state]] | Search, filters and page live in the URL; pure reader and writer; debounce and focus rules; the shared hook useListAddress |
 | [[knowledge/concepts/aligned-load-more]] | A "Load more" feed over a page-numbered API: next page from the held count, merge by id, a log of local total changes |
 
 ## Components

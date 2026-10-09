@@ -6,6 +6,11 @@ import styles from "./Avatar.module.css";
 // "xl" is the profile band (120px, 96px on a phone).
 export type AvatarSize = "sm" | "md" | "lg" | "xl";
 
+// The photo's width and height attributes say only its shape, a square, so
+// the browser knows it before the photo arrives. The stylesheet fills the
+// token-sized box (width and height 100%), which wins over the attributes.
+const SQUARE_HINT = 1;
+
 export type AvatarProps = {
   name: string | null;
   // Shown only when it starts with http:// or https://.
@@ -31,9 +36,12 @@ export function Avatar({ name, photoUrl, size = "md" }: AvatarProps) {
           className={styles.photo}
           src={link}
           alt=""
+          width={SQUARE_HINT}
+          height={SQUARE_HINT}
           // The photo host does not learn which page was open.
           referrerPolicy="no-referrer"
           loading="lazy"
+          decoding="async"
           // Also covers an http:// photo that the browser blocks on an https:// site.
           onError={() => setFailedLink(link)}
         />
