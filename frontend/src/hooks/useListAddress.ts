@@ -12,10 +12,13 @@ export interface ListAddressQuery {
   page: number;
 }
 
+/** The states a list goes through; the store's lists use the same four words. */
+export type ListAddressStatus = "idle" | "loading" | "ready" | "error";
+
 /** The part of a list's state the hook reads. `queryKey` says which address it belongs to. */
 export interface ListAddressList {
   queryKey: string | null;
-  status: string;
+  status: ListAddressStatus;
   total: number;
   limit: number;
 }
@@ -120,13 +123,13 @@ export function useListAddress<Q extends ListAddressQuery, L extends ListAddress
    * A new search always starts on page 1, even when a page click sends it
    * (AC6, CORR-002).
    */
-  function writeControl(patch: Partial<Q>): boolean {
+  function writeControl(patch: Partial<Q>, page: number): boolean {
     const pending = stopTimer();
     const base = liveQuery.current;
     const q = pending ?? base.q;
     lastCommitted.current = q;
     const newSearch = q !== base.q;
-    return writeAddress({ ...base, q, ...patch, ...(newSearch ? { page: 1 } : {}) }, false);
+    return writeAddress({ ...base, q, ...patch, page: newSearch ? 1 : page }, false);
   }
 
   /** Sends the search text now. Typing replaces the history entry (listed deviation). */
@@ -150,12 +153,14 @@ export function useListAddress<Q extends ListAddressQuery, L extends ListAddress
     commitSearch(searchText);
   }
 
+  // The page is its own argument, so no cast: `{ page }` is not a Partial<Q>
+  // for every Q the compiler can imagine.
   function changeFilter(patch: Partial<Q>) {
-    writeControl({ ...patch, page: 1 });
+    writeControl(patch, 1);
   }
 
   function changePage(page: number) {
-    focusCountOnPage.current = writeControl({ page } as Partial<Q>);
+    focusCountOnPage.current = writeControl({}, page);
   }
 
   function clear() {

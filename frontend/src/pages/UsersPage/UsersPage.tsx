@@ -1,5 +1,5 @@
 import type { PublicUser } from "@alumni/shared";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "../../components/shell/PageLayout/PageLayout";
 import { Card } from "../../components/ui/Card/Card";
@@ -31,7 +31,6 @@ import {
 import { useListAddress } from "../../hooks/useListAddress";
 import { displayName } from "../../lib/alumniDisplay";
 import { loadFailureText } from "../../lib/loadFailure";
-import { lastPage } from "../../lib/pageRange";
 import {
   DEFAULT_USERS_QUERY,
   hasUsersCriteria,
@@ -58,7 +57,6 @@ type ListView = "loading" | "ready" | "empty" | "error";
  * failure that answers after the close becomes a toast (ADV-001).
  */
 export default function UsersPage() {
-  const store = useStore();
   const users = useAtomValue(usersAtom);
   const session = useAtomValue(sessionAtom);
   const loadUsers = useSetAtom(loadUsersAtom);
@@ -116,6 +114,16 @@ export default function UsersPage() {
   // visit's list or error for a frame before its own load.
   useEffect(() => () => clearUsers(), [clearUsers]);
 
+  // Leaving the page closes the dialog for good: a delete that fails after
+  // that becomes a toast, not an error on a dialog nobody sees (ADV-001).
+  useEffect(
+    () => () => {
+      confirmOpenRef.current = null;
+      setConfirmOpen(false);
+    },
+    [],
+  );
+
   // Runs after the dialog's own close effect (a child's effect runs first),
   // so the modal no longer swallows the focus.
   useEffect(() => {
@@ -158,25 +166,6 @@ export default function UsersPage() {
     setDeletingIds([...deletingRef.current]);
   }
 
-  /**
-   * The row was the last one on its page but more users remain there: load
-   * the page again rather than show "No users found". A page after the last
-   * one is moved by useListAddress (past the end).
-   */
-  function refillEmptiedPage() {
-    const list = store.get(usersAtom);
-    if (
-      list.status === "ready" &&
-      list.queryKey !== null &&
-      list.items.length === 0 &&
-      list.total > 0 &&
-      list.page <= lastPage(list.total, list.limit)
-    ) {
-      const keyQuery = readUsersQuery(new URLSearchParams(list.queryKey));
-      void loadUsers({ params: toUserListParams(keyQuery), queryKey: list.queryKey });
-    }
-  }
-
   async function handleConfirmDelete() {
     const user = pendingUser;
     if (user === null || deletingRef.current.has(user.id)) {
@@ -192,14 +181,13 @@ export default function UsersPage() {
     const dialogOpen = confirmOpenRef.current === user.id;
 
     if (result.ok || isGone(result.failure)) {
-      // The store took the row off the list.
+      // The store took the row off the list, and reloaded a page it emptied.
       if (dialogOpen) {
         closeConfirm();
       }
       showToast(result.ok ? userDeletedToast(name) : USER_ALREADY_GONE_TOAST);
       focusOnlyIfLost.current = !dialogOpen;
       setFocusCountRequest((count) => count + 1);
-      refillEmptiedPage();
       return;
     }
     const text = userDeleteFailureText(result.failure, userDeleteFailureWords(name));

@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-10-09] verify-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | findings: C0/M0/m4 (2 review rounds, fix all done; BeingBuilt.tsx deleted by owner yes; ADR-06 and ADR-10 deviation lines to be added at wrap-up)
+
 ## [2026-10-09] implement-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | 14 tasks done, 536 library cases, build and style pass; browser checks in headless Chrome against a mock API; broken post picture stays hidden (option A); one scratch file made and removed inside frontend/src by a task agent (rule slip, told to the owner)
 
 ## [2026-10-08] architect-gate-cleared | REQ-fs-007-frontend-users-about-polish-perf | 14 tasks, no ADR; owner approved: Directory moves to a shared useListAddress hook, post pictures in a fixed 4:3 box, no list reload after a delete; n2 skipped

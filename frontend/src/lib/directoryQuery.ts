@@ -2,7 +2,7 @@
 // The address is the truth: the page reads it through readDirectoryQuery and
 // writes it through writeDirectoryQuery, so a bad value never reaches the page.
 
-import { readPageParam, singleParam } from "./addressParams";
+import { PAGE_KEY, readPageParam, singleParam } from "./addressParams";
 
 /** The directory query after reading the address. Defaults mean "not set". */
 export interface DirectoryQuery {
@@ -44,7 +44,7 @@ const DEPARTMENT_KEY = "department";
 const YEAR_KEY = "graduation_year";
 const FIELD_KEY = "field";
 const MENTORING_KEY = "mentoring";
-const PAGE_KEY = "page";
+// The page key is PAGE_KEY from addressParams.ts, written last.
 
 const YEAR_PATTERN = /^[0-9]{4}$/;
 // The server compares department and field with btrim, which strips spaces

@@ -2,8 +2,8 @@
 // The address is the truth: the page reads it through readUsersQuery and
 // writes it through writeUsersQuery, so a bad value never reaches the page.
 
-import { readPageParam, singleParam } from "./addressParams";
-import { ROLES, type Role } from "./token";
+import { PAGE_KEY, readPageParam, singleParam } from "./addressParams";
+import { asRole, type Role } from "./token";
 
 /** The users query after reading the address. "" means "not set". */
 export interface UsersQuery {
@@ -33,11 +33,11 @@ export interface UserListParams {
 // gives the same address text).
 const Q_KEY = "q";
 const ROLE_KEY = "role";
-const PAGE_KEY = "page";
+// The page key is PAGE_KEY from addressParams.ts, written last.
 
 /** A role word exactly as stored (lower case), else "" (all roles). */
 function readRole(value: string | null): "" | Role {
-  return ROLES.find((role) => role === value) ?? "";
+  return (value === null ? null : asRole(value)) ?? "";
 }
 
 /**

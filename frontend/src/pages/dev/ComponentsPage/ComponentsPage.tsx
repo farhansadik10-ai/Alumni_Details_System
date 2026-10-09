@@ -93,6 +93,7 @@ import {
   PROFILE_POSTS_EMPTY_TEXT,
   PROFILE_POSTS_ERROR_HEADING,
   PROFILE_POSTS_HEADING,
+  ROLE_WORDS,
   SAVE_LABEL,
   SAVING_LABEL,
   USERS_HEADING,
@@ -227,10 +228,12 @@ const DEPARTMENTS = [
 
 type SampleRole = "student" | "alumni";
 
-const ROLE_OPTIONS: { value: SampleRole; label: string }[] = [
-  { value: "student", label: "Student" },
-  { value: "alumni", label: "Alumni" },
-];
+// The sign-up choices; the words come from ROLE_WORDS.
+const SAMPLE_ROLES: readonly SampleRole[] = ["student", "alumni"];
+const ROLE_OPTIONS: { value: SampleRole; label: string }[] = SAMPLE_ROLES.map((value) => ({
+  value,
+  label: ROLE_WORDS[value],
+}));
 
 type SampleUser = {
   id: number;

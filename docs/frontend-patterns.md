@@ -403,7 +403,7 @@ We did not split by hand in the Vite config, and we did not preload every page a
 - `PageLayout`: the band (accent bar, the one `<h1>`, a line of sub text) and a content column. The first child of the column overlaps the band. It also sets the browser tab title from the heading.
 - `PageNote`: a card that says one thing about the page, with an optional link or button under it.
 
-The no-access page and the not-found page are `PageLayout` with one `PageNote`. `BeingBuilt` is that pair with fixed words; until part 4 each unbuilt route had a thin page file that gave it a heading and a sub text. Since part 4 no page uses it (see "Open points").
+The no-access page and the not-found page are `PageLayout` with one `PageNote`. Until part 4, a `BeingBuilt` component drew that pair with fixed words for each unbuilt route. The last unbuilt page went in part 4, and the component was deleted.
 
 Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel beside the form, two columns that wrap into one on a narrow screen.
 
@@ -412,7 +412,6 @@ Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel
 - `frontend/src/components/shell/AppShell/AppShell.tsx`
 - `frontend/src/components/shell/PageLayout/PageLayout.tsx` (holds both `PageLayout` and `PageNote`) and `frontend/src/components/shell/PageLayout/PageLayout.module.css`
 - `frontend/src/components/shell/Band/Band.tsx`, `frontend/src/components/shell/Header/Header.tsx`, `frontend/src/components/shell/Footer/Footer.tsx`, `frontend/src/components/shell/SkipLink/SkipLink.tsx`, `frontend/src/components/shell/PhoneMenu/PhoneMenu.tsx`
-- `frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx` (no user since part 4)
 - `frontend/src/pages/NotFoundPage/NotFoundPage.tsx`, `frontend/src/pages/NoAccessPage/NoAccessPage.tsx`
 - Real pages built in part 4 on the same frame: `frontend/src/pages/UsersPage/UsersPage.tsx` (pattern 34) and `frontend/src/pages/AboutPage/AboutPage.tsx` (pattern 36). The footer now holds the About link: `frontend/src/components/shell/Footer/Footer.tsx`.
 - Real pages built in part 3 on the same frame: `frontend/src/pages/FeedPage/FeedPage.tsx` and `frontend/src/pages/DashboardPage/DashboardPage.tsx`. Both put one row as the frame's first child, so the row overlaps the band.
@@ -420,11 +419,11 @@ Log in and sign-up do not use the shell. They share `AuthLayout`: the band panel
 - A page that replaces the band with its own: `PageLayout`'s `band` slot, used with `ProfileBand` (pattern 26)
 - `frontend/src/components/auth/AuthLayout/AuthLayout.tsx`
 
-**Why we chose it.** The plan gave `BeingBuilt` its own stylesheet. While building, three pages turned out to need the same card (a statement, a line, a link). So the card became `PageNote` inside `PageLayout`, and `BeingBuilt` has nothing of its own to style. One frame also means the tab title, the single `<h1>` and the band overlap are right on every page without each page thinking about them.
+**Why we chose it.** The plan gave `BeingBuilt` its own stylesheet. While building, three pages turned out to need the same card (a statement, a line, a link). So the card became `PageNote` inside `PageLayout`, and the old `BeingBuilt` component (since deleted) had nothing of its own to style. One frame also means the tab title, the single `<h1>` and the band overlap are right on every page without each page thinking about them.
 
 We did not make one shared page file for all six unbuilt routes (the build could then not show one file per page).
 
-**To build a new page:** give it its own page file. Keep `PageLayout` as the outer element and put your cards inside it. The last unbuilt page went in part 4, so `BeingBuilt` can now be deleted; that is left for a later change (see "Open points"). Log out lives in the Account card of My profile (`frontend/src/components/profile/AccountCard/AccountCard.tsx`) and in the phone menu.
+**To build a new page:** give it its own page file. Keep `PageLayout` as the outer element and put your cards inside it. The last unbuilt page went in part 4, so `BeingBuilt` was deleted. Log out lives in the Account card of My profile (`frontend/src/components/profile/AccountCard/AccountCard.tsx`) and in the phone menu.
 
 ---
 
@@ -457,7 +456,7 @@ A double submit is stopped twice: the button is busy (it stays focusable and ign
 **Where it lives.**
 
 - Validators and messages: `frontend/src/lib/validation.ts`
-- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2, 469 after part 3, 536 after part 4; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
+- The check that runs them without a browser: `scripts/frontend-lib-check.ts` (333 cases after part 2, 469 after part 3, 565 after part 4 and its review fixes; `toPeopleBlockState` in `store/` is covered too, because its imports are types only; the expected messages are typed out in the script on purpose, so the code is not compared with itself)
 - Forms: `frontend/src/pages/LoginPage/LoginPage.tsx`, `frontend/src/pages/SignUpPage/SignUpPage.tsx`
 - The busy button: `frontend/src/components/ui/Button/Button.tsx`
 - Other pure functions checked the same way: `frontend/src/lib/token.ts`, `frontend/src/lib/initials.ts`
@@ -737,7 +736,7 @@ Part 4 did the same for four more rules, each moved or written once when the Use
 
 - "the one value of an address key" and "the page number in the address": `singleParam` and `readPageParam` in `frontend/src/lib/addressParams.ts`, taken out of `directoryQuery.ts` so both list pages use them
 - "the last page number": `lastPage` moved from `directoryQuery.ts` to `frontend/src/lib/pageRange.ts`, beside the other page numbers
-- "the three role words": `ROLES` in `frontend/src/lib/token.ts` is now exported; `usersQuery.ts`, `UsersFilters.tsx` and `usersColumns.tsx` test a role against it. The shown names are `ROLE_WORDS` in `frontend/src/config/text.ts`, read by both `RoleTag` and the Users role filter.
+- "the three role words": `ROLES` in `frontend/src/lib/token.ts` is now exported, and "is this string a role" is `asRole(value)` beside it (the exact lower-case word, else null), used by `usersQuery.ts`, `UsersFilters.tsx`, `usersColumns.tsx` and `RoleTag`. The shown names are `ROLE_WORDS` in `frontend/src/config/text.ts`, read by both `RoleTag` and the Users role filter.
 - "which words for a failed user delete": `userDeleteFailureText` in `frontend/src/lib/writeFailure.ts` (pattern 9)
 
 **Where it lives.** `frontend/src/lib/` and `scripts/frontend-lib-check.ts`. The rule for a failed save is there too: `saveFailureText` in `frontend/src/lib/saveFailure.ts`. It reads the failure shape `CallFailure` declared in `frontend/src/lib/loadFailure.ts`, not the store's type, so it needs nothing outside `lib/` and the library check covers it.
@@ -952,7 +951,7 @@ The page keeps what is its own: the effect that loads the list when `queryKey` c
 
 - The hook: `frontend/src/hooks/useListAddress.ts`
 - The two pages: `frontend/src/pages/DirectoryPage/DirectoryPage.tsx`, `frontend/src/pages/UsersPage/UsersPage.tsx`
-- The shared address readers: `frontend/src/lib/addressParams.ts` (`singleParam`: a key sent twice counts as absent; `readPageParam`: a whole number from 1 to 9999999, else 1)
+- The shared address readers: `frontend/src/lib/addressParams.ts` (`singleParam`: a key sent twice counts as absent; `readPageParam`: a whole number from 1 to 9999999, else 1; `PAGE_KEY`: the one name of the page key, used by both list pages' writers)
 - `lastPage` (at least 1, also for an empty list or a page size of 0): `frontend/src/lib/pageRange.ts`. It moved there from `directoryQuery.ts`.
 - The Users rules: `frontend/src/lib/usersQuery.ts` (`readUsersQuery`, `writeUsersQuery`, `toUserListParams`, `hasUsersCriteria`, `DEFAULT_USERS_QUERY`). A role that is not exactly `student`, `alumni` or `admin` reads as "all roles". `limit` is never sent. Its type `UserListParams` has the same name as the one in `frontend/src/services/userService.ts`; a file that imports both must rename one.
 - The cases: `scripts/frontend-lib-check.ts` (`singleParam`, `readPageParam`, `lastPage` in its new home, and the Users query)
@@ -1072,7 +1071,7 @@ Run all four from the repo root before you say a piece of work is done. All must
 |---|---|
 | `npm run build` | The code compiles (type errors fail it) and the production build works. |
 | `node scripts/frontend-style-check.mjs` | The eleven style and layer rules of pattern 3. |
-| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers (536 cases after part 4). |
+| `npx tsx scripts/frontend-lib-check.ts` | The pure functions in `frontend/src/lib/` give the right answers (565 cases after part 4 and its review fixes). |
 | `git grep -n --untracked "antd" -- frontend/src frontend/package.json` | Prints nothing: the old UI library is gone. Keep `--untracked`; without it git skips files that are not committed yet. |
 
 After the build, three looks at the output:
@@ -1111,7 +1110,5 @@ Known gaps left by part 1. None blocks parts 2 to 4. The full list is in `check-
   - A post picture link that fails after its 4:3 box is drawn is hidden, so the page below moves up once. The owner chooses: keep it (as built) or keep an empty 4:3 box (pattern 37).
   - Three page stores sit in the entry script so that log out can reset them (pattern 37). Moving them out is a design change for a later REQ.
   - "Load more" can show a total one too low after a delete that races a load (REQ-fs-006 n2). The browser cannot tell the two orders apart, so there is no safe small fix.
-  - `BeingBuilt` (`frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx`) has no user any more and can be deleted. The `PageNote` comment in `frontend/src/components/shell/PageLayout/PageLayout.tsx` still gives "This page is being built" as its example.
-  - The comment on `list` in `frontend/src/hooks/useListAddress.ts` says style rule d keeps `hooks/` out of `store/`. Rule d checks only `axios` and `services/`; staying out of `store/` is the hook's own choice (pattern 35).
   - Links inside a sentence or a list are below 44px on a phone (allowed by WCAG 2.5.8). A toast can cover a button that sits exactly on the bottom edge of a phone screen, until it leaves after 5 seconds or is dismissed.
   - 200% zoom was checked by emulation in headless Chrome, not by a real browser zoom. A real phone, a real 409 from the server on a user with content, and a screen reader on the delete dialog are on the owner's manual checklist.

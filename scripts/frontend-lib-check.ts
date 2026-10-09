@@ -8,8 +8,10 @@
 // AC18, AC36; REQ-fs-007: the TASK-002 and TASK-003 lists), not from the code. The expected messages are typed out here
 // on purpose: importing the constants would compare the code with itself.
 //
-// It imports only from frontend/src/lib/ and the plain words of
-// frontend/src/config/text.ts. It reads no file and calls no API.
+// It imports only from frontend/src/lib/, the plain words of
+// frontend/src/config/text.ts, and frontend/src/store/peopleBlockState.ts
+// (type-only imports, so no atom or service loads). It reads no file and
+// calls no API.
 
 import type { Alumni } from "@alumni/shared";
 import { readPageParam, singleParam } from "../frontend/src/lib/addressParams.ts";
@@ -1151,6 +1153,114 @@ check("user delete words: 403 is forbidden", userDeleteFailureText({ kind: "http
 check("user delete words: no answer", userDeleteFailureText({ kind: "network" }, USER_DELETE_WORDS), "noAnswer");
 check("user delete words: 500", userDeleteFailureText({ kind: "http", status: 500 }, USER_DELETE_WORDS), "server");
 check("user delete words: 400", userDeleteFailureText({ kind: "http", status: 400 }, USER_DELETE_WORDS), "general");
+
+// ---- REQ-fs-007 fix round: the Users and About words (QUAL-004) ------------
+// Typed from the spec (AC9, A3, TASK-008 list) and the design intent, not
+// worked out with the code. The functions take a name the caller has already
+// chosen (displayName gives "Name not given"); they add no fallback of their own.
+
+import {
+  aboutPurposeText,
+  aboutSub,
+  userDeleteBlockedText,
+  userDeleteBody,
+  userDeletedToast,
+  userDeleteFailureWords,
+  usersCount,
+  usersDeleteButtonName,
+} from "../frontend/src/config/text.ts";
+
+check("users count: 0", usersCount(0), "0 users");
+check("users count: 1", usersCount(1), "1 user");
+check("users count: 2", usersCount(2), "2 users");
+check("users count: 124", usersCount(124), "124 users");
+check("users delete button: read out with the name", usersDeleteButtonName("Nadia Rahman"), "Delete Nadia Rahman");
+check("users delete button: no name given", usersDeleteButtonName("Name not given"), "Delete Name not given");
+check(
+  "user delete body: names the person",
+  userDeleteBody("Nadia Rahman"),
+  "The account of Nadia Rahman will be removed for everyone. This cannot be undone.",
+);
+check("user deleted toast", userDeletedToast("Nadia Rahman"), "Nadia Rahman was deleted");
+check(
+  "user delete 409: names posts, comments and an alumni profile",
+  userDeleteBlockedText("Nadia Rahman"),
+  "Nadia Rahman cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed.",
+);
+check(
+  "user delete words: blocked names the person",
+  userDeleteFailureWords("Tanvir Ahmed").blocked,
+  "Tanvir Ahmed cannot be deleted because they still have posts, comments or an alumni profile. Nothing was changed.",
+);
+check(
+  "user delete words: 404 is the already-gone toast",
+  userDeleteFailureWords("Tanvir Ahmed").notFound,
+  "This user had already been deleted, so they were removed from the list.",
+);
+check("about sub: uses the app name given", aboutSub("Nordlys Alumni"), "What Nordlys Alumni is for, and who to ask.");
+check(
+  "about purpose: uses the app name given",
+  aboutPurposeText("Nordlys Alumni"),
+  "Nordlys Alumni helps graduates and students stay in touch with each other.",
+);
+
+// ---- REQ-fs-007 fix round: asRole (QUAL-003) --------------------------------
+// Only the three stored words, exactly, in lower case. Anything else is null.
+
+import { asRole } from "../frontend/src/lib/token.ts";
+
+check("role: student", asRole("student"), "student");
+check("role: alumni", asRole("alumni"), "alumni");
+check("role: admin", asRole("admin"), "admin");
+check("role: Admin (capital) is none", asRole("Admin"), null);
+check("role: ADMIN is none", asRole("ADMIN"), null);
+check("role: leading space is none", asRole(" admin"), null);
+check("role: trailing space is none", asRole("admin "), null);
+check("role: empty is none", asRole(""), null);
+check("role: teacher is none", asRole("teacher"), null);
+check("role: alumnus is none", asRole("alumnus"), null);
+
+// ---- REQ-fs-007 fix round: toPeopleBlockState (QUAL-005, REQ-fs-006 n6) ------
+// The file lives in store/ but imports types only, which tsx erases, so no atom,
+// service or axios is loaded. Idle, or loaded for the other kind, is "loading"
+// with no items, so a page never shows the other page's list (pattern 23).
+
+import { toPeopleBlockState } from "../frontend/src/store/peopleBlockState.ts";
+
+const PERSON = { id: 5, full_name: "Nadia Rahman" } as unknown as Alumni;
+const PEOPLE_LOADING = { status: "loading", items: [], failure: null };
+const PEOPLE_FAILURE = { kind: "http" as const, status: 500 };
+
+check(
+  "people block: idle is loading",
+  toPeopleBlockState({ status: "idle", kind: null, items: [], failure: null }, "newest"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: loading for this kind",
+  toPeopleBlockState({ status: "loading", kind: "mentoring", items: [], failure: null }, "mentoring"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: ready for this kind keeps the items",
+  toPeopleBlockState({ status: "ready", kind: "newest", items: [PERSON], failure: null }, "newest"),
+  { status: "ready", items: [PERSON], failure: null },
+);
+check(
+  "people block: error for this kind keeps the failure",
+  toPeopleBlockState({ status: "error", kind: "mentoring", items: [], failure: PEOPLE_FAILURE }, "mentoring"),
+  { status: "error", items: [], failure: PEOPLE_FAILURE },
+);
+check(
+  "people block: ready for the other kind is loading, no items",
+  toPeopleBlockState({ status: "ready", kind: "mentoring", items: [PERSON], failure: null }, "newest"),
+  PEOPLE_LOADING,
+);
+check(
+  "people block: error for the other kind is loading, no failure",
+  toPeopleBlockState({ status: "error", kind: "newest", items: [], failure: PEOPLE_FAILURE }, "mentoring"),
+  PEOPLE_LOADING,
+);
 
 // ---- Result ---------------------------------------------------------------
 

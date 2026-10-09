@@ -144,3 +144,83 @@
 **Claim:** When the last user of a placeholder component goes, delete the component in the same REQ, or list it as an open point.
 **Saw it in:** `frontend/src/components/shell/BeingBuilt/BeingBuilt.tsx` (no importer after the Users page became real)
 **Context:** Pattern 14 said "delete BeingBuilt when the last unbuilt page is gone"; no task of REQ-fs-007 owned it.
+
+## CAND-030 [review-arch]
+**Claim:** When a shared hook takes the page's list state as a parameter, constrain its `status` to the union, not `string`.
+**Saw it in:** `frontend/src/hooks/useListAddress.ts:1396`
+**Context:** The seam is typed loosely so any list fits; a typo in a status word compiles.
+
+## CAND-031 [review-arch]
+**Claim:** A fixed wording in an accepted ADR needs a deviation note when the UI text changes.
+**Saw it in:** `frontend/src/config/text.ts:497` vs ADR-06
+**Context:** The delete-blocked message differs from the ADR's quoted text.
+
+## CAND-032 [review-arch]
+**Claim:** Put "reload after the last row of a page is removed" in the store action, not the page.
+**Saw it in:** `frontend/src/pages/UsersPage/UsersPage.tsx:2779`
+**Context:** The page reads store state and re-parses the query key to decide a reload.
+
+## CAND-030 [review-qual]
+**Claim:** When a new page needs "is this string one of our roles", add one `asRole()` next to `ROLES` instead of a fourth inline test.
+**Saw it in:** `frontend/src/components/users/UserCells/usersColumns.tsx:19` (also `RoleTag.tsx:14`, `usersQuery.ts:40`, `UsersFilters.tsx:56`)
+**Context:** One rule, four spellings, written in one REQ, only one of them has lib-check cases.
+
+## CAND-031 [review-qual]
+**Claim:** Copy-and-adapt of a page's view-state chain (loading/error/empty/ready + count text) is a missing pure helper; extract it when the second page appears.
+**Saw it in:** `frontend/src/pages/UsersPage/UsersPage.tsx:213` and `frontend/src/pages/DirectoryPage/DirectoryPage.tsx:109`
+**Context:** Same hook was extracted for the address, but the 10-line view chain beside it was copied.
+
+## CAND-032 [review-qual]
+**Claim:** An "Open points" line in the docs that describes a code comment must be re-read against the comment before it ships.
+**Saw it in:** `docs/frontend-patterns.md` (Open points, part 4) vs `frontend/src/hooks/useListAddress.ts:31`
+**Context:** The doc says the comment claims something the comment does not say (LESSON-REQ-fs-006-4 variant).
+
+## CAND-033 [review-qual]
+**Claim:** A carried "no check cases" review item (toPeopleBlockState) that is skipped REQ after REQ should be done in the next REQ that touches lib-check.
+**Saw it in:** `frontend/src/store/peopleBlockState.ts` (no case in `scripts/frontend-lib-check.ts`)
+**Context:** REQ-fs-006 n6 was skipped again in REQ-fs-007 skipped.md although the REQ added 67 cases beside it.
+
+## CAND-034 [review-corr]
+**Claim:** A ref that records "which dialog is open" must be cleared on unmount, or a late async answer on the unmounted page takes the dialog-open branch and drops its message.
+**Saw it in:** `frontend/src/pages/UsersPage/UsersPage.tsx:2713, 2805`
+**Context:** handleConfirmDelete decides toast versus in-dialog error from confirmOpenRef after an await.
+
+## CAND-035 [review-corr]
+**Claim:** When an image gets width/height attributes as a shape hint, check the stylesheet sets both dimensions, or a 1x1 attribute renders a 1px image.
+**Saw it in:** `frontend/src/components/ui/Avatar/Avatar.tsx:672`, `Avatar.module.css:41`
+**Context:** Checked and safe here (.photo is 100% by 100%); the shape of bug is easy to introduce for a new img.
+
+## CAND-036 [review-reflect]
+**Claim:** When a fix adds a guard to one branch of an async handler, add it to every branch in the same edit.
+**Saw it in:** `frontend/src/components/posts/CommentItem/CommentItem.tsx:132-135`
+**Context:** L-REQ-fs-006-2 said every branch; the 404 branch stayed bare.
+
+## CAND-037 [review-reflect]
+**Claim:** When a spec narrows what an accepted ADR lists (page content), write the deviation in the ADR at the spec gate.
+**Saw it in:** `frontend/src/pages/AboutPage/AboutPage.tsx` vs ADR-10 "About page content"
+**Context:** "Who can join" and the app version were dropped by AC14; the ADR open question on the version was never closed.
+
+## CAND-038 [review-reflect]
+**Claim:** Remove a known-gap line from the patterns doc in the same round the code is fixed; grep Open points for the file name.
+**Saw it in:** `docs/frontend-patterns.md:1115` (comment already fixed at `useListAddress.ts:31`)
+**Context:** Repeat of L-REQ-fs-006-4; fits a wrap-up checklist line better than a new lesson.
+
+## CAND-039 [ui-review]
+**Claim:** A fixed toast stack needs bottom room on a phone, or it hides the last control (Pagination, footer) of a long card list.
+**Saw it in:** `frontend/src/pages/UsersPage/UsersPage.tsx` (Pagination under the card list) at 360px
+**Context:** Two 62px toasts cover Next and the footer link for 5 s each; same class as the skipped My profile Save case.
+
+## CAND-040 [ui-review]
+**Claim:** A table cell that renders null still gets a label in card mode; hide the whole cell when the value is empty.
+**Saw it in:** `frontend/src/components/users/UserCells/UserActionsCell.tsx:20`
+**Context:** The own row shows "Actions" with no control beside it at 360px.
+
+## CAND-041 [implement-task]
+**Claim:** Before calling a store/ function "not checkable", look at its imports: type-only imports are erased by tsx, so the library check can import it with no atom or axios loaded.
+**Saw it in:** `frontend/src/store/peopleBlockState.ts:4` (and `scripts/frontend-lib-check.ts`, toPeopleBlockState block)
+**Context:** REQ-fs-006 n6 was skipped twice as "needs the atoms"; a require.cache probe showed only the file itself loads.
+
+## CAND-042 [implement-task]
+**Claim:** Table hides an empty phone cell through `.value:empty`; a column render that returns whitespace or an empty fragment wrapper instead of null brings the empty "label + box" line back.
+**Saw it in:** `frontend/src/components/ui/Table/Table.module.css` (phone block, `.cell:has(> .value:empty)`)
+**Context:** UI-002 fix; the value div must stay the only child of the td with no text around the render call (G46).

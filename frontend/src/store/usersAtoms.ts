@@ -1,5 +1,7 @@
 import { atom } from "jotai";
 import type { PublicUser } from "@alumni/shared";
+import { lastPage } from "../lib/pageRange";
+import { readUsersQuery, toUserListParams } from "../lib/usersQuery";
 import { isCancelled, toApiFailure } from "../services/apiError";
 import type { ApiFailure } from "../services/apiError";
 import { listUsers } from "../services/userService";
@@ -107,23 +109,42 @@ export const removeUserLocallyAtom = atom(null, (get, set, id: number) => {
 });
 
 /**
- * Forgets the list and cancels its call. The Users page calls it when it
- * closes, so the next visit never starts from this one. A delete still
- * running patches nothing afterwards.
+ * The row taken off was the last one on its page, but more users remain
+ * there: loads the page again rather than show "No users found". Only a
+ * ready list is reloaded, with the params of its own address. A page after
+ * the last one is moved by useListAddress (past the end), not here.
  */
-export const clearUsersAtom = atom(null, (_get, set) => {
+export const refillEmptiedUsersPageAtom = atom(null, (get, set) => {
+  const list = get(usersAtom);
+  if (
+    list.status === "ready" &&
+    list.queryKey !== null &&
+    list.items.length === 0 &&
+    list.total > 0 &&
+    list.page <= lastPage(list.total, list.limit)
+  ) {
+    const keyQuery = readUsersQuery(new URLSearchParams(list.queryKey));
+    void set(loadUsersAtom, { params: toUserListParams(keyQuery), queryKey: list.queryKey });
+  }
+});
+
+// Forgets the list, cancels its call and starts a new visit: a delete still
+// running patches nothing afterwards.
+const forgetUsersAtom = atom(null, (_get, set) => {
   usersVisit += 1;
   usersRequest.cancel();
   set(usersAtom, IDLE_USERS);
 });
 
 /**
- * Puts the list back to idle and cancels its call. The session actions call
- * it beside `resetAlumniAtom` whenever the user changes, so one admin's list
- * is never shown to the next user.
+ * Forgets the list. The Users page calls it when it closes, so the next
+ * visit never starts from this one.
  */
-export const resetUsersAtom = atom(null, (_get, set) => {
-  usersVisit += 1;
-  usersRequest.cancel();
-  set(usersAtom, IDLE_USERS);
-});
+export const clearUsersAtom = forgetUsersAtom;
+
+/**
+ * The same as clearUsersAtom, for the session actions: they call it beside
+ * `resetAlumniAtom` whenever the user changes, so one admin's list is never
+ * shown to the next user.
+ */
+export const resetUsersAtom = forgetUsersAtom;

@@ -4,7 +4,8 @@
 // A whole number from 1 to 9999999, without a leading zero.
 const PAGE_PATTERN = /^[1-9][0-9]{0,6}$/;
 
-const PAGE_KEY = "page";
+/** The address key of the page number, shared by every list query. */
+export const PAGE_KEY = "page";
 
 /** The one value of a key, or null when it is absent or sent more than once. */
 export function singleParam(params: URLSearchParams, key: string): string | null {

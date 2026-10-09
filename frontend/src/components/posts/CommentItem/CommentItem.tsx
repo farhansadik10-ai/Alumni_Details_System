@@ -131,8 +131,12 @@ export function CommentItem({
     }
     if (isGone(result.failure)) {
       // The store took the comment off the list, so this form goes with it.
+      // Focus moves only if this edit is still open: a late 404 must not pull
+      // focus away from another edit or reply (LESSON-REQ-fs-006-2).
       showToast(COMMENT_NOT_FOUND_TEXT);
-      onRemoved();
+      if (editingRef.current) {
+        onRemoved();
+      }
     }
     return { ok: false, text: writeFailureText(result.failure, COMMENT_WRITE_FAILURE_WORDS) };
   }

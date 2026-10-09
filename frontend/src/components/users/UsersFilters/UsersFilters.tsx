@@ -7,7 +7,7 @@ import {
   USERS_SEARCH_LABEL,
   USERS_SEARCH_PLACEHOLDER,
 } from "../../../config/text";
-import { ROLES } from "../../../lib/token";
+import { ROLES, asRole } from "../../../lib/token";
 import type { Role } from "../../../lib/token";
 import type { UsersQuery } from "../../../lib/usersQuery";
 import { Button } from "../../ui/Button/Button";
@@ -53,7 +53,7 @@ export function UsersFilters({
 
   // Choosing the role that is already set does not write the address again.
   function handleRole(event: ChangeEvent<HTMLSelectElement>) {
-    const role = ROLES.find((value) => value === event.target.value) ?? "";
+    const role = asRole(event.target.value) ?? "";
     if (role !== query.role) {
       onRoleChange(role);
     }

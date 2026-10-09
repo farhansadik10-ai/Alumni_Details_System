@@ -1,4 +1,5 @@
 import { ROLE_WORDS } from "../../../config/text";
+import { asRole } from "../../../lib/token";
 import type { Role } from "../../../lib/token";
 import { Tag } from "./Tag";
 import type { TagVariant } from "./Tag";
@@ -11,18 +12,15 @@ const ROLE_VARIANTS: Record<Role, TagVariant> = {
   admin: "role-admin",
 };
 
-function isRole(value: string): value is Role {
-  return Object.hasOwn(ROLE_VARIANTS, value);
-}
-
 export type RoleTagProps = {
   // The role as the API gives it. A role we do not know renders nothing.
   role: string | null | undefined;
 };
 
 export function RoleTag({ role }: RoleTagProps) {
-  if (!role || !isRole(role)) {
+  const known = role ? asRole(role) : null;
+  if (known === null) {
     return null;
   }
-  return <Tag variant={ROLE_VARIANTS[role]}>{ROLE_WORDS[role]}</Tag>;
+  return <Tag variant={ROLE_VARIANTS[known]}>{ROLE_WORDS[known]}</Tag>;
 }

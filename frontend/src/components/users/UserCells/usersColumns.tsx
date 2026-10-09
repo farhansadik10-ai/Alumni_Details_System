@@ -9,16 +9,12 @@ import {
   USERS_COLUMN_ROLE,
 } from "../../../config/text";
 import { dateText } from "../../../lib/postDisplay";
-import { ROLES } from "../../../lib/token";
+import { asRole } from "../../../lib/token";
 import type { TableColumn } from "../../ui/Table/Table";
 import { RoleTag } from "../../ui/Tag/RoleTag";
 import { UserActionsCell } from "./UserActionsCell";
 import { UserNameCell } from "./UserNameCell";
 import styles from "./usersColumns.module.css";
-
-function isKnownRole(role: string | null): boolean {
-  return ROLES.some((known) => known === role);
-}
 
 export type UsersColumnsOptions = {
   // The logged-in admin's id: their own row shows "You" and no Delete (AC5).
@@ -50,7 +46,7 @@ export function usersColumns({ selfId, onDelete }: UsersColumnsOptions): TableCo
       key: "role",
       header: USERS_COLUMN_ROLE,
       render: (user) =>
-        isKnownRole(user.role) ? (
+        user.role !== null && asRole(user.role) !== null ? (
           <RoleTag role={user.role} />
         ) : (
           <span className={styles.muted}>{NO_ROLE}</span>

@@ -5,14 +5,16 @@ import { toApiFailure } from "../services/apiError";
 import type { ApiFailure } from "../services/apiError";
 import { deleteUser } from "../services/userService";
 import { sessionAtom } from "./sessionAtoms";
-import { currentUsersVisit, removeUserLocallyAtom } from "./usersAtoms";
+import { currentUsersVisit, refillEmptiedUsersPageAtom, removeUserLocallyAtom } from "./usersAtoms";
 
 // The one write of the Users page: delete a user (admin only). It returns a
 // result and never throws; it shows no toast and moves no focus (pattern 7).
 // After the server answers, the list is patched, not reloaded, and only when
 // it is still safe: the same user, the same visit of the page (no clear or
 // reset since), and the list `ready` and holding the row (L-REQ-fs-006-2).
-// A late answer patches nothing and still returns its result.
+// Under the same guard, a page the delete left empty while more users remain
+// is loaded again (refillEmptiedUsersPageAtom). A late answer patches and
+// reloads nothing and still returns its result.
 //
 // A 404 still returns the failure, and also removes the row here, so the page
 // can say "already gone". A 409 (the user still owns content) and any other
@@ -44,7 +46,10 @@ function startWrite(get: Getter): { isCurrent: () => boolean } | null {
   };
 }
 
-/** Deletes a user. Does not reload the list: the page decides what comes next. */
+/**
+ * Deletes a user. Reloads the list only for a page the delete emptied; the
+ * page decides the dialog, the toast and the focus.
+ */
 export const deleteUserAtom = atom(
   null,
   async (get, set, id: number): Promise<UserWriteResult> => {
@@ -61,6 +66,7 @@ export const deleteUserAtom = atom(
     const gone = failure === null || isGone(failure);
     if (gone && scope.isCurrent()) {
       set(removeUserLocallyAtom, id);
+      set(refillEmptiedUsersPageAtom);
     }
     return failure === null ? { ok: true } : { ok: false, failure };
   },
