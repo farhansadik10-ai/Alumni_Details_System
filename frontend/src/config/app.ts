@@ -2,4 +2,4 @@
 export const APP_NAME = "University Alumni";
 
 // Placeholder address of the alumni office; the owner replaces it with the real one.
-export const CONTACT_EMAIL = "alumni-office@example.com";
+export const CONTACT_EMAIL = "farhansadik@gmail.com";
