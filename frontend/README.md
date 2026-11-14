@@ -24,13 +24,14 @@ The dev server runs on `https://localhost:5173` when these two files exist, and 
 | `frontend/.cert/localhost.pem` | A certificate for `localhost` |
 | `frontend/.cert/localhost-key.pem` | Its private key |
 
-The folder is gitignored. The files are per machine: never commit them and never send the key to anyone. To make a pair, install [mkcert](https://github.com/FiloSottile/mkcert), run `mkcert -install` once, then from the repo root:
+The folder is gitignored. The files are per machine: never commit them and never send the key to anyone. To make a pair, install [mkcert](https://github.com/FiloSottile/mkcert), run `mkcert -install` once, then from the repo root (the first line makes the folder; mkcert does not):
 
 ```
+mkdir frontend/.cert
 mkcert -cert-file frontend/.cert/localhost.pem -key-file frontend/.cert/localhost-key.pem localhost 127.0.0.1 ::1
 ```
 
-Restart the dev server after adding or removing the files. The API stays on plain http at port 3000; only the browser's connection to Vite is https. A build and `vite preview` do not use the files.
+Restart the dev server after adding or removing the files. If a file cannot be read, or the two are not a matching pair, the dev server starts on http and says so. The API stays on plain http at port 3000; only the browser's connection to Vite is https. A build and `vite preview` do not use the files; preview stays on http.
 
 ## Folders under `src/`
 

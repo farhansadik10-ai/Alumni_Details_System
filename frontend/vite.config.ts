@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs'
+import { createSecureContext } from 'node:tls'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
@@ -66,22 +67,37 @@ function fontPreload(): Plugin {
 const DEV_CERT_FILE = fileURLToPath(new URL('./.cert/localhost.pem', import.meta.url))
 const DEV_KEY_FILE = fileURLToPath(new URL('./.cert/localhost-key.pem', import.meta.url))
 
-// Both files present: the dev server runs on https. Either one missing:
-// undefined, so Vite stays on http and a fresh clone still starts.
+// Both files present and a working pair: the dev server runs on https.
+// Anything else returns undefined, so Vite stays on http and still starts:
+// a fresh clone has no files, and a broken file must not stop the server.
+// Each case prints one line. No line ever shows what is in a file.
 function devHttps(): { cert: Buffer; key: Buffer } | undefined {
-  if (!existsSync(DEV_CERT_FILE) || !existsSync(DEV_KEY_FILE)) return undefined
-  return { cert: readFileSync(DEV_CERT_FILE), key: readFileSync(DEV_KEY_FILE) }
-}
-
-// https://vite.dev/config/
-export default defineConfig(({ command }) => {
-  // Only the dev server reads the files; a build never touches them.
-  const https = command === 'serve' ? devHttps() : undefined
-  if (command === 'serve' && https === undefined) {
+  if (!existsSync(DEV_CERT_FILE) || !existsSync(DEV_KEY_FILE)) {
     console.info(
       'Dev server: https is off. For https, put localhost.pem and localhost-key.pem in frontend/.cert/ (see frontend/README.md).',
     )
+    return undefined
   }
+  try {
+    const pair = { cert: readFileSync(DEV_CERT_FILE), key: readFileSync(DEV_KEY_FILE) }
+    // Throws when a file is not PEM or the key does not belong to the
+    // certificate. Without this, Vite fails later with a raw TLS error.
+    createSecureContext(pair)
+    return pair
+  } catch {
+    console.warn(
+      'Dev server: https is off. frontend/.cert/localhost.pem and localhost-key.pem could not be read, or are not a matching certificate and key. Make the pair again (see frontend/README.md).',
+    )
+    return undefined
+  }
+}
+
+// https://vite.dev/config/
+export default defineConfig(({ command, isPreview }) => {
+  // Only the dev server uses the files. A build never reads them, and
+  // `vite preview` must not either: preview also runs as 'serve' and would
+  // take server.https as its own default (G61).
+  const https = command === 'serve' && !isPreview ? devHttps() : undefined
 
   return {
     plugins: [react(), indexHtmlConstants(), fontPreload()],
