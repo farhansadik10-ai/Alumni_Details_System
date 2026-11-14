@@ -17,6 +17,10 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-11-14] work-path-set | REQ-fs-008-vite-dev-https | branch at C:/Users/Lenovo/Alumni_Details_System (feat/REQ-fs-008-vite-dev-https, off main)
+
+## [2026-11-14] task-plan-cleared | REQ-fs-008-vite-dev-https | owner chose the gitignored folder frontend/.cert/ for the mkcert files; http when they are missing
+
 ## [2026-10-09] req-archived | REQ-fs-007-frontend-users-about-polish-perf
 
 ## [2026-10-09] req-merged | REQ-fs-007-frontend-users-about-polish-perf | merge commit 0f2946ff on redesign (the feature branch was deleted by the owner)

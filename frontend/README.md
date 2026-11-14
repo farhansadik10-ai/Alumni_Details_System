@@ -15,6 +15,23 @@ Run every command from the repo root, not from this folder. Run `npm install` on
 
 In development, Vite sends every `/api` request to the API at `http://localhost:3000` (see `vite.config.ts`). If requests fail, check that the API dev server is running.
 
+### https in development
+
+The dev server runs on `https://localhost:5173` when these two files exist, and on `http://localhost:5173` when either is missing (it then prints one line that says so):
+
+| File | What it is |
+|---|---|
+| `frontend/.cert/localhost.pem` | A certificate for `localhost` |
+| `frontend/.cert/localhost-key.pem` | Its private key |
+
+The folder is gitignored. The files are per machine: never commit them and never send the key to anyone. To make a pair, install [mkcert](https://github.com/FiloSottile/mkcert), run `mkcert -install` once, then from the repo root:
+
+```
+mkcert -cert-file frontend/.cert/localhost.pem -key-file frontend/.cert/localhost-key.pem localhost 127.0.0.1 ::1
+```
+
+Restart the dev server after adding or removing the files. The API stays on plain http at port 3000; only the browser's connection to Vite is https. A build and `vite preview` do not use the files.
+
 ## Folders under `src/`
 
 | Folder | What it holds |
