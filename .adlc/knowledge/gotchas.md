@@ -1532,3 +1532,27 @@ Where each old item went:
 **Don't:** Don't return `<></>` or whitespace from a column render to mean "nothing"; don't drop `height: auto` from an image that has size attributes.
 
 **Related:** [[knowledge/gotchas#^g46|G46]], [[knowledge/gotchas#^g52|G52]], [[knowledge/lessons/LESSON-REQ-fs-007-5-a-reserved-image-box-and-hide-on-error-decide-together|L-REQ-fs-007-5]]
+
+---
+
+## G61 — Vite dev https: preview counts as "serve", the config is a function, mkcert and curl ^g61
+
+| Field | Value |
+|---|---|
+| Discovered | 2026-11-14 |
+| REQ | REQ-fs-008 |
+| Component | `frontend/vite.config.ts`, `frontend/.cert/` (gitignored) |
+| Status | confirmed |
+| Severity | careful (check before touching) |
+
+**What:** (1) https on the dev server comes from two files in `frontend/.cert/` that are not in git. Before REQ-fs-008 nothing in git recorded an https setup for the dev server. (2) `vite preview` runs the config with `command === 'serve'`, and Vite 5.4 uses `server.https` for preview when `preview.https` is not set. To limit something to the dev server, test `isPreview` too. (3) The default export of `vite.config.ts` is a function (`defineConfig((env) => ...)`), so a throwaway config that reuses it must call it. (4) Windows `curl.exe` and Git Bash `curl` refuse a mkcert certificate with `CRYPT_E_NO_REVOCATION_CHECK` although the chain is trusted; use `--ssl-no-revoke`.
+
+**Where:** `frontend/vite.config.ts` (`devHttps`, the config function); `frontend/README.md` ("https in development").
+
+**Why it's surprising:** The config looks like it has one switch for one server. A failed `curl` looks like a broken certificate.
+
+**Why it exists:** Vite shares the `serve` command and the https default between dev and preview. mkcert certificates publish no revocation list.
+
+**Don't:** Don't remove `devHttps` or `server.https` when rewriting the config. Don't commit anything from `frontend/.cert/`. Don't point the `/api` proxy target at https; the API speaks plain http.
+
+**Related:** [[knowledge/lessons/LESSON-REQ-fs-004-5-find-out-what-listens-on-the-api-port|L-REQ-fs-004-5]]

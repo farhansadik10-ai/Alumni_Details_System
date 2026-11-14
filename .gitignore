@@ -3,6 +3,10 @@ node_modules/
 frontend/.env
 dist/
 
+# Local https for the Vite dev server: a mkcert certificate and its private key.
+# Per machine; never commit them (see frontend/README.md).
+frontend/.cert/
+
 # ADLC — per-developer scratch state. Shared knowledge files stay committed;
 # the shared logs (hot.md, decisions.md, glossary.md) are committed too.
 .adlc/now.md

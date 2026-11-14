@@ -266,7 +266,7 @@ Each service file is a thin list of calls: one function per endpoint, relative `
 - Services: `frontend/src/services/authService.ts`, `frontend/src/services/userService.ts`, `frontend/src/services/alumniService.ts` (part 2; the three loaders that can be cancelled take a `signal`, see pattern 23; from part 3 its list takes an optional `limit`, so the small lists ask for 3)
 - From part 3: `frontend/src/services/postService.ts` (list, create, edit, delete a post; it owns `POSTS_PATH`), `frontend/src/services/commentService.ts` (a post's comments, create, edit, delete; it imports `POSTS_PATH` for `/api/posts/:id/comments`), `frontend/src/services/statsService.ts` (`GET /api/stats`). The list loaders take a `signal`; the deletes return nothing.
 - From part 4: `listUsers(params, signal)` (`GET /api/users`, admin only; `limit` is not sent, so the server's page size is used) and `deleteUser(id)` (`DELETE /api/users/:id`) in `frontend/src/services/userService.ts`.
-- The dev proxy that sends `/api` to the backend: `frontend/vite.config.ts`
+- The dev proxy that sends `/api` to the backend: `frontend/vite.config.ts`. The same file turns on https for the dev server when the two files in `frontend/.cert/` exist and are a working pair (`devHttps`, REQ-fs-008; see `frontend/README.md`); otherwise, and for `vite preview`, it stays on http. The proxy target stays plain http.
 
 **Why we chose it.** If the client imported the store, and the store imports the services, the two would import each other. Handing the functions in keeps the arrow pointing one way (pattern 1) and lets the client be tried with a fake token and a fake handler.
 

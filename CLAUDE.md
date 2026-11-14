@@ -24,6 +24,8 @@ Backend config comes from a single root-level `.env` (not `backend/.env`), read 
 
 The frontend calls the API with relative paths like `/api/auth/login`. In dev, `frontend/vite.config.ts` proxies `/api` to the backend at `http://localhost:3000`; in production Apache proxies `/api`. `VITE_API_URL` in `frontend/.env` is not used by any code — don't wire new API calls to it. If requests fail in dev, check that the API dev server is running on port 3000.
 
+The frontend dev server runs on `https://localhost:5173` when `frontend/.cert/localhost.pem` and `frontend/.cert/localhost-key.pem` exist (a mkcert pair, per machine, gitignored), and on http when either is missing or the two are not a working pair. `vite preview` stays on http. `frontend/vite.config.ts` (`devHttps`) reads them; nothing in git holds a certificate. If you rewrite `vite.config.ts`, keep `devHttps` and `server.https`. Setup steps are in `frontend/README.md`.
+
 ## Architecture
 
 ### Backend: layered monorepo packages under `backend/src/`
@@ -48,7 +50,7 @@ React + TypeScript + Vite, with `jotai` for state, `react-router-dom` for routin
 
 ### Ignored files
 
-The root `.gitignore` ignores `node_modules/` (at any depth, including the nested `backend/src/api/node_modules` and `backend/src/dal/node_modules`), `.env`, `frontend/.env` and `dist/`. None of these are tracked in git: run `npm install` after cloning, and create the root `.env` and `frontend/.env` by hand (see Environment above). Never commit them. Earlier commits still contain `node_modules/` and the `.env` files, so their secrets must be treated as exposed and rotated.
+The root `.gitignore` ignores `node_modules/` (at any depth, including the nested `backend/src/api/node_modules` and `backend/src/dal/node_modules`), `.env`, `frontend/.env`, `dist/` and `frontend/.cert/` (the local https certificate and key). None of these are tracked in git: run `npm install` after cloning, and create the root `.env` and `frontend/.env` by hand (see Environment above). Never commit them. Earlier commits still contain `node_modules/` and the `.env` files, so their secrets must be treated as exposed and rotated.
 
 ## Other resources
 

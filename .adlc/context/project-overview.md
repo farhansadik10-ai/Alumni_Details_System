@@ -54,7 +54,7 @@ Run from the repo root.
 | Task | Command |
 |---|---|
 | Install | `npm install` |
-| API + frontend dev servers | `npm run dev` |
+| API + frontend dev servers | `npm run dev` (frontend on `https://localhost:5173` when the mkcert pair is in `frontend/.cert/`, else on http; REQ-fs-008) |
 | API only | `npm run dev:api` |
 | Frontend only | `npm run dev:frontend` |
 | Build everything | `npm run build` (API, then frontend) |
