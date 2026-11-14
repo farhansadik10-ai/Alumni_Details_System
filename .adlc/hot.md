@@ -17,6 +17,8 @@ Grep-friendly format: `## [YYYY-MM-DD] kind | description` with optional metadat
 
 <!-- Newest entries below this line, newest first. Each entry is a level-2 heading. -->
 
+## [2026-11-14] req-merged | REQ-fs-008-vite-dev-https | merge commit d1c3a298 on main (pull request #55)
+
 ## [2026-11-14] ship-gate-cleared | REQ-fs-008-vite-dev-https | wrap-up committed on the feature branch (no push); t3 wording fixed in CLAUDE.md and docs/frontend-patterns.md; owner runs the merge checklist
 
 ## [2026-11-14] req-ready-to-merge | REQ-fs-008-vite-dev-https | https on the Vite dev server from the mkcert pair in frontend/.cert/ (gitignored), http when it is missing or broken; vite preview stays on http; 2 review rounds (round 1: 1 major, 2 minor, 2 trivial; owner chose fix M1, m1, t2; round 2: 3 trivial open); 2 commits

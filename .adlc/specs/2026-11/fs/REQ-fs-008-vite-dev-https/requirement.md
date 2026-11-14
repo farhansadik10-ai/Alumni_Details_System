@@ -8,7 +8,7 @@ kind: task
 |---|---|
 | REQ | REQ-fs-008 |
 | Kind | task |
-| Status | ready to merge |
+| Status | merged (d1c3a298, pull request #55, 2026-11-14) |
 | Phase | review and ship (gate cleared 2026-11-14) |
 | Created | 2026-11-14 |
 | Primary repo | alumni-details-system |
