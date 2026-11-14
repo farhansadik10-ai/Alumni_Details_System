@@ -1,0 +1,59 @@
+/*
+ * The confirm dialog of system.html, "Dialog and pagination". A native
+ * <dialog>: the browser puts it in the top layer and centers it (margin: auto).
+ * Tokens only.
+ */
+
+.dialog {
+  width: 100%;
+  /* Never wider than the screen minus the gutter on each side. */
+  max-width: min(var(--dialog-max), calc(100% - 2 * var(--gutter)));
+  max-height: calc(100% - 2 * var(--gutter));
+  margin: auto;
+  padding: var(--space-5);
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  overflow: auto;
+}
+
+/* Only while open: a closed <dialog> must keep the browser's display: none. */
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* The band color at 60%: no new color (architecture.md, "Tokens and styles"). */
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--band) 60%, transparent);
+}
+
+.title {
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+}
+
+.text {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+/* Phone: the buttons stack, each as wide as the card. */
+@media (max-width: 767.98px) {
+  .actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+}

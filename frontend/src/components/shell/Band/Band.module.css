@@ -1,0 +1,57 @@
+/*
+ * The band of directory.html and phone-directory.html. Tokens only. The
+ * heading size, its line height and the overlap change on a phone through
+ * tokens.css; only the paddings and the sub text size change here.
+ */
+.band {
+  border-bottom: var(--border-edge) solid var(--edge);
+  background: var(--band);
+  color: var(--band-text);
+}
+
+/* The bottom padding leaves room for the first card, which is pulled up
+   over the band by --band-overlap (PageLayout). */
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-7) var(--gutter) calc(var(--band-overlap) + var(--space-7));
+}
+
+.bar {
+  width: var(--bar-w);
+  height: var(--bar-h);
+  background: var(--accent);
+}
+
+/* As wide as its words, so the focus ring it gets on a page change hugs them. */
+.heading {
+  align-self: flex-start;
+  max-width: 100%;
+  font-size: var(--text-band);
+  line-height: var(--leading-band);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-band);
+  overflow-wrap: break-word;
+}
+
+.sub {
+  max-width: var(--measure);
+  margin: 0;
+  color: var(--band-muted);
+  font-size: var(--text-h3);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-regular);
+}
+
+@media (max-width: 767.98px) {
+  .inner {
+    padding: var(--space-5) var(--gutter) calc(var(--band-overlap) + var(--space-5));
+  }
+
+  .sub {
+    font-size: var(--text-body);
+  }
+}

@@ -1,0 +1,67 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.label {
+  align-self: flex-start;
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+.optionalNote {
+  font-weight: var(--weight-regular);
+  color: var(--muted);
+}
+
+.help,
+.error {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.help {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+  font-weight: var(--weight-semibold);
+}
+
+/*
+ * The box of a text control. TextInput, Select and Textarea take it with
+ * "composes", so the border and the disabled and error looks are written once.
+ */
+.control {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.control::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.control[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.control:disabled {
+  border-color: var(--line);
+  background: var(--sunken);
+  color: var(--muted);
+  opacity: 1;
+}

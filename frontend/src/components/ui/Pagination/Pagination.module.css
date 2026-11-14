@@ -1,0 +1,64 @@
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-h);
+  min-height: var(--control-h);
+  margin: 0;
+  padding: 0 var(--space-1);
+  border: var(--border-edge) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.page:hover {
+  background: var(--sunken);
+}
+
+.page[aria-current="page"] {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--on-action);
+  font-weight: var(--weight-bold);
+  cursor: default;
+}
+
+.gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  min-height: var(--control-h);
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+
+.status {
+  margin: 0;
+  padding-left: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}

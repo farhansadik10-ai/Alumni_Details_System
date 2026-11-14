@@ -1,0 +1,46 @@
+/*
+ * The open thread of feed.html: the page's ground under a top edge, comments
+ * stacked, replies one level in behind a left edge, then the form. Tokens
+ * only. Nothing animates on open or close, so reduced motion needs no rule.
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-top: var(--border-edge) solid var(--edge);
+  background: var(--ground);
+  overflow-wrap: anywhere;
+}
+
+.threads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Every reply of a thread, flat, one level in (C3). */
+.replies {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: var(--border-edge) solid var(--edge);
+  list-style: none;
+}
+
+.reply {
+  min-width: 0;
+}
+
+/* At 360px the indent is smaller, so a reply keeps room for its words. */
+@media (max-width: 767.98px) {
+  .replies {
+    padding-left: var(--space-3);
+  }
+}

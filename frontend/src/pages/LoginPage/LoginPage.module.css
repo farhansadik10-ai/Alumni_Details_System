@@ -1,0 +1,24 @@
+/* The form of login.html. Tokens only. The shared parts are in AuthLayout. */
+.form {
+  composes: form from "../../components/auth/AuthLayout/AuthLayout.module.css";
+  gap: var(--space-5);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  composes: formTitle from "../../components/auth/AuthLayout/AuthLayout.module.css";
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+}
+
+.footer {
+  composes: formFooter from "../../components/auth/AuthLayout/AuthLayout.module.css";
+}

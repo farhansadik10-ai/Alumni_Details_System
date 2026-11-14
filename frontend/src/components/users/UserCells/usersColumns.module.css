@@ -1,0 +1,9 @@
+/* The Users table's quiet cells. Tokens only. */
+
+/* Email, a missing role and the date, as drawn: muted. A long email with no
+   break point wraps inside its cell (AC11, G46). */
+.muted {
+  min-width: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

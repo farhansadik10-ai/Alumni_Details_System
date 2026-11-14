@@ -1,0 +1,60 @@
+/*
+ * The Account card of my-profile.html. Tokens only. The card's frame is Card.
+ * This file owns the blocks both My profile cards share (card, heading, form,
+ * ruled); the Alumni profile card takes them with "composes", so the two
+ * cards cannot drift.
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* H2 as drawn: 24px, bold, snug. As wide as its words, so the focus ring it
+ * gets after "Try again" hugs them. */
+.heading {
+  align-self: flex-start;
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* A row under a thin line, apart from what is above it. */
+.ruled {
+  padding-top: var(--space-5);
+  border-top: var(--border-line) solid var(--line);
+}
+
+/* A read-only row: the label as a field label, the role tag after it. */
+.role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.roleLabel {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* As wide as its words, not the card. */
+.save {
+  display: flex;
+}
+
+/* Log out sits under the line, apart from the save. */
+.logOut {
+  composes: ruled;
+  display: flex;
+}

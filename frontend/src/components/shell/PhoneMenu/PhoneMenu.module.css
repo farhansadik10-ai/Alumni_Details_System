@@ -1,0 +1,151 @@
+/*
+ * The open menu of phone-menu.html. A native <dialog> that fills the screen
+ * (the browser puts it in the top layer). Tokens only. It is only ever open
+ * in the phone layout, where --header-h and --gutter have their phone values.
+ */
+.menu {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  color: var(--text);
+  /* A short screen: the menu scrolls inside itself. */
+  overflow-y: auto;
+}
+
+/* Only while open: a closed <dialog> must keep the browser's display: none. */
+.menu[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The same row as the phone header, with Close where the menu button was. */
+.top {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header-h);
+  padding: 0 var(--space-2) 0 var(--gutter);
+  border-bottom: var(--border-edge) solid var(--edge);
+}
+
+.appName {
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.closeButton {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.links {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: var(--space-8);
+  padding: var(--space-2) var(--gutter);
+  border-bottom: var(--border-line) solid var(--line);
+  color: var(--text);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+  text-decoration: none;
+}
+
+.link[aria-current="page"] {
+  font-weight: var(--weight-bold);
+}
+
+/* The marker of the current link: a bar on the left edge, as thick as the
+   band's accent bar. A drawn box, not a shadow (no shadows). */
+.link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--bar-h);
+  background: var(--accent);
+}
+
+/* A link is as wide as the screen, so its ring is drawn inside its edge,
+   where it can be seen. */
+.link:focus-visible {
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.theme {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--gutter);
+}
+
+.themeLabel {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* Pushed to the bottom of the screen when there is room. */
+.account {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: auto;
+  padding: var(--space-5) var(--gutter);
+  border-top: var(--border-edge) solid var(--edge);
+  background: var(--ground);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.email {
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  overflow-wrap: anywhere;
+}

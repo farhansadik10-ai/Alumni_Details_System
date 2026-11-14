@@ -1,0 +1,59 @@
+/* min-width: a fieldset is as wide as its content by default, which breaks a narrow page. */
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Looks like a field label. */
+.legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+/* The whole card is the label, so a click anywhere on it chooses the option. */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--control-h-lg);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* The radio's own dot is the signal; the soft background only adds to it. */
+.chosen {
+  background: var(--accent-soft);
+}
+
+.input {
+  flex: 0 0 auto;
+  width: var(--check-size);
+  height: var(--check-size);
+  margin: 0;
+  accent-color: var(--action);
+  cursor: inherit;
+}
+
+.text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

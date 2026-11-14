@@ -1,0 +1,70 @@
+/*
+ * The toast of system.html, "Messages and states". Tokens only. No enter or
+ * leave animation: a toast appears and is gone.
+ */
+
+/* Bottom right corner. With no toast in it the box has no height, so it
+   covers nothing. */
+.viewport {
+  position: fixed;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: min(var(--toast-max), calc(100% - 2 * var(--gutter)));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: 100%;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--action);
+  color: var(--on-action);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-semibold);
+}
+
+.text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dismiss {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--on-action);
+  cursor: pointer;
+}
+
+/* The ring of base.css stays; only its color changes. It is drawn on the
+   --action background here, where --focus is too faint in the dark theme. */
+.dismiss:focus-visible {
+  outline-color: var(--on-action);
+}
+
+/* Phone: along the bottom, the full width minus the gutters. */
+@media (max-width: 767.98px) {
+  .viewport {
+    left: var(--gutter);
+    align-items: stretch;
+    max-width: none;
+  }
+}

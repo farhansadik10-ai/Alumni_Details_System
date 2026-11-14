@@ -1,0 +1,46 @@
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+.sm {
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+  font-size: var(--text-caption);
+}
+
+.md {
+  width: var(--avatar-md);
+  height: var(--avatar-md);
+  font-size: var(--text-body);
+}
+
+.lg {
+  width: var(--avatar-lg);
+  height: var(--avatar-lg);
+  font-size: var(--text-h2);
+}
+
+/* The initials are a third of the box, as for "lg": 40 at 120 and 32 at 96,
+   as drawn in profile.html and my-profile.html. */
+.xl {
+  width: var(--avatar-xl);
+  height: var(--avatar-xl);
+  font-size: calc(var(--avatar-xl) / 3);
+  letter-spacing: var(--tracking-snug);
+}
+
+.photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

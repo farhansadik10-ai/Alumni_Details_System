@@ -6,6 +6,8 @@ import postRoutes from "./routes/PostRoutes";
 import commentRoutes from "./routes/CommentRoutes";
 import userRoutes from "./routes/UserRoutes";
 import authRoutes from "./routes/AuthRoutes";
+import statsRoutes from "./routes/StatsRoutes";
+import { errorMiddleware, notFoundHandler } from "./MiddleWare/errorMiddleware";
 
 dotenv.config({ path: "../../.env" });
 
@@ -22,5 +24,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/alumni", alumniRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api", notFoundHandler);
+app.use(errorMiddleware);
 
 export default app;

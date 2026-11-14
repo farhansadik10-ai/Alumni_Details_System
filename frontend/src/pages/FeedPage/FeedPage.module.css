@@ -1,0 +1,76 @@
+/*
+ * The Feed (feed.html). Tokens only. The posts are the wide column and the
+ * side list the narrow one, side by side while both fit (480 and 280 at the
+ * least, as drawn), the side list under the posts when they do not: no
+ * breakpoint decides it. The design's gap is 24px by 40px; the nearest
+ * column step is 32. min-width: 0 lets a column be narrower than its widest
+ * word on a 360px phone. The whole row is the page frame's first child, so
+ * its top overlaps the band; the first card of each column must be opaque.
+ */
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-5) var(--space-6);
+}
+
+.main {
+  flex: 2 1 calc(var(--space-8) * 7.5);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.side {
+  flex: 1 1 calc(var(--space-8) * 4.375);
+  min-width: 0;
+}
+
+/* The student's note in place of the composer. */
+.note {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The posts, and the skeleton cards in their place. */
+.posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skeletonPost {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeletonByline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.skeletonWho {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* "More posts could not be loaded", then why, under it. */
+.moreError {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+}

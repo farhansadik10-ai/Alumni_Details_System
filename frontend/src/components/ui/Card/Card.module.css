@@ -1,0 +1,15 @@
+.card {
+  display: block;
+  min-width: 0;
+  border: var(--border-edge) solid var(--edge);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.md {
+  padding: var(--space-5);
+}
+
+.lg {
+  padding: var(--space-6);
+}

@@ -1,0 +1,53 @@
+/* A still block in the shape of what is coming. No animation, on purpose. */
+.skeleton {
+  display: block;
+  flex-shrink: 0;
+  max-width: 100%;
+  border-radius: var(--radius);
+  background: var(--sunken);
+}
+
+.line {
+  width: 80%;
+  height: var(--space-3);
+}
+
+.title {
+  width: 55%;
+  height: var(--space-4);
+}
+
+.avatarSm {
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+}
+
+.avatarMd {
+  width: var(--avatar-md);
+  height: var(--avatar-md);
+}
+
+.block {
+  width: 100%;
+  height: calc(var(--space-8) * 2);
+}
+
+.group {
+  display: flex;
+  min-width: 0;
+}
+
+.stack {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* A column of lines beside an avatar takes the room that is left. */
+.row > .group {
+  flex: 1;
+}

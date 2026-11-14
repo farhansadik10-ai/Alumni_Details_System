@@ -1,0 +1,45 @@
+/* The select and its chevron share one grid cell; the chevron sits at the right. */
+.box {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  color: var(--text);
+}
+
+.select,
+.chevron {
+  grid-area: 1 / 1;
+}
+
+.select {
+  composes: control from "../Field/Field.module.css";
+  appearance: none;
+  -webkit-appearance: none;
+  /* Room for the chevron: its width plus the same space on both sides of it. */
+  padding: 0 calc(var(--icon-sm) + 2 * var(--space-3)) 0 var(--space-3);
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.select:disabled {
+  cursor: default;
+}
+
+.md {
+  height: var(--control-h);
+}
+
+.lg {
+  height: var(--control-h-lg);
+}
+
+/* Clicks go through the chevron to the select under it. */
+.chevron {
+  justify-self: end;
+  margin-right: var(--space-3);
+  pointer-events: none;
+}
+
+.select:disabled + .chevron {
+  color: var(--muted);
+}

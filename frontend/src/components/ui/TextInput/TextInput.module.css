@@ -1,0 +1,12 @@
+.input {
+  composes: control from "../Field/Field.module.css";
+  padding: 0 var(--space-3);
+}
+
+.md {
+  height: var(--control-h);
+}
+
+.lg {
+  height: var(--control-h-lg);
+}

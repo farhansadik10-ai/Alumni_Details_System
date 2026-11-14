@@ -1,0 +1,70 @@
+/* The result card of directory.html and its loading shape. Tokens only. */
+
+/* Fills the card, so "View profile" sits at the bottom of every card in a row. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-snug);
+  overflow-wrap: anywhere;
+}
+
+.job {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tags > li {
+  max-width: 100%;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-h);
+  margin-top: auto;
+  border-top: var(--border-line) solid var(--line);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+/* The link is the whole row high, so it is easy to hit on a phone. */
+.footer > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,76 @@
+/* The search form of directory.html and phone-directory.html. Tokens only.
+   The page puts it in a Card, so it draws no border of its own. */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* The search box with its Search button on the right, at the foot of the box. */
+.searchRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.searchBox {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-3);
+}
+
+/* The "Filters" button is a phone thing: on a wide screen the panel is always open. */
+.toggle {
+  display: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* As many selects in a row as fit; one under the other on a narrow card. */
+.selects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(calc(var(--space-8) * 3), 100%), 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.optionsError,
+.clear {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+@media (max-width: 767.98px) {
+  .searchRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* "Filters" and "Search" side by side, as drawn in phone-directory.html. */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toggle {
+    display: block;
+  }
+
+  /* Closed: out of the tab order and the reading order (AC13). */
+  .closed {
+    display: none;
+  }
+}

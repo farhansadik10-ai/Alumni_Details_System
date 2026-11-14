@@ -1,0 +1,21 @@
+/* The search form of users.html: search box, role filter, Search button in
+   one row that wraps on a narrow card. The page puts it in a Card. Tokens only. */
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* The search box takes three parts of the room, the role filter one. */
+.search {
+  flex: 3 1 calc(var(--space-8) * 4);
+  min-width: 0;
+}
+
+.role {
+  flex: 1 1 calc(var(--space-8) * 3);
+  min-width: 0;
+}

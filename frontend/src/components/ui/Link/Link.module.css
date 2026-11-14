@@ -1,0 +1,12 @@
+.link {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: var(--accent-soft-text);
+}
+
+.strong {
+  font-weight: var(--weight-bold);
+}

@@ -11,26 +11,27 @@ export class PostManager {
     return newPost;
   }
 
-  public async updatePost(post: PostDTO) {
-    const newUpatePost = await this.postQuery.updatePost(post);
+  public async updatePost(
+    id: number,
+    data: Parameters<PostQuery["updatePost"]>[1],
+  ) {
+    const newUpatePost = await this.postQuery.updatePost(id, data);
     return newUpatePost;
   }
-  public async deletePost(post:PostDTO){
-    const newDeletePOst = await this.postQuery.deletePost(post);
-    return newDeletePOst;
+  public async findPostById(id: number) {
+    const post = await this.postQuery.findPostById(id);
+    return post;
   }
-  public async getAllPosts(){
-    const allPosts = await this.postQuery.getAllPosts();
-    return allPosts;
-
+  /** Deletes the post with its comments and their replies. `false` when no post has this id. */
+  public async deletePost(id: number) {
+    const deleted = await this.postQuery.deletePost(id);
+    return deleted;
   }
-  public async getPostsByUserId(post:PostDTO){
-    const  newPostById = await this.postQuery.getPostsByUserId(post);
-    return newPostById;
-
-  }
-  public async updateCommentCount(post:PostDTO){
-    const newCommentCount = await this.postQuery.updateCommentCount(post);
-    return newCommentCount;
+  public async listPosts(
+    page: Parameters<PostQuery["listPosts"]>[0],
+    filter?: Parameters<PostQuery["listPosts"]>[1],
+  ) {
+    const posts = await this.postQuery.listPosts(page, filter);
+    return posts;
   }
 }

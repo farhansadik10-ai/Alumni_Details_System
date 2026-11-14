@@ -1,0 +1,13 @@
+/* The form of signup.html. Tokens only. The shared parts are in AuthLayout. */
+.form {
+  composes: form from "../../components/auth/AuthLayout/AuthLayout.module.css";
+  gap: var(--space-4);
+}
+
+.title {
+  composes: formTitle from "../../components/auth/AuthLayout/AuthLayout.module.css";
+}
+
+.footer {
+  composes: formFooter from "../../components/auth/AuthLayout/AuthLayout.module.css";
+}

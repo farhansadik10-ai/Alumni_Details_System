@@ -1,0 +1,60 @@
+/* The three count cards of dashboard.html. Tokens only. The page frame lifts
+   this block over the band (the first row overlaps it). */
+.block {
+  min-width: 0;
+}
+
+/* As many cards in a row as fit, one per row on a phone. The minimum is the
+   design's card width (260px), taken as four of the largest space step (256px). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(calc(var(--space-8) * 4), 100%), 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Every card in a row is as tall as the tallest. */
+.item {
+  display: flex;
+  min-width: 0;
+}
+
+.item > * {
+  flex: 1;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+/* The design draws 52px; the nearest type step is Display (architecture,
+   "Sizes off the design scale"). */
+.number {
+  margin: 0;
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.link {
+  margin: 0;
+  padding-top: var(--space-2);
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+  overflow-wrap: anywhere;
+}

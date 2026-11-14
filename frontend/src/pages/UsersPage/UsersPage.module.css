@@ -1,0 +1,29 @@
+/*
+ * The results of the Users page (users.html): the count line, the table (a
+ * card per row on a phone, through Table) and the pages. Tokens only.
+ */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.count {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+/* The table never gets wider than the page; long values break inside it. */
+.table {
+  min-width: 0;
+}
+
+/* One loading row: an avatar and two lines beside it. */
+.skeletonRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}

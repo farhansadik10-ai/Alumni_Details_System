@@ -1,0 +1,26 @@
+/* Avatar, name and the "You" tag in one row; the tag drops under on a narrow
+   cell. A long name with no spaces breaks inside the cell (G46). Tokens only. */
+
+.cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
+/* Avatar and name stay side by side; only the tag drops under. */
+.person {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,27 @@
+/* The text of a post or a comment. Tokens only. */
+.text {
+  margin: 0;
+  /* Keeps the writer's line breaks; runs of spaces fold to one. */
+  white-space: pre-line;
+  /* A long link or word breaks rather than pushing the card wider at 360px. */
+  overflow-wrap: anywhere;
+}
+
+.md {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.sm {
+  font-size: var(--text-small);
+  line-height: var(--leading-small);
+}
+
+/* Three lines, then an ellipsis. */
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}

@@ -1,0 +1,41 @@
+/*
+ * A router link drawn as a button. Every look comes from Button.module.css
+ * with "composes" (pattern 3). Only properties the composed classes do not set
+ * are added here (G52), so the order the two stylesheets load in does not matter.
+ */
+.link {
+  composes: button from "../Button/Button.module.css";
+  text-decoration: none;
+}
+
+.primary {
+  composes: primary from "../Button/Button.module.css";
+}
+
+.secondary {
+  composes: secondary from "../Button/Button.module.css";
+}
+
+.md {
+  composes: md from "../Button/Button.module.css";
+}
+
+.sm {
+  composes: sm from "../Button/Button.module.css";
+}
+
+.lg {
+  composes: lg from "../Button/Button.module.css";
+}
+
+/*
+ * base.css gives every a:hover the --accent-soft-text color. A button keeps
+ * the text color of its variant on hover, from the same tokens as Button.
+ */
+.primary:hover {
+  color: var(--on-accent);
+}
+
+.secondary:hover {
+  color: var(--text);
+}
