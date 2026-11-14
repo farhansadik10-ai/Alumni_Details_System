@@ -8,8 +8,8 @@ kind: task
 |---|---|
 | REQ | REQ-fs-008 |
 | Kind | task |
-| Status | drafting |
-| Phase | plan |
+| Status | ready to merge |
+| Phase | review and ship (gate cleared 2026-11-14) |
 | Created | 2026-11-14 |
 | Primary repo | alumni-details-system |
 | Touched repos | alumni-details-system (frontend dev config, docs and vault only) |
